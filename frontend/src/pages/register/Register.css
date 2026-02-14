@@ -1,255 +1,285 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+:root {
+  --primary: #4f46e5;
+  --primary-glow: rgba(79, 70, 229, 0.4);
+  --accent: #818cf8;
+  --bg-deep: #0f172a;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --error: #ef4444;
 }
 
 .register-page {
-  background: linear-gradient(135deg, #0a1b66 0%, #1e3a8a 100%);
+  background: var(--bg-deep);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Animated Ambient Glow */
+.register-page::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+  filter: blur(100px);
+  z-index: 0;
 }
 
 /* Compact Header */
 .compact-header {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 12px 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(15px);
+  padding: 15px 40px;
+  border-bottom: 1px solid var(--card-border);
+  z-index: 10;
 }
 
 .header-content {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 30px;
 }
 
 .header-content h1 {
-  font-size: 22px;
+  font-size: 18px;
+  font-weight: 800;
   color: white;
-  font-weight: 700;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
 }
 
 .back-link {
-  color: white;
+  color: var(--text-dim);
   text-decoration: none;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   padding: 8px 16px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
   transition: all 0.3s ease;
-  font-size: 14px;
 }
 
 .back-link:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-5px);
 }
 
-/* Register Container */
+/* Main Container */
 .register-container {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
+  z-index: 2;
 }
 
 .register-card-compact {
-  display: flex;
-  justify-content: center;
-  max-width: 600px;
   width: 100%;
-  background: white;
-  border-radius: 16px;
+  max-width: 800px;
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--card-border);
+  border-radius: 32px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  animation: fadeIn 0.5s ease-out;
+  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.7);
+  animation: scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeIn {
+@keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.98) translateY(20px);
   }
 
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 
-/* Form Section */
 .form-section-compact {
-  padding: 40px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  padding: 50px;
 }
 
 .form-header {
-  margin-bottom: 25px;
+  margin-bottom: 40px;
+  text-align: center;
 }
 
 .form-header h2 {
-  font-size: 28px;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, #0a1b66 0%, #1e3a8a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 32px;
   font-weight: 800;
+  color: white;
+  margin-bottom: 10px;
+  letter-spacing: -1px;
 }
 
 .form-header p {
-  color: #666;
-  font-size: 15px;
+  color: var(--text-dim);
+  font-size: 16px;
 }
 
-/* Compact Form */
-.compact-form {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
+/* Grid Layout for Form */
 .form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 25px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 40px;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
   position: relative;
 }
 
+/* Extended Floating Label Styles */
 .floating-group {
   position: relative;
 }
 
 .floating-group input {
   width: 100%;
-  padding: 12px 12px 4px 12px;
-  height: 48px;
-  border-radius: 10px;
-  border: 2px solid #e0e0e0;
-  background: white;
+  padding: 24px 16px 8px 16px;
+  height: 64px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 2px solid var(--card-border);
+  border-radius: 16px;
+  color: white;
   font-size: 15px;
-  transition: all 0.2s ease;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .floating-group label {
   position: absolute;
-  top: 14px;
-  left: 12px;
-  font-size: 14px;
-  color: #666;
+  top: 20px;
+  left: 16px;
+  color: var(--text-dim);
+  font-size: 15px;
   pointer-events: none;
-  transition: all 0.2s ease;
-  background: transparent;
-  padding: 0 4px;
+  transition: all 0.3s ease;
 }
 
+/* State when input is focused or has value */
 .floating-group input:focus~label,
 .floating-group input:not(:placeholder-shown)~label {
-  top: -8px;
-  left: 10px;
+  top: 10px;
+  left: 16px;
   font-size: 12px;
-  color: #1e3a8a;
-  background: white;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .floating-group input:focus {
   outline: none;
-  border-color: #1e3a8a;
-  box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1);
-}
-
-.floating-group input.error {
-  border-color: #d63031;
+  border-color: var(--primary);
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow: 0 0 0 4px var(--primary-glow);
 }
 
 .field-error {
-  color: #d63031;
+  color: var(--error);
   font-size: 12px;
-  margin-top: 4px;
-  font-weight: 500;
-}
-
-.error-msg {
-  background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
-  color: white;
-  padding: 14px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  text-align: center;
+  margin-top: 6px;
   font-weight: 600;
-  font-size: 14px;
-  box-shadow: 0 4px 15px rgba(214, 48, 49, 0.3);
+  display: block;
 }
 
+/* Wide Button */
 .register-btn-compact {
+  grid-column: span 2;
   width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #0a1b66 0%, #1e3a8a 100%);
+  padding: 18px;
+  background: var(--primary);
   color: white;
   border: none;
-  border-radius: 10px;
-  font-weight: 700;
+  border-radius: 18px;
   font-size: 16px;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(10, 27, 102, 0.4);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 25px -5px var(--primary-glow);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .register-btn-compact:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(10, 27, 102, 0.5);
+  transform: translateY(-3px) scale(1.02);
+  background: #4338ca;
+  box-shadow: 0 20px 40px -10px var(--primary-glow);
 }
 
 .register-btn-compact:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .auth-links-compact {
-  margin-top: 20px;
+  grid-column: span 2;
   text-align: center;
-  padding-top: 20px;
-  border-top: 2px solid #f0f0f0;
-  color: #666;
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 1px solid var(--card-border);
+  color: var(--text-dim);
   font-size: 14px;
 }
 
 .auth-links-compact a {
-  color: #1e3a8a;
-  text-decoration: none;
+  color: white;
   font-weight: 700;
+  text-decoration: none;
+  margin-left: 5px;
 }
 
 .auth-links-compact a:hover {
+  color: var(--accent);
   text-decoration: underline;
 }
 
+/* Centering full-width items in dynamic grid */
+.form-group:nth-child(5),
+/* Address */
+.form-group:nth-child(6) {
+  /* confirm or something else */
+  /* Keep as is or make full width if needed */
+}
+
+/* Make Address and Submit Full Width */
+#address,
+.register-btn-compact,
+.auth-links-compact {
+  grid-column: span 2;
+}
+
+/* Spinner */
 .spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -261,13 +291,24 @@
   }
 }
 
-/* Responsive Design */
-@media (max-width: 640px) {
-  .register-container {
-    padding: 15px;
+/* Responsive Grid */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
 
   .form-section-compact {
-    padding: 30px 20px;
+    padding: 30px 24px;
+  }
+
+  .form-header h2 {
+    font-size: 26px;
+  }
+
+  #address,
+  .register-btn-compact,
+  .auth-links-compact {
+    grid-column: span 1;
   }
 }
