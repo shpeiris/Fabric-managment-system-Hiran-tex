@@ -1,0 +1,211 @@
+.arrivals-page {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.arrivals-page h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.add-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.add-btn:hover {
+  background: #16a34a;
+}
+
+.section-title {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.arrivals-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.arrivals-table th {
+  text-align: left;
+  padding: 12px;
+  background: #f1f5f9;
+}
+
+.arrivals-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.arrivals-table tr:last-child td {
+  border-bottom: none;
+}
+
+.status-received {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.status-in-transit {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.status-pending {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.date-text {
+  color: #6c757d;
+}
+
+.supplier-link {
+  color: #007bff;
+}
+
+.actions {
+  text-align: right;
+}
+
+.action-view {
+  color: #2563eb;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+.action-print {
+  color: #6b7280;
+  cursor: pointer;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 600px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.items-section {
+  margin-bottom: 15px;
+}
+
+.items-section label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.items-panel {
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.item-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.item-row select {
+  flex: 2;
+}
+
+.item-row input {
+  flex: 1;
+}
+
+.btn-add-item {
+  padding: 6px 12px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.btn-cancel {
+  padding: 8px 16px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  padding: 8px 16px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}

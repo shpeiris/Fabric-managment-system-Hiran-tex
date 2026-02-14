@@ -1,0 +1,47 @@
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0b2c6f;
+  padding: 12px 25px;
+  border-bottom: 3px solid #1e90ff;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  color: #2aff00;
+  font-size: 22px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logo:hover {
+  color: #7CFF00;
+  transform: scale(1.05);
+}
+
+.home-icon {
+  margin-right: 8px;
+}
+
+.company-name {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+nav a {
+  margin-left: 20px;
+  color: #7CFF00;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.get-started {
+  background: #7CFF00;
+  color: #003366;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}

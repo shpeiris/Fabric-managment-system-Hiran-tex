@@ -1,0 +1,57 @@
+﻿diff --git a/backend/db/schema.sql b/backend/db/schema.sql
+index 28a7854..35e1de3 100644
+--- a/backend/db/schema.sql
++++ b/backend/db/schema.sql
+@@ -3,7 +3,6 @@
+ -- Drop tables if they exist (clean setup)
+ DROP TABLE IF EXISTS activity_logs CASCADE;
+ DROP TABLE IF EXISTS confirmation_logs CASCADE;
+-DROP TABLE IF EXISTS order_status_history CASCADE;
+ DROP TABLE IF EXISTS payments CASCADE;
+ DROP TABLE IF EXISTS stock_arrivals CASCADE;
+ DROP TABLE IF EXISTS order_items CASCADE;
+@@ -130,18 +129,7 @@ CREATE TABLE payments (
+     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ );
+ 
+--- 10. Order Status History Table (for tracking status changes)
+-CREATE TABLE order_status_history (
+-    history_id SERIAL PRIMARY KEY,
+-    order_id INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+-    old_status VARCHAR(50),
+-    new_status VARCHAR(50) NOT NULL,
+-    changed_by INTEGER REFERENCES employees(employee_id) ON DELETE SET NULL,
+-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+-    notes TEXT
+-);
+-
+--- 11. Confirmation Logs Table (for customer notifications)
++-- 10. Confirmation Logs Table (for customer notifications)
+ CREATE TABLE confirmation_logs (
+     confirmation_id SERIAL PRIMARY KEY,
+     order_id INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+@@ -159,16 +147,9 @@ CREATE TABLE activity_logs (
+     log_id SERIAL PRIMARY KEY,
+     customer_id INTEGER REFERENCES customers(customer_id) ON DELETE SET NULL,
+     action_type VARCHAR(50) NOT NULL,
+-    description TEXT,
+-    target_id INTEGER,
+-    actor_id INTEGER,
+     actor_type VARCHAR(50),
+     action VARCHAR(255) NOT NULL,
+-    details TEXT,
+-    ip_address VARCHAR(45),
+-    user_agent TEXT,
+     employee_id INTEGER REFERENCES employees(employee_id),
+-    metadata JSONB,
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ );
+ 
+@@ -190,7 +171,6 @@ CREATE INDEX idx_payments_status ON payments(payment_status);
+ CREATE INDEX idx_confirmation_logs_order_id ON confirmation_logs(order_id);
+ CREATE INDEX idx_confirmation_logs_type ON confirmation_logs(confirmation_type);
+ CREATE INDEX idx_activity_logs_action_type ON activity_logs(action_type);
+-CREATE INDEX idx_order_status_history_order_id ON order_status_history(order_id);
+ 
+ -- Seed Sample Suppliers
+ INSERT INTO suppliers (name, contact_person, contact_number, email, address) VALUES

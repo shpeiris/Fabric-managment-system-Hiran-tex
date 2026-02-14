@@ -1,0 +1,618 @@
+/* Sales Dashboard - Premium Theme */
+.sales-dashboard {
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+}
+
+.sales-dashboard h1 {
+    color: #001a66;
+    font-weight: 700;
+    margin-bottom: 5px;
+    font-size: 32px;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 15px;
+    margin-bottom: 30px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
+    border: 2px solid rgba(124, 255, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #7cff00 0%, #001a66 100%);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 32px rgba(0, 26, 102, 0.15);
+    border-color: rgba(124, 255, 0, 0.3);
+}
+
+.stat-card.highlight {
+    background: linear-gradient(135deg, #7cff00 0%, #6ee000 100%);
+    border-color: #7cff00;
+}
+
+.stat-card.highlight .stat-info h4,
+.stat-card.highlight .stat-info h2 {
+    color: #001a66;
+}
+
+.stat-icon {
+    font-size: 40px;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(124, 255, 0, 0.15) 0%, rgba(0, 26, 102, 0.05) 100%);
+    border-radius: 16px;
+    border: 2px solid rgba(124, 255, 0, 0.2);
+}
+
+.stat-info h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6c757d;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.stat-info h2 {
+    font-size: 32px;
+    color: #001a66;
+    font-weight: 900;
+    margin: 0;
+}
+
+/* Section */
+.section {
+    margin-bottom: 40px;
+}
+
+.section h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #001a66;
+    margin-bottom: 20px;
+}
+
+/* Table */
+.table-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
+    overflow: hidden;
+    border: 2px solid rgba(124, 255, 0, 0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background: linear-gradient(135deg, #001a66 0%, #002a99 100%);
+    color: white;
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f2f5;
+    color: #333;
+    font-size: 14px;
+}
+
+.data-table tr:hover {
+    background: linear-gradient(90deg, rgba(124, 255, 0, 0.05) 0%, transparent 100%);
+}
+
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.pending {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: white;
+}
+
+.status-badge.processing {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.status-badge.shipped {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+}
+
+.status-badge.delivered {
+    background: linear-gradient(135deg, #7cff00 0%, #6ee000 100%);
+    color: #001a66;
+}
+
+.status-badge.cancelled {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+/* Enhanced stat cards for verification and payment */
+.stat-card.verification {
+    cursor: pointer;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-color: #ffc107;
+}
+
+.stat-card.verification:hover {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(255, 193, 7, 0.3);
+}
+
+.stat-card.payment {
+    cursor: pointer;
+    background: linear-gradient(135deg, #d4edda 0%, #a3d9a4 100%);
+    border-color: #28a745;
+}
+
+.stat-card.payment:hover {
+    background: linear-gradient(135deg, #a3d9a4 0%, #7dce7d 100%);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(40, 167, 69, 0.3);
+}
+
+.stat-subtitle {
+    font-size: 10px;
+    color: #666;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+/* Quick Actions */
+.quick-actions {
+    margin: 30px 0;
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
+    border: 2px solid rgba(124, 255, 0, 0.1);
+}
+
+.quick-actions h3 {
+    color: #001a66;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #333;
+    border: 2px solid #dee2e6;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.action-btn:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.verify-btn {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: white;
+    border-color: #ffc107;
+}
+
+.payment-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-color: #28a745;
+}
+
+.confirm-btn {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    border-color: #17a2b8;
+}
+
+.orders-btn {
+    background: linear-gradient(135deg, #001a66 0%, #002a99 100%);
+    color: white;
+    border-color: #001a66;
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+/* Enhanced table with payment info */
+.payment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.payment-status {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.payment-status.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.payment-status.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.payment-status.failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.payment-info small {
+    color: #666;
+    font-size: 11px;
+}
+
+/* Action buttons mini */
+.action-buttons-mini {
+    display: flex;
+    gap: 5px;
+}
+
+.mini-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.mini-btn.verify {
+    background: #ffc107;
+    color: white;
+}
+
+.mini-btn.payment {
+    background: #28a745;
+    color: white;
+}
+
+.mini-btn.confirm {
+    background: #17a2b8;
+    color: white;
+}
+
+.mini-btn:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(124, 255, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 25px;
+    border-bottom: 2px solid #f0f2f5;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 14px 14px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #001a66;
+    font-weight: 700;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #f8f9fa;
+    color: #001a66;
+}
+
+.modal-content {
+    padding: 25px;
+}
+
+/* Order Verification Styles */
+.order-verification, .payment-processing, .confirmation-sending {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-summary {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    border-left: 4px solid #7cff00;
+}
+
+.order-summary h4 {
+    margin: 0 0 10px 0;
+    color: #001a66;
+    font-weight: 700;
+}
+
+.order-summary p {
+    margin: 5px 0;
+    color: #333;
+}
+
+.verification-checklist {
+    background: #e7f5e7;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.verification-checklist h5 {
+    margin: 0 0 10px 0;
+    color: #155724;
+}
+
+.verification-checklist ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.verification-checklist li {
+    color: #155724;
+    font-weight: 500;
+    margin: 5px 0;
+}
+
+.verification-actions, .payment-actions, .confirmation-types {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.verify-approve {
+    background: #28a745;
+    color: white;
+}
+
+.verify-reject {
+    background: #dc3545;
+    color: white;
+}
+
+.payment-confirm {
+    background: #28a745;
+    color: white;
+}
+
+.payment-reject {
+    background: #dc3545;
+    color: white;
+}
+
+.confirmation-type {
+    background: #17a2b8;
+    color: white;
+    flex: 1;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Pending items lists */
+.pending-verifications, .pending-payments, .confirmation-options {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.verification-item, .payment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #dee2e6;
+}
+
+.order-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.order-info strong {
+    color: #001a66;
+    font-weight: 700;
+}
+
+.order-info span {
+    color: #333;
+}
+
+.order-info small {
+    color: #666;
+    font-size: 12px;
+}
+
+.verification-buttons, .payment-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.verification-buttons button, .payment-buttons button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.bulk-confirmation-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.bulk-confirmation {
+    background: #001a66;
+    color: white;
+    padding: 15px;
+    text-align: left;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .verification-actions, .payment-actions {
+        flex-direction: column;
+    }
+    
+    .verification-item, .payment-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .verification-buttons, .payment-buttons {
+        align-self: stretch;
+        justify-content: center;
+    }
+}

@@ -1,0 +1,207 @@
+/* LogViewer Component Styles */
+.log-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.log-viewer-modal {
+  background: white;
+  width: 90%;
+  max-width: 1200px;
+  height: 80%;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.log-viewer-header {
+  padding: 20px;
+  background: #001a66;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.log-viewer-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.log-viewer-content {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.log-table thead {
+  background: #f8fafc;
+  position: sticky;
+  top: 0;
+}
+
+.log-table th,
+.log-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.log-table th {
+  font-weight: 600;
+  color: #374151;
+}
+
+.log-table tbody tr {
+  font-size: 14px;
+}
+
+.log-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.log-level-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.log-level-error {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.log-level-warn {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.log-level-info {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.log-level-debug {
+  background-color: rgba(107, 114, 128, 0.2);
+  color: #6b7280;
+}
+
+.log-details summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.log-details pre {
+  margin-top: 8px;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 4px;
+  font-size: 11px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.log-viewer-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  background: #001a66;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 26, 102, 0.3);
+  transition: all 0.2s ease;
+}
+
+.log-viewer-button:hover {
+  background: #002080;
+  transform: translateY(-2px);
+}
+
+.log-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6b7280;
+  font-size: 16px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .log-viewer-modal {
+    width: 95%;
+    height: 90%;
+  }
+  
+  .log-viewer-header {
+    padding: 16px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .log-viewer-controls {
+    flex-wrap: wrap;
+  }
+  
+  .log-table {
+    font-size: 12px;
+  }
+  
+  .log-table th,
+  .log-table td {
+    padding: 8px;
+  }
+}

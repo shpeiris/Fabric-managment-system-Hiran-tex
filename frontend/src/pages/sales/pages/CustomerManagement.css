@@ -1,0 +1,82 @@
+/* Customer Management - Premium Theme */
+.customer-management {
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    color: #001a66;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+    font-size: 32px;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 15px;
+    margin: 0;
+}
+
+/* Search Bar */
+.search-bar {
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 500px;
+    padding: 14px 18px;
+    border: 2px solid rgba(124, 255, 0, 0.2);
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #7cff00;
+    box-shadow: 0 0 0 4px rgba(124, 255, 0, 0.1);
+}
+
+/* Table */
+.table-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
+    overflow: hidden;
+    border: 2px solid rgba(124, 255, 0, 0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background: linear-gradient(135deg, #001a66 0%, #002a99 100%);
+    color: white;
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f2f5;
+    font-size: 14px;
+}
+
+.data-table tr:hover {
+    background: linear-gradient(90deg, rgba(124, 255, 0, 0.05) 0%, transparent 100%);
+}

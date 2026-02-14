@@ -1,0 +1,16 @@
+.header {
+  background: linear-gradient(to right, #0a1b66, #0f2c8f);
+  color: #33ff00;
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  color: #33ff00;
+  font-size: 22px;
+}
