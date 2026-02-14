@@ -8,20 +8,20 @@
 }
 
 :root {
-  --primary: #6366f1;
-  --primary-glow: rgba(99, 102, 241, 0.5);
-  --accent: #f43f5e;
-  --accent-glow: rgba(244, 63, 94, 0.4);
-  --bg-deep: #020617;
-  --card-bg: rgba(15, 23, 42, 0.6);
-  --card-border: rgba(255, 255, 255, 0.12);
-  --text-main: #f8fafc;
-  --text-dim: #94a3b8;
-  --error: #fb7185;
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --accent: #0ea5e9;
+  --bg-light: #ffffff;
+  --bg-subtle: #f8fafc;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-border: rgba(148, 163, 184, 0.2);
+  --text-main: #0f172a;
+  --text-dim: #64748b;
+  --error: #dc2626;
 }
 
 .login-page {
-  background: var(--bg-deep);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #ffffff 100%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -29,46 +29,22 @@
   overflow: hidden;
 }
 
-/* Dynamic Animated Background */
+/* Fabric Background Pattern */
 .login-page::before {
   content: '';
   position: absolute;
-  top: -10%;
-  left: -10%;
-  width: 40%;
-  height: 40%;
-  background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-  filter: blur(80px);
-  animation: float 15s infinite alternate;
-  z-index: 0;
-}
-
-.login-page::after {
-  content: '';
-  position: absolute;
-  bottom: -10%;
-  right: -10%;
+  top: 0;
+  right: 0;
   width: 50%;
-  height: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
-  filter: blur(100px);
-  animation: float 20s infinite alternate-reverse;
+  height: 100%;
+  background: url('/fabric-rolls-colorful.png') center/contain no-repeat;
+  opacity: 0.25;
   z-index: 0;
-}
-
-@keyframes float {
-  0% {
-    transform: translate(0, 0);
-  }
-
-  100% {
-    transform: translate(100px, 50px);
-  }
 }
 
 /* Header */
 .top-bar {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   padding: 20px 40px;
   border-bottom: 1px solid var(--card-border);
@@ -85,7 +61,7 @@
 .logo h1 {
   font-size: 20px;
   font-weight: 700;
-  color: white;
+  color: var(--text-main);
   letter-spacing: -0.5px;
 }
 
@@ -125,7 +101,7 @@
 .login-box h2 {
   font-size: 36px;
   font-weight: 800;
-  color: white;
+  color: var(--text-main);
   margin-bottom: 8px;
   letter-spacing: -1px;
 }
@@ -136,7 +112,7 @@
   margin-bottom: 32px;
 }
 
-/* Glassmorphism Card */
+/* Clean White Card */
 .login-content {
   background: var(--card-bg);
   backdrop-filter: blur(20px);
@@ -144,7 +120,7 @@
   border: 1px solid var(--card-border);
   border-radius: 24px;
   padding: 40px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
 .login-form {
@@ -160,7 +136,7 @@
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-dim);
+  color: var(--text-main);
   margin-bottom: 10px;
   transition: color 0.3s;
 }
@@ -170,9 +146,9 @@
   width: 100%;
   padding: 14px 18px;
   border-radius: 12px;
-  border: 2px solid var(--card-border);
-  background: rgba(15, 23, 42, 0.4);
-  color: white;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: var(--text-main);
   font-size: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -180,8 +156,8 @@
 .login-form input:focus {
   outline: none;
   border-color: var(--primary);
-  background: rgba(15, 23, 42, 0.6);
-  box-shadow: 0 0 20px 2px var(--primary-glow);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
   transform: translateY(-2px);
 }
 
@@ -227,7 +203,7 @@
 }
 
 .forgot-link {
-  color: var(--accent);
+  color: var(--primary);
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
@@ -235,11 +211,11 @@
 }
 
 .forgot-link:hover {
-  color: white;
-  text-shadow: 0 0 10px var(--primary-glow);
+  color: var(--primary-dark);
+  text-decoration: underline;
 }
 
-/* Premium Button */
+/* Premium Blue Button */
 .login-btn {
   width: 100%;
   padding: 16px;
@@ -253,7 +229,7 @@
   position: relative;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 20px -5px var(--primary-glow);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }
 
 .login-btn::before {
@@ -269,8 +245,8 @@
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 15px 30px -5px var(--primary-glow);
-  background: #4338ca;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  background: var(--primary-dark);
 }
 
 .login-btn:hover::before {
@@ -302,9 +278,9 @@
 }
 
 .error-message {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #dc2626;
   padding: 12px;
   border-radius: 12px;
   margin-bottom: 24px;
@@ -321,7 +297,7 @@
 }
 
 .signup-text a {
-  color: white;
+  color: var(--primary);
   font-weight: 700;
   text-decoration: none;
   margin-left: 5px;
@@ -329,27 +305,13 @@
 }
 
 .signup-text a:hover {
-  color: var(--accent);
+  color: var(--primary-dark);
   text-decoration: underline;
 }
 
-/* Image Banner - Integrated subtlely */
+/* Image Banner - Hidden on light theme */
 .image-banner {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.2;
-}
-
-.image-banner img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(1) brightness(0.5);
+  display: none;
 }
 
 /* Mobile Responsiveness */
@@ -364,5 +326,10 @@
 
   .top-bar {
     padding: 15px 20px;
+  }
+
+  .login-page::before {
+    width: 100%;
+    opacity: 0.15;
   }
 }
