@@ -86,11 +86,11 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      {/* Header */}
+      {/* Header - Matching other pages */}
       <header className="top-bar">
-        <div className="logo">
-          <span className="home-icon">🏠</span>
-          <h1>Hiran Fabric Textile</h1>
+        <div className="sidebar-header">
+          <span className="sidebar-logo-icon">🏠</span>
+          <span className="sidebar-title">Hiran Fabrics</span>
         </div>
       </header>
 

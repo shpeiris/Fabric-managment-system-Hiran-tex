@@ -89,12 +89,13 @@ const Register = () => {
   return (
     <div className="register-page">
       <header className="compact-header">
-        <div className="header-content">
-          <h1>Hiran Fabric Textile</h1>
-          <Link to="/" className="back-link">
-            ← Home
-          </Link>
+        <div className="sidebar-header">
+          <span className="sidebar-logo-icon">🏠</span>
+          <span className="sidebar-title">Hiran Fabrics</span>
         </div>
+        <Link to="/" className="back-link">
+          ← Home
+        </Link>
       </header>
 
       <div className="register-container">
