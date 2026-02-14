@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../../services";
 import { setUser } from "../../utils/auth";
 import { useFormValidation } from "../../hooks/useFormValidation";
+import registrationImage from "../../assets/Fabrics/registration.png";
 import {
   validateRequired,
   validateEmail,
@@ -98,6 +99,12 @@ const Register = () => {
 
       <div className="register-container">
         <div className="register-card-compact">
+          {/* Image Side Panel */}
+          <div className="image-side-panel">
+            <img src={registrationImage} alt="Fabric Collection" />
+          </div>
+
+          {/* Form Section */}
           <div className="form-section-compact">
             <div className="form-header">
               <h2>Customer Registration</h2>

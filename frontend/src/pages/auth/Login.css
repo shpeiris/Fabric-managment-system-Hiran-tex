@@ -29,16 +29,16 @@
   overflow: hidden;
 }
 
-/* Fabric Image on Side - Clear, No Blur */
+/* Fabric Background Pattern */
 .login-page::before {
   content: '';
   position: absolute;
   top: 0;
   right: 0;
-  width: 45%;
+  width: 50%;
   height: 100%;
-  background: url('/fabric-rolls-colorful.png') center/cover no-repeat;
-  opacity: 0.4;
+  background: url('/fabric-rolls-colorful.png') center/contain no-repeat;
+  opacity: 0.25;
   z-index: 0;
 }
 
