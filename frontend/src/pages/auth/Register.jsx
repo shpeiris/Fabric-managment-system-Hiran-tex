@@ -247,37 +247,6 @@ const Register = () => {
               </div>
             </form>
           </div>
-
-          <div className="info-section-compact">
-            <div className="info-overlay">
-              <h2>Welcome to Hiran Fabric Textile</h2>
-              <p className="info-subtitle">Join our premium fabric community</p>
-
-              <div className="features-compact">
-                <div className="feature-item-compact">
-                  <span className="feature-icon">✓</span>
-                  <span>Premium Quality Fabrics</span>
-                </div>
-                <div className="feature-item-compact">
-                  <span className="feature-icon">✓</span>
-                  <span>Wide Selection</span>
-                </div>
-                <div className="feature-item-compact">
-                  <span className="feature-icon">✓</span>
-                  <span>Fast Delivery</span>
-                </div>
-                <div className="feature-item-compact">
-                  <span className="feature-icon">✓</span>
-                  <span>Secure Shopping</span>
-                </div>
-              </div>
-
-              <div className="info-note">
-                <strong>Note:</strong> This registration is for customers only.
-                Employees should contact admin for credentials.
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

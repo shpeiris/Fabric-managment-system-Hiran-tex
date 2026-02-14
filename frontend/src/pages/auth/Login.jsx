@@ -100,7 +100,6 @@ export default function Login() {
           <p className="login-subtitle">Sign in to access your dashboard</p>
 
           <div className="login-content">
-            {/* Left - Login Form */}
             <div className="login-form">
               <form onSubmit={handleSubmit}>
                 {errors.submit && (
@@ -181,52 +180,6 @@ export default function Login() {
                 Don't have an account?{" "}
                 <Link to="/register">Sign up as Customer</Link>
               </p>
-            </div>
-
-            {/* Right - Role Information */}
-            <div className="role-box">
-              <p className="role-title">Available Roles</p>
-              <p className="role-description">
-                Login with your assigned role credentials
-              </p>
-
-              <div className="role-list">
-                <div className="role-item customer">
-                  <span className="role-icon">👤</span>
-                  <div className="role-info">
-                    <span className="role-name">Customer</span>
-                    <span className="role-access">Browse & Shop</span>
-                  </div>
-                </div>
-
-                <div className="role-item admin">
-                  <span className="role-icon">👑</span>
-                  <div className="role-info">
-                    <span className="role-name">Admin</span>
-                    <span className="role-access">Full Access</span>
-                  </div>
-                </div>
-
-                <div className="role-item inventory">
-                  <span className="role-icon">📦</span>
-                  <div className="role-info">
-                    <span className="role-name">Inventory Manager</span>
-                    <span className="role-access">Stock Management</span>
-                  </div>
-                </div>
-
-                <div className="role-item sales">
-                  <span className="role-icon">💼</span>
-                  <div className="role-info">
-                    <span className="role-name">Sales Person</span>
-                    <span className="role-access">Sales & Orders</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="role-note">
-                <small>Employee accounts are created by administrators</small>
-              </div>
             </div>
           </div>
         </div>
