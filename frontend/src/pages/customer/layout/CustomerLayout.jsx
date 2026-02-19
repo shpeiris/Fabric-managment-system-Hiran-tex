@@ -31,40 +31,33 @@ export default function CustomerLayout() {
       {/* Sidebar */}
       <aside className="customer-sidebar">
         <div className="sidebar-header">
-          <span className="sidebar-logo-icon">🏠</span>
           <span className="sidebar-title">Hiran Fabrics</span>
         </div>
 
         <nav className="sidebar-nav">
           <NavLink to="/customer/dashboard" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">📊</span>
             Dashboard
           </NavLink>
           <NavLink to="/customer/browse" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">🧵</span>
             Browse Fabrics
           </NavLink>
           <NavLink to="/customer/cart" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">🛒</span>
             Shopping Cart
           </NavLink>
           <NavLink to="/customer/orders" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">📦</span>
             My Orders
           </NavLink>
           <NavLink to="/customer/payments" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">💳</span>
             Payments
           </NavLink>
           <NavLink to="/customer/profile" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">👤</span>
             Profile
           </NavLink>
         </nav>
 
         <div className="sidebar-footer">
           <button className="logout-btn" onClick={handleLogout}>
-            <span>🚪</span> Logout
+            Logout
           </button>
         </div>
       </aside>
@@ -74,7 +67,6 @@ export default function CustomerLayout() {
         {/* Top Header */}
         <header className="customer-header">
           <div className="header-search">
-            <span className="search-icon">🔍</span>
             <input type="text" placeholder="Search fabrics..." />
           </div>
 
