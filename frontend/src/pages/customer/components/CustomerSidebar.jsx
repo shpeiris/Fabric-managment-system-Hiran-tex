@@ -2,9 +2,9 @@ import { NavLink } from 'react-router-dom'
 
 export default function CustomerSidebar() {
   return (
-    <div style={{ 
-      width: '220px', 
-      background: '#1e3a8a', 
+    <div style={{
+      width: '220px',
+      background: '#1e3a8a',
       minHeight: '100vh',
       color: 'white',
       padding: '20px 0',
@@ -23,8 +23,8 @@ export default function CustomerSidebar() {
 
       {/* Navigation */}
       <nav>
-        <NavLink 
-          to="/customer/dashboard" 
+        <NavLink
+          to="/customer/dashboard"
           style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
@@ -38,12 +38,11 @@ export default function CustomerSidebar() {
             transition: 'all 0.2s'
           })}
         >
-          <span style={{ marginRight: '10px' }}>📊</span>
           Dashboard
         </NavLink>
 
-        <NavLink 
-          to="/customer/browse" 
+        <NavLink
+          to="/customer/browse"
           style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
@@ -57,12 +56,11 @@ export default function CustomerSidebar() {
             transition: 'all 0.2s'
           })}
         >
-          <span style={{ marginRight: '10px' }}>🧵</span>
           Browse Fabrics
         </NavLink>
 
-        <NavLink 
-          to="/customer/cart" 
+        <NavLink
+          to="/customer/cart"
           style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
@@ -76,12 +74,11 @@ export default function CustomerSidebar() {
             transition: 'all 0.2s'
           })}
         >
-          <span style={{ marginRight: '10px' }}>🛒</span>
           Shopping Cart
         </NavLink>
 
-        <NavLink 
-          to="/customer/orders" 
+        <NavLink
+          to="/customer/orders"
           style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
@@ -95,12 +92,11 @@ export default function CustomerSidebar() {
             transition: 'all 0.2s'
           })}
         >
-          <span style={{ marginRight: '10px' }}>📦</span>
           My Orders
         </NavLink>
 
-        <NavLink 
-          to="/customer/payments" 
+        <NavLink
+          to="/customer/payments"
           style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
@@ -114,12 +110,11 @@ export default function CustomerSidebar() {
             transition: 'all 0.2s'
           })}
         >
-          <span style={{ marginRight: '10px' }}>💳</span>
           Payments
         </NavLink>
 
-        <NavLink 
-          to="/customer/profile" 
+        <NavLink
+          to="/customer/profile"
           style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
@@ -133,7 +128,6 @@ export default function CustomerSidebar() {
             transition: 'all 0.2s'
           })}
         >
-          <span style={{ marginRight: '10px' }}>👤</span>
           Profile
         </NavLink>
       </nav>
