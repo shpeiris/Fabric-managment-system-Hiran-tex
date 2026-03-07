@@ -111,6 +111,17 @@ const BrowseFabrics = () => {
             <div className="products-grid">
                 {filteredFabrics.map(fabric => (
                     <div key={fabric.fabric_id} className="product-card">
+                        <div className="product-image-container">
+                            <img 
+                                src={fabric.image_url ? `/src/assets/Fabrics/${fabric.image_url}` : '/src/assets/Fabrics/fabric-collage.jpg'} 
+                                alt={fabric.name} 
+                                className="product-image"
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = '/src/assets/Fabrics/fabric-collage.jpg';
+                                }}
+                            />
+                        </div>
                         <div className="product-details">
                             <div className="product-header-row">
                                 <span className="product-category">{fabric.material_type}</span>
