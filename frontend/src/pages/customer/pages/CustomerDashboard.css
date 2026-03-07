@@ -162,10 +162,15 @@
     text-align: left;
     padding: 12px 24px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     color: #94a3b8;
     text-transform: uppercase;
     background: #f8fafc;
+}
+
+.modern-table th:last-child,
+.modern-table td.amount {
+    text-align: right;
 }
 
 .modern-table td {

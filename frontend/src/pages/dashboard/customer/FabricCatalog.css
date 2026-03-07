@@ -16,7 +16,7 @@
 .catalog-header h1 {
     font-size: 2.2rem;
     color: #001a66;
-    font-weight: 700;
+    font-weight: 800;
     margin: 0;
 }
 
@@ -206,12 +206,14 @@
 }
 
 .card-footer {
-    padding-top: 15px;
+    padding-top: 20px;
     border-top: 1px solid #f1f5f9;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
+    /* Align to the right for consistent look */
     align-items: center;
     margin-top: auto;
+    gap: 10px;
 }
 
 .reorder-info {
@@ -257,8 +259,12 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #64748b;
-    font-weight: 600;
+    font-weight: 700;
     border-bottom: 2px solid #e2e8f0;
+}
+
+.fabric-table th:last-child {
+    text-align: center;
 }
 
 .fabric-table td {
