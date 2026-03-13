@@ -2,7 +2,12 @@ import express from "express";
 import cors from "cors";
 import session from "express-session";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { pool } from "./config/db.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -53,6 +58,9 @@ app.use(
 );
 
 app.use(express.json());
+
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Session middleware (In-Memory for now, replacing DB storage)
 app.use(

@@ -17,7 +17,8 @@ export default function FabricManagement() {
     price_per_meter: '',
     stock_quantity: '',
     reorder_level: '100',
-    restock_date: ''
+    restock_date: '',
+    image_url: ''
   });
 
   useEffect(() => {
@@ -84,7 +85,8 @@ export default function FabricManagement() {
       reorder_level: fabric.reorder_level,
       restock_date: fabric.restock_date && !isNaN(new Date(fabric.restock_date))
         ? new Date(fabric.restock_date).toISOString().split('T')[0]
-        : ''
+        : '',
+      image_url: fabric.image_url || ''
     });
     setShowModal(true);
   };
@@ -120,7 +122,8 @@ export default function FabricManagement() {
       price_per_meter: '',
       stock_quantity: '',
       reorder_level: '100',
-      restock_date: ''
+      restock_date: '',
+      image_url: ''
     });
     setEditingFabric(null);
   };
@@ -277,6 +280,35 @@ export default function FabricManagement() {
                     value={formData.restock_date}
                     onChange={(e) => setFormData({ ...formData, restock_date: e.target.value })}
                   />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Image Selection</label>
+                  <div className="image-selection-container">
+                    <select
+                      className="image-select"
+                      value={formData.image_url}
+                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    >
+                      <option value="">No Image</option>
+                      <option value="satin_orange.jpg">Satin Orange</option>
+                      <option value="satin_cream.jpg">Satin Cream</option>
+                      <option value="satin_maroon.jpg">Satin Maroon</option>
+                      <option value="linen_green.jpg">Linen Green</option>
+                      <option value="fabric-collage.jpg">Fabric Collage (Default)</option>
+                    </select>
+                    {formData.image_url && (
+                      <div className="image-preview-modal">
+                        <img 
+                          src={`/src/assets/Fabrics/${formData.image_url}`} 
+                          alt="Preview" 
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
