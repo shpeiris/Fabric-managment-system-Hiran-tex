@@ -212,5 +212,5 @@ export {
   getSuppliers,
   addSupplier,
   updateSupplier,
-  deleteSupplier,
+  deleteSupplier
 };

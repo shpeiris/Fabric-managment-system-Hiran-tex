@@ -20,7 +20,6 @@ import InventoryDashboard from "./pages/inventory/pages/Dashboard"; // Left behi
 import FabricList from "./pages/inventory/FabricList";
 import StockAlerts from "./pages/inventory/StockAlerts";
 import StockArrivals from "./pages/inventory/pages/StockArrivals"; // Left behind
-import Transactions from "./pages/inventory/pages/Transactions"; // Left behind
 import InventorySuppliers from "./pages/inventory/pages/SupplierManagement"; // Left behind
 
 // Sales Imports
@@ -81,7 +80,6 @@ function App() {
           <Route path="fabrics" element={<FabricList />} />
           <Route path="alerts" element={<StockAlerts />} />
           <Route path="stock-arrivals" element={<StockArrivals />} />
-          <Route path="transactions" element={<Transactions />} />
           <Route path="suppliers" element={<InventorySuppliers />} />
         </Route>
 

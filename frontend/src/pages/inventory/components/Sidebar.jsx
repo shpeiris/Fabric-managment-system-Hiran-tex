@@ -30,8 +30,7 @@ const InventorySidebar = () => {
     { name: 'Fabric Management', path: '/inventory/fabrics', icon: '🧵' },
     { name: 'Stock Arrivals', path: '/inventory/stock-arrivals', icon: '📥' },
     { name: 'Suppliers', path: '/inventory/suppliers', icon: '🏭' },
-    { name: 'Low Stock Alerts', path: '/inventory/alerts', icon: '⚠️' },
-    { name: 'Transactions', path: '/inventory/transactions', icon: '📝' }
+    { name: 'Low Stock Alerts', path: '/inventory/alerts', icon: '⚠️' }
   ];
 
   return (

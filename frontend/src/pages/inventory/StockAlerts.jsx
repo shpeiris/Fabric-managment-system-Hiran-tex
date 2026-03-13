@@ -94,7 +94,6 @@ export default function StockAlerts() {
                 <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Current Stock</th>
                 <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Reorder Level</th>
                 <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Expected Restock</th>
-                <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Expected Restock</th>
               </tr>
             </thead>
             <tbody>
