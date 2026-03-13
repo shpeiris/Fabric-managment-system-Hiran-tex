@@ -12,7 +12,6 @@ export default function FabricManagement() {
   const [formData, setFormData] = useState({
     name: '',
     material_type: '',
-    color: '',
     design: '',
     price_per_meter: '',
     stock_quantity: '',
@@ -95,7 +94,6 @@ export default function FabricManagement() {
     setFormData({
       name: fabric.name,
       material_type: fabric.material_type || '',
-      color: fabric.color || '',
       design: fabric.design || '',
       price_per_meter: fabric.price_per_meter,
       stock_quantity: fabric.stock_quantity,
@@ -136,7 +134,6 @@ export default function FabricManagement() {
     setFormData({
       name: '',
       material_type: '',
-      color: '',
       design: '',
       price_per_meter: '',
       stock_quantity: '',
@@ -185,7 +182,6 @@ export default function FabricManagement() {
               <th>ID</th>
               <th>Name</th>
               <th>Material</th>
-              <th>Color</th>
               <th>Design</th>
               <th>Price/m</th>
               <th>Stock</th>
@@ -199,14 +195,30 @@ export default function FabricManagement() {
                 <td>#{fabric.fabric_id}</td>
                 <td>{fabric.name}</td>
                 <td>{fabric.material_type}</td>
-                <td>{fabric.color}</td>
                 <td>{fabric.design}</td>
                 <td>Rs. {Number(fabric.price_per_meter).toFixed(2)}</td>
                 <td>{fabric.stock_quantity} m</td>
                 <td>
-                  <span className={`status-badge ${(fabric.stock_status || 'OK').toLowerCase()}`}>
-                    {fabric.stock_status || 'OK'}
-                  </span>
+                  {(() => {
+                    const status = fabric.stock_status || 'OK';
+                    let label = 'In Stock';
+                    let icon = '✔';
+                    
+                    if (status === 'LOW') {
+                      label = 'Low Stock';
+                      icon = '⚠';
+                    } else if (status === 'OUT_OF_STOCK') {
+                      label = 'Out of Stock';
+                      icon = '✖';
+                    }
+
+                    return (
+                      <span className={`status-badge ${status.toLowerCase()}`}>
+                        <span style={{ marginRight: '5px' }}>{icon}</span>
+                        {label}
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td>
                   <div className="action-buttons">
@@ -247,14 +259,6 @@ export default function FabricManagement() {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>Color</label>
-                  <input
-                    type="text"
-                    value={formData.color}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  />
-                </div>
 
                 <div className="form-group">
                   <label>Design</label>
