@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { apiCall } from "../../../utils/auth.js";
 import "./InventoryDashboard.css";
 
 export default function StockArrivals() {
+  const location = useLocation();
   const [showModal, setShowModal] = useState(false);
   const [arrivals, setArrivals] = useState([]);
   const [fabrics, setFabrics] = useState([]);
@@ -29,7 +31,17 @@ export default function StockArrivals() {
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+    
+    // Check for incoming fabric state from Alerts
+    if (location.state && location.state.fabric_id) {
+      setFormData(prev => ({ ...prev, fabric_id: location.state.fabric_id }));
+      setFabricSearch(`${location.state.fabric_name} (${location.state.material_type || ''})`);
+      setShowModal(true);
+      
+      // Clear location state to prevent modal reopening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const fetchInitialData = async () => {
     try {

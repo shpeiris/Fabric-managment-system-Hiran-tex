@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiCall } from "../../utils/auth.js";
 
 export default function StockAlerts() {
+  const navigate = useNavigate();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -92,7 +94,7 @@ export default function StockAlerts() {
                 <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Current Stock</th>
                 <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Reorder Level</th>
                 <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Expected Restock</th>
-                <th style={{ textAlign: "right", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Actions</th>
+                <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "12px", letterSpacing: "0.05em" }}>Expected Restock</th>
               </tr>
             </thead>
             <tbody>
@@ -142,32 +144,7 @@ export default function StockAlerts() {
                       fontWeight: "600"
                     }}
                   >
-                    {fabric.restock_date || 'Not Set'}
-                  </td>
-                  <td
-                    style={{
-                      padding: "16px",
-                      textAlign: "right",
-                    }}
-                  >
-                    <button
-                      style={{
-                        background: parseFloat(fabric.stock_quantity) === 0 ? "#dc2626" : "#001a66",
-                        color: "white",
-                        border: "none",
-                        padding: "8px 16px",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                        transition: "all 0.2s"
-                      }}
-                      onMouseOver={(e) => e.target.style.transform = "translateY(-1px)"}
-                      onMouseOut={(e) => e.target.style.transform = "translateY(0)"}
-                      onClick={() => alert(`Initiate reorder for ${fabric.name}`)}
-                    >
-                      {parseFloat(fabric.stock_quantity) === 0 ? "Urgent Reorder" : "Reorder Stock"}
-                    </button>
+                    {fabric.restock_date ? new Date(fabric.restock_date).toLocaleDateString() : 'Not Set'}
                   </td>
                 </tr>
               ))}

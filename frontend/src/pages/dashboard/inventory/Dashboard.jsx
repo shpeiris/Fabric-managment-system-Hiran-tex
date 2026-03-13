@@ -88,7 +88,7 @@ const InventoryDashboard = () => {
               <td>{alert.currentStock}</td>
               <td>{alert.reorderLevel}</td>
               <td>{alert.supplier}</td>
-              <td style={{ color: '#059669', fontWeight: '500' }}>{alert.restockDate}</td>
+              <td style={{ color: '#059669', fontWeight: '500' }}>{new Date(alert.restockDate).toLocaleDateString()}</td>
               <td>
                 <button style={{
                   background: '#2563eb',

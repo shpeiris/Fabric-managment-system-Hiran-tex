@@ -179,7 +179,7 @@ const FabricDetails = () => {
                             <span className="icon">📅</span>
                             <div className="text">
                                 <strong>Expected Restock</strong>
-                                <p>{new Date(fabric.restock_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                                <p>{new Date(fabric.restock_date).toLocaleDateString()}</p>
                             </div>
                         </div>
                     )}

@@ -142,7 +142,7 @@ const BrowseFabrics = () => {
                             {/* Restock Date Info */}
                             {(fabric.stock_quantity <= (fabric.reorder_level || 50)) && fabric.restock_date && (
                                 <div className="restock-info-banner">
-                                    📅 Restocking on: {new Date(fabric.restock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    📅 Restocking on: {new Date(fabric.restock_date).toLocaleDateString()}
                                 </div>
                             )}
 

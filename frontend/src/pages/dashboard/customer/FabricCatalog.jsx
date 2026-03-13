@@ -377,7 +377,7 @@ const FabricCatalog = () => {
                             textAlign: "center",
                           }}
                         >
-                          📅 Expected Restock: {fabric.reorderDate || "TBA"}
+                          📅 Expected Restock: {fabric.reorderDate ? new Date(fabric.reorderDate).toLocaleDateString() : "TBA"}
                         </div>
                       )}
                     <button

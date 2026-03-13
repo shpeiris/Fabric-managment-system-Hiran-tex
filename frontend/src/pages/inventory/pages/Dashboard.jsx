@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiCall } from "../../../utils/auth.js";
 import "./InventoryDashboard.css";
 
 export default function InventoryDashboard() {
+  const navigate = useNavigate();
   const [fabrics, setFabrics] = useState([]);
   const [arrivals, setArrivals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +105,6 @@ export default function InventoryDashboard() {
                 <th>Current Stock</th>
                 <th>Reorder Level</th>
                 <th>Expected Restock</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -119,12 +120,7 @@ export default function InventoryDashboard() {
                       color: parseFloat(fabric.stock_quantity) === 0 ? '#dc2626' : '#059669',
                       fontWeight: '500'
                     }}>
-                      {fabric.restock_date || 'Not Set'}
-                    </td>
-                    <td>
-                      <button className="btn-primary">
-                        {parseFloat(fabric.stock_quantity) === 0 ? 'Urgent Order' : 'Order Stock'}
-                      </button>
+                      {fabric.restock_date ? new Date(fabric.restock_date).toLocaleDateString() : 'Not Set'}
                     </td>
                   </tr>
                 ))
