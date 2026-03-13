@@ -20,6 +20,8 @@ export default function FabricManagement() {
     restock_date: '',
     image_url: ''
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imageSource, setImageSource] = useState('select'); // 'select' or 'upload'
 
   useEffect(() => {
     fetchFabrics();
@@ -52,10 +54,25 @@ export default function FabricManagement() {
 
       const method = editingFabric ? 'PUT' : 'POST';
 
-      const response = await apiCall(url, {
-        method,
-        body: JSON.stringify(formData)
-      });
+      let response;
+      if (imageSource === 'upload' && selectedFile) {
+        const formDataToSend = new FormData();
+        Object.keys(formData).forEach(key => {
+          formDataToSend.append(key, formData[key]);
+        });
+        formDataToSend.append('image', selectedFile);
+
+        response = await apiCall(url, {
+          method,
+          body: formDataToSend,
+          headers: {} // apiCall usually sets JSON headers, we need to let the browser set boundary for FormData
+        });
+      } else {
+        response = await apiCall(url, {
+          method,
+          body: JSON.stringify(formData)
+        });
+      }
 
       const data = await response.json();
 
@@ -88,6 +105,8 @@ export default function FabricManagement() {
         : '',
       image_url: fabric.image_url || ''
     });
+    setSelectedFile(null);
+    setImageSource(fabric.image_url?.startsWith('uploads/') ? 'upload' : 'select');
     setShowModal(true);
   };
 
@@ -126,6 +145,8 @@ export default function FabricManagement() {
       image_url: ''
     });
     setEditingFabric(null);
+    setSelectedFile(null);
+    setImageSource('select');
   };
 
   const filteredFabrics = fabrics.filter(f =>
@@ -284,26 +305,60 @@ export default function FabricManagement() {
 
                 <div className="form-group full-width">
                   <label>Image Selection</label>
-                  <div className="image-selection-container">
-                    <select
-                      className="image-select"
-                      value={formData.image_url}
-                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  <div className="image-source-toggle">
+                    <button 
+                      type="button" 
+                      className={`btn-toggle ${imageSource === 'select' ? 'active' : ''}`}
+                      onClick={() => setImageSource('select')}
                     >
-                      <option value="">No Image</option>
-                      <option value="satin_orange.jpg">Satin Orange</option>
-                      <option value="satin_cream.jpg">Satin Cream</option>
-                      <option value="satin_maroon.jpg">Satin Maroon</option>
-                      <option value="linen_green.jpg">Linen Green</option>
-                      <option value="fabric-collage.jpg">Fabric Collage (Default)</option>
-                    </select>
-                    {formData.image_url && (
+                      Select Existing
+                    </button>
+                    <button 
+                      type="button" 
+                      className={`btn-toggle ${imageSource === 'upload' ? 'active' : ''}`}
+                      onClick={() => setImageSource('upload')}
+                    >
+                      Upload from PC
+                    </button>
+                  </div>
+
+                  <div className="image-selection-container">
+                    {imageSource === 'select' ? (
+                      <select
+                        className="image-select"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                      >
+                        <option value="">No Image</option>
+                        <option value="satin_orange.jpg">Satin Orange</option>
+                        <option value="satin_cream.jpg">Satin Cream</option>
+                        <option value="satin_maroon.jpg">Satin Maroon</option>
+                        <option value="linen_green.jpg">Linen Green</option>
+                        <option value="fabric-collage.jpg">Fabric Collage (Default)</option>
+                      </select>
+                    ) : (
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => setSelectedFile(e.target.files[0])}
+                        className="file-input"
+                      />
+                    )}
+                    
+                    {(formData.image_url || selectedFile) && (
                       <div className="image-preview-modal">
                         <img 
-                          src={`/src/assets/Fabrics/${formData.image_url}`} 
+                          src={selectedFile 
+                            ? URL.createObjectURL(selectedFile) 
+                            : (formData.image_url?.startsWith('uploads/') 
+                                ? `http://localhost:5000/${formData.image_url}` 
+                                : (formData.image_url?.startsWith('http') 
+                                    ? formData.image_url 
+                                    : `/src/assets/Fabrics/${formData.image_url || 'fabric-collage.jpg'}`))
+                          } 
                           alt="Preview" 
                           onError={(e) => {
-                            e.target.style.display = 'none';
+                            e.target.src = '/src/assets/Fabrics/fabric-collage.jpg';
                           }}
                         />
                       </div>

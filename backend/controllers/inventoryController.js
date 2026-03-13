@@ -42,7 +42,13 @@ const addFabric = async (req, res) => {
     }
 
     try {
-        const result = await inventoryService.addFabric(req.body);
+        const fabricData = { ...req.body };
+        if (req.file) {
+            // Set image_url to the path of the uploaded file
+            fabricData.image_url = `uploads/fabrics/${req.file.filename}`;
+        }
+
+        const result = await inventoryService.addFabric(fabricData);
         res.json({ message: "Fabric added successfully", fabric_id: result.fabric_id });
     } catch (err) {
         console.error("Error adding fabric:", err);
@@ -53,7 +59,13 @@ const addFabric = async (req, res) => {
 const updateFabric = async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await inventoryService.updateFabric(id, req.body);
+        const fabricData = { ...req.body };
+        if (req.file) {
+            // Set image_url to the path of the uploaded file
+            fabricData.image_url = `uploads/fabrics/${req.file.filename}`;
+        }
+
+        const result = await inventoryService.updateFabric(id, fabricData);
         if (!result) return res.status(404).json({ error: "Fabric not found" });
         res.json({ message: "Fabric updated successfully" });
     } catch (err) {

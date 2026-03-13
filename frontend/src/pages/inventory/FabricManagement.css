@@ -296,6 +296,50 @@
     box-shadow: 0 0 0 4px rgba(124, 255, 0, 0.1);
 }
 
+.image-source-toggle {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.btn-toggle {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: #666;
+}
+
+.btn-toggle.active {
+  background: #4a90e2;
+  color: white;
+  border-color: #4a90e2;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
+}
+
+.btn-toggle:hover:not(.active) {
+  background: #f0f2f5;
+  border-color: #ccc;
+}
+
+.file-input {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.file-input:hover {
+  border-color: #4a90e2;
+}
+
 .image-preview-modal {
     width: 120px;
     height: 120px;

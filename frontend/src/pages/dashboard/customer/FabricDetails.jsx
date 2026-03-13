@@ -116,9 +116,20 @@ const FabricDetails = () => {
                 <div className="image-view">
                     <div className="image-frame">
                         <img
-                            src={fabric.image_url || 'https://via.placeholder.com/600x600?text=Premium+Fabric'}
+                            src={!fabric.image_url 
+                                ? '/src/assets/Fabrics/fabric-collage.jpg' 
+                                : (fabric.image_url.startsWith('uploads/') 
+                                    ? `http://localhost:5000/${fabric.image_url}` 
+                                    : (fabric.image_url.startsWith('http') 
+                                        ? fabric.image_url 
+                                        : `/src/assets/Fabrics/${fabric.image_url}`))
+                            }
                             alt={fabric.name}
                             className="main-fabric-image"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/src/assets/Fabrics/fabric-collage.jpg';
+                            }}
                         />
                         {fabric.stock_quantity <= (fabric.reorder_level || 50) && (
                             <span className="stock-warning-label">

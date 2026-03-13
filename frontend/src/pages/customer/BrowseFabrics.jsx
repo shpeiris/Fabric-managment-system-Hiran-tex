@@ -113,7 +113,14 @@ const BrowseFabrics = () => {
                     <div key={fabric.fabric_id} className="product-card">
                         <div className="product-image-container">
                             <img 
-                                src={fabric.image_url ? `/src/assets/Fabrics/${fabric.image_url}` : '/src/assets/Fabrics/fabric-collage.jpg'} 
+                                src={!fabric.image_url 
+                                    ? '/src/assets/Fabrics/fabric-collage.jpg' 
+                                    : (fabric.image_url.startsWith('uploads/') 
+                                        ? `http://localhost:5000/${fabric.image_url}` 
+                                        : (fabric.image_url.startsWith('http') 
+                                            ? fabric.image_url 
+                                            : `/src/assets/Fabrics/${fabric.image_url}`))
+                                } 
                                 alt={fabric.name} 
                                 className="product-image"
                                 onError={(e) => {

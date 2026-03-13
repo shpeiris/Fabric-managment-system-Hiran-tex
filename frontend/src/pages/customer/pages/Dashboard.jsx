@@ -152,7 +152,18 @@ export default function Dashboard() {
               {favorites.map(fabric => (
                 <div key={fabric.id} className="mini-fabric-card" onClick={() => navigate(`/customer/fabric/${fabric.fabric_id}`)}>
                   <div className="mini-img-wrapper">
-                    <img src={fabric.image} alt={fabric.name} onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Fabric'; }} />
+                    <img 
+                      src={!fabric.image 
+                        ? fabric1 
+                        : (typeof fabric.image === 'string' && fabric.image.startsWith('uploads/') 
+                            ? `http://localhost:5000/${fabric.image}` 
+                            : (typeof fabric.image === 'string' && fabric.image.startsWith('http') 
+                                ? fabric.image 
+                                : (typeof fabric.image === 'string' ? `/src/assets/Fabrics/${fabric.image}` : fabric1)))
+                      } 
+                      alt={fabric.name} 
+                      onError={(e) => { e.target.src = '/src/assets/Fabrics/fabric-collage.jpg'; }} 
+                    />
                   </div>
                   <div className="mini-info">
                     <h4>{fabric.name}</h4>
