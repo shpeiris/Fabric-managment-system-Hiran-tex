@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { apiCall } from "../../utils/auth.js";
 import "./Dashboard.css";
 import { activityService } from "../../services";
-import chartImage from "../../assets/admin_chart.png";
 
 export default function Dashboard() {
   const [activities, setActivities] = useState([]);
@@ -93,20 +92,11 @@ export default function Dashboard() {
           <div className="stats-grid">
             <StatCard title="Total Users" value={stats.totalUsers.toString()} />
             <StatCard title="Total Fabrics" value={stats.totalFabrics.toString()} />
-            <StatCard title="Stock Value" value={`Rs.${(stats.totalRevenue / 1000).toFixed(0)}K`} />
             <StatCard title="Pending Orders" value={stats.pendingOrders.toString()} />
           </div>
         </>
       )}
 
-      {/* Visualization Section */}
-      <h2 style={{ fontSize: "18px", marginBottom: "20px", opacity: 0.8 }}>Analytics & Trends</h2>
-      <div className="viz-section">
-        <div className="viz-image-container">
-          <img src={chartImage} alt="Analytics Chart" className="viz-image" id="dashboard-chart-img" />
-          <div className="viz-overlay">Live Data Feed</div>
-        </div>
-      </div>
 
       {/* Recent System Activities */}
       <h2 style={{ fontSize: "18px", marginBottom: "20px", opacity: 0.8 }}>Recent System Activities</h2>
@@ -163,13 +153,10 @@ export default function Dashboard() {
 
 function StatCard({ title, value }) {
   return (
-    <div className="stat-card">
+    <div className="stat-card" style={{ borderLeft: "4px solid #28a745" }}>
       <div>
         <h4 className="stat-title">{title}</h4>
         <h2 className="stat-value">{value}</h2>
-      </div>
-      <div style={{ alignSelf: "flex-end", color: "#7cff00", fontSize: "24px" }}>
-        📈
       </div>
     </div>
   );

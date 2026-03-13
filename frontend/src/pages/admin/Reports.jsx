@@ -42,7 +42,6 @@ export default function Reports() {
   return (
     <div className="reports-page">
       <h1>Reports and Analytics</h1>
-      <p className="subtitle">System performance insights.</p>
 
       {/* TABS */}
       <div className="report-tabs">

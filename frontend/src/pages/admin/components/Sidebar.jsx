@@ -20,15 +20,16 @@ export default function Sidebar() {
       }}
     >
       {/* Header */}
-      <div style={{ padding: "20px", background: "#083366" }}>
-        <div style={{ 
-          background: "linear-gradient(45deg, #28a745, #20c997)", 
-          padding: "8px 12px", 
-          borderRadius: "4px",
-          display: "inline-block"
+      <div style={{ padding: "30px 20px", borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}>
+        <h3 style={{ 
+          margin: 0, 
+          fontSize: "18px", 
+          fontWeight: "700", 
+          color: "#28a745",
+          letterSpacing: "0.5px"
         }}>
-          <h3 style={{ margin: 0, fontSize: "16px" }}>🏠 Hiran Fabric Textile</h3>
-        </div>
+          Hiran Fabric Textile
+        </h3>
       </div>
 
       {/* Navigation */}
@@ -43,7 +44,7 @@ export default function Sidebar() {
                 borderLeft: isActive("/admin/dashboard") ? "4px solid #28a745" : "4px solid transparent"
               }}
             >
-              📊 Dashboard
+              Dashboard
             </Link>
           </li>
           <li>
@@ -55,7 +56,7 @@ export default function Sidebar() {
                 borderLeft: isActive("/admin/users") ? "4px solid #28a745" : "4px solid transparent"
               }}
             >
-              👥 User Management
+              User Management
             </Link>
           </li>
           <li>
@@ -67,7 +68,7 @@ export default function Sidebar() {
                 borderLeft: isActive("/admin/suppliers") ? "4px solid #28a745" : "4px solid transparent"
               }}
             >
-              🏭 Supplier Management
+              Supplier Management
             </Link>
           </li>
           <li>
@@ -79,7 +80,7 @@ export default function Sidebar() {
                 borderLeft: isActive("/admin/reports") ? "4px solid #28a745" : "4px solid transparent"
               }}
             >
-              📈 Reports and Analytics
+              Reports and Analytics
             </Link>
           </li>
         </ul>
