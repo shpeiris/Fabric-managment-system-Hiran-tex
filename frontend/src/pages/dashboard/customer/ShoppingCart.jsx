@@ -184,6 +184,21 @@ const ShoppingCart = () => {
             <div className="cart-summary-card">
               <h2>Order Summary</h2>
 
+              <div className="summary-items-list">
+                {cartItems.map((item) => (
+                  <div key={item.cart_id} className="summary-item-detail">
+                    <span className="summary-item-name">
+                      {item.fabric_name} ({item.quantity}m)
+                    </span>
+                    <span className="summary-item-price">
+                      Rs. {(parseFloat(item.price_per_meter) * item.quantity).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="summary-divider"></div>
+
               <div className="summary-row">
                 <span>
                   Subtotal ({cartItems.length}{" "}
@@ -192,10 +207,6 @@ const ShoppingCart = () => {
                 <span>Rs. {calculateTotal().toFixed(2)}</span>
               </div>
 
-              <div className="summary-row">
-                <span>Shipping</span>
-                <span className="text-muted">Calculated at checkout</span>
-              </div>
 
               <div className="summary-divider"></div>
 

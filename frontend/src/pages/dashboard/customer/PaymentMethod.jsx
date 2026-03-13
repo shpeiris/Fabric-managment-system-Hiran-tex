@@ -17,9 +17,9 @@ const PaymentMethod = ({
 
   const bankDetails = {
     bankName: "People's Bank",
-    accountName: "Fabric Management System",
-    accountNumber: "1234567890",
-    branch: "Colombo 01"
+    accountName: "Hiran Fabric Textile",
+    accountNumber: "2022154879536",
+    branch: "Nittambuwa"
   };
 
   const validateForm = () => {
@@ -68,6 +68,14 @@ const PaymentMethod = ({
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   const handlePlaceOrder = async () => {
     if (!validateForm()) {
       return;
@@ -87,7 +95,19 @@ const PaymentMethod = ({
     }
   };
 
-  const deliveryFee = orderData.deliveryMethod === 'HOME_DELIVERY' ? 500 : 0;
+  const getDeliveryFee = () => {
+    switch (orderData.deliveryMethod) {
+      case 'GAMPAHA':
+      case 'GAMPAHA_SUBURBS':
+        return 500;
+      case 'OUT_OF_GAMPAHA':
+        return 750;
+      default:
+        return 0;
+    }
+  };
+
+  const deliveryFee = getDeliveryFee();
 
   return (
     <div className="payment-method-container">
@@ -125,18 +145,22 @@ const PaymentMethod = ({
               </div>
             </label>
 
-            <label className="payment-option">
+            <label className={`payment-option ${orderData.deliveryMethod !== 'STORE_PICKUP' ? 'disabled' : ''}`}>
               <input
                 type="radio"
                 name="paymentMethod"
-                value="CASH_ON_DELIVERY"
-                checked={orderData.paymentMethod === 'CASH_ON_DELIVERY'}
+                value="CASH_ON_COUNTER"
+                checked={orderData.paymentMethod === 'CASH_ON_COUNTER'}
                 onChange={(e) => handlePaymentMethodChange(e.target.value)}
+                disabled={orderData.deliveryMethod !== 'STORE_PICKUP'}
               />
               <span className="radio-button"></span>
               <div className="option-content">
-                <strong>Cash on Delivery</strong>
-                <p>Pay when your order is delivered (Available for home delivery only)</p>
+                <strong>Cash at Counter</strong>
+                <p>Pay when you pick up your order at the store counter</p>
+                {orderData.deliveryMethod !== 'STORE_PICKUP' && (
+                  <span className="method-note">Available for Store Pickup only</span>
+                )}
               </div>
             </label>
           </div>
@@ -181,18 +205,28 @@ const PaymentMethod = ({
                 />
                 <div className="upload-content">
                   {orderData.bankSlipFile ? (
-                    <div className="file-selected">
-                      <span className="file-icon">📄</span>
-                      <span className="file-name">{orderData.bankSlipFile.name}</span>
-                      <span className="file-size">
-                        ({(orderData.bankSlipFile.size / 1024).toFixed(1)} KB)
-                      </span>
+                    <div className="file-selected-details">
+                      <div className="file-icon-large">📄</div>
+                      <div className="file-info-text">
+                        <span className="file-name">{orderData.bankSlipFile.name}</span>
+                        <span className="file-size">({formatFileSize(orderData.bankSlipFile.size)})</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        className="btn-remove-file"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateOrderData({ bankSlipFile: null });
+                        }}
+                      >
+                        ✕
+                      </button>
                     </div>
                   ) : (
                     <div className="upload-prompt">
-                      <span className="upload-icon">📎</span>
-                      <span>Click to upload payment slip</span>
-                      <p className="upload-hint">JPG, PNG or PDF (max 5MB)</p>
+                      <span className="upload-icon">📤</span>
+                      <span>Click or drag to upload payment slip</span>
+                      <p className="upload-hint">Support: JPG, PNG, PDF (Max 5MB)</p>
                     </div>
                   )}
                 </div>
@@ -204,9 +238,9 @@ const PaymentMethod = ({
           </div>
         )}
 
-        {orderData.paymentMethod === 'CASH_ON_DELIVERY' && orderData.deliveryMethod === 'STORE_PICKUP' && (
+        {orderData.paymentMethod === 'CASH_ON_COUNTER' && orderData.deliveryMethod !== 'STORE_PICKUP' && (
           <div className="payment-warning">
-            <p>⚠️ Cash on Delivery is not available for Store Pickup. Please select Bank Transfer or change delivery method to Home Delivery.</p>
+            <p>⚠️ Cash at Counter is not available for delivery. Please select Bank Transfer or change delivery method to Store Pickup.</p>
           </div>
         )}
 
@@ -217,7 +251,7 @@ const PaymentMethod = ({
           <button 
             onClick={handlePlaceOrder} 
             className="btn-primary place-order-btn"
-            disabled={loading || (orderData.paymentMethod === 'CASH_ON_DELIVERY' && orderData.deliveryMethod === 'STORE_PICKUP')}
+            disabled={loading}
           >
             {loading ? 'Processing...' : 'Place Order'}
           </button>
@@ -260,7 +294,7 @@ const PaymentMethod = ({
             <div className="summary-divider"></div>
 
             <div className="summary-row total-row">
-              <span>Grand Total</span>
+              <span>Total</span>
               <span>Rs. {calculateTotal().toFixed(2)}</span>
             </div>
           </div>

@@ -36,6 +36,9 @@ const getInventoryFabrics = async (req, res) => {
 };
 
 const addFabric = async (req, res) => {
+    console.log("Add Fabric request received");
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
     const { name, price_per_meter } = req.body;
     if (!name || !price_per_meter) {
         return res.status(400).json({ error: "Name and price are required" });
@@ -58,11 +61,17 @@ const addFabric = async (req, res) => {
 
 const updateFabric = async (req, res) => {
     const { id } = req.params;
+    console.log("Update Fabric request received for ID:", id);
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
     try {
         const fabricData = { ...req.body };
         if (req.file) {
             // Set image_url to the path of the uploaded file
             fabricData.image_url = `uploads/fabrics/${req.file.filename}`;
+        } else if (req.body.existing_image_url) {
+            // Preserve existing image if no new one
+            fabricData.image_url = req.body.existing_image_url;
         }
 
         const result = await inventoryService.updateFabric(id, fabricData);

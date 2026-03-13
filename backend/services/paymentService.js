@@ -151,16 +151,24 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
         }
 
         // Log the payment confirmation activity
-        const activityQuery = `
-            INSERT INTO activity_logs (actor_id, actor_type, action_type, description, target_table, target_id)
-            VALUES ($1, 'EMPLOYEE', 'PAYMENT_CONFIRMATION', $2, 'payments', $3)
-        `;
-        
         await client.query(activityQuery, [
             verifierId, 
-            `Payment ${status.toLowerCase()} for Order #${payment.order_id} by ${options.confirmedBy || 'system'}`, 
+            `Payment ${status.toLowerCase()} for Order #${payment.order_id} by ${confirmedBy || 'system'}`, 
             payment.payment_id
         ]);
+
+        if (status === 'COMPLETED') {
+            // Simulate sending notification to customer
+            const notificationQuery = `
+                INSERT INTO activity_logs (actor_id, actor_type, action_type, description, target_table, target_id)
+                VALUES ($1, 'SYSTEM', 'NOTIFICATION_SENT', $2, 'orders', $3)
+            `;
+            await client.query(notificationQuery, [
+                verifierId,
+                `Order confirmation notification sent to customer for Order #${payment.order_id}`,
+                payment.order_id
+            ]);
+        }
 
         await client.query('COMMIT');
         

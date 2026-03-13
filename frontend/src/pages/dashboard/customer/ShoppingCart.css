@@ -232,13 +232,44 @@
 
 /* Summary Section */
 .cart-summary-card {
-    background: #1e293b;
+    background: #f8fafc;
     border-radius: 20px;
     padding: 30px;
-    color: white;
+    color: #1e293b;
     position: sticky;
     top: 40px;
-    box-shadow: 0 20px 50px rgba(0, 26, 102, 0.15);
+    border: 1px solid #e2e8f0;
+}
+
+.cart-summary-card h2 {
+    font-size: 22px;
+    margin: 0 0 20px 0;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.summary-items-list {
+    margin-bottom: 5px;
+}
+
+.summary-item-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #475569;
+}
+
+.summary-item-name {
+    font-weight: 500;
+    max-width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.summary-item-price {
+    font-weight: 600;
 }
 
 .cart-summary-card h2 {
@@ -252,63 +283,67 @@
     justify-content: space-between;
     margin-bottom: 15px;
     font-size: 15px;
-    color: #CBD5E1;
+    color: #64748b;
 }
 
 .summary-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.1);
+    background: #f1f5f9;
     margin: 20px 0;
 }
 
 .total-row {
     margin-bottom: 30px;
-    color: white;
+    color: #0f172a;
     font-weight: 700;
 }
 
 .total-amount {
-    font-size: 24px;
-    color: #7cff00;
-    /* Lime green accent */
+    font-size: 28px;
+    color: #001a66;
+    /* Primary Brand Color */
+    font-weight: 800;
 }
 
 .btn-checkout {
     width: 100%;
     padding: 16px;
-    background: #7cff00;
-    color: #001a66;
+    background: #001a66;
+    color: white;
     border: none;
     border-radius: 12px;
-    font-size: 18px;
-    font-weight: 800;
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .btn-checkout:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(124, 255, 0, 0.3);
-    filter: brightness(1.1);
+    background: #001144;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 26, 102, 0.2);
 }
 
 .btn-continue {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     background: transparent;
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #64748b;
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .btn-continue:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: white;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
 }
 
 /* Empty State */

@@ -51,6 +51,14 @@
   font-weight: 600;
 }
 
+.form-subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-top: -15px;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
 .form-group {
   margin-bottom: 20px;
 }
@@ -173,6 +181,20 @@
   font-size: 0.875rem;
   margin: 0;
   line-height: 1.4;
+}
+
+.shipping-note {
+  font-size: 0.75rem !important;
+  color: #94a3b8 !important;
+  margin-top: 4px !important;
+}
+
+.shipping-price {
+  display: block;
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 1rem;
+  margin-top: 8px;
 }
 
 /* Form Actions */

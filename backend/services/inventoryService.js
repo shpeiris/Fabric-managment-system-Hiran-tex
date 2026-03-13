@@ -68,6 +68,12 @@ const addFabric = async (fabricData) => {
     restock_date || null
   ]);
 
+  // Ensure stock_available_quantity is also set for new fabrics
+  await pool.query(
+    "UPDATE fabrics SET stock_available_quantity = stock_quantity WHERE fabric_id = $1",
+    [result.rows[0].fabric_id]
+  );
+
   return { fabric_id: result.rows[0].fabric_id, ...fabricData };
 };
 
@@ -106,6 +112,12 @@ const updateFabric = async (id, fabricData) => {
     restock_date || null,
     id
   ]);
+
+  // Update available quantity in sync
+  await pool.query(
+    "UPDATE fabrics SET stock_available_quantity = stock_quantity WHERE fabric_id = $1",
+    [id]
+  );
 
   if (result.rowCount === 0) return null;
   return { fabric_id: id, ...fabricData };

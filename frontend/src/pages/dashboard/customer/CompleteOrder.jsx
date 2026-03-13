@@ -51,7 +51,19 @@ const CompleteOrder = ({
     }
   };
 
-  const deliveryFee = orderData.deliveryMethod === 'HOME_DELIVERY' ? 500 : 0;
+  const getDeliveryFee = () => {
+    switch (orderData.deliveryMethod) {
+      case 'GAMPAHA':
+      case 'GAMPAHA_SUBURBS':
+        return 500;
+      case 'OUT_OF_GAMPAHA':
+        return 750;
+      default:
+        return 0;
+    }
+  };
+
+  const deliveryFee = getDeliveryFee();
 
   return (
     <div className="complete-order-container">
@@ -121,23 +133,9 @@ const CompleteOrder = ({
           </div>
 
           <div className="form-group">
-            <label>Delivery Method</label>
+            <label>Shipping Method</label>
+            <p className="form-subtitle">Choose a shipping method</p>
             <div className="delivery-options">
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="deliveryMethod"
-                  value="HOME_DELIVERY"
-                  checked={orderData.deliveryMethod === 'HOME_DELIVERY'}
-                  onChange={(e) => handleInputChange('deliveryMethod', e.target.value)}
-                />
-                <span className="radio-button"></span>
-                <div className="option-content">
-                  <strong>Home Delivery</strong>
-                  <p>Delivered to your doorstep (Rs. 500 delivery fee)</p>
-                </div>
-              </label>
-
               <label className="radio-option">
                 <input
                   type="radio"
@@ -150,6 +148,57 @@ const CompleteOrder = ({
                 <div className="option-content">
                   <strong>Store Pickup</strong>
                   <p>Collect from our store (Free)</p>
+                </div>
+              </label>
+
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="deliveryMethod"
+                  value="GAMPAHA"
+                  checked={orderData.deliveryMethod === 'GAMPAHA'}
+                  onChange={(e) => handleInputChange('deliveryMethod', e.target.value)}
+                />
+                <span className="radio-button"></span>
+                <div className="option-content">
+                  <strong>Gampaha</strong>
+                  <p>Delivered within 2-5 business days</p>
+                  <p className="shipping-note">and every Additional kilo or part thereof is LKR 100</p>
+                  <span className="shipping-price">Rs 500.00</span>
+                </div>
+              </label>
+
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="deliveryMethod"
+                  value="GAMPAHA_SUBURBS"
+                  checked={orderData.deliveryMethod === 'GAMPAHA_SUBURBS'}
+                  onChange={(e) => handleInputChange('deliveryMethod', e.target.value)}
+                />
+                <span className="radio-button"></span>
+                <div className="option-content">
+                  <strong>Gampaha Suburbs</strong>
+                  <p>Delivered within 2-5 business days</p>
+                  <p className="shipping-note">and every Additional kilo or part thereof is LKR 100</p>
+                  <span className="shipping-price">Rs 500.00</span>
+                </div>
+              </label>
+
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="deliveryMethod"
+                  value="OUT_OF_GAMPAHA"
+                  checked={orderData.deliveryMethod === 'OUT_OF_GAMPAHA'}
+                  onChange={(e) => handleInputChange('deliveryMethod', e.target.value)}
+                />
+                <span className="radio-button"></span>
+                <div className="option-content">
+                  <strong>Out of Gampaha</strong>
+                  <p>Delivered within 2-7 business days</p>
+                  <p className="shipping-note">and every Additional kilo or part thereof is LKR 100</p>
+                  <span className="shipping-price">Rs 750.00</span>
                 </div>
               </label>
             </div>
@@ -203,7 +252,7 @@ const CompleteOrder = ({
             <div className="summary-divider"></div>
 
             <div className="summary-row total-row">
-              <span>Grand Total</span>
+              <span>Total</span>
               <span>Rs. {calculateTotal().toFixed(2)}</span>
             </div>
           </div>

@@ -54,6 +54,8 @@ app.use(
       callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
   }),
 );
 
@@ -90,9 +92,12 @@ app.use("/", productRoutes);
 app.use("/", activityRoutes);
 app.use("/", customerRoutes);
 
-// Test API
-app.get("/", (req, res) => {
-  res.send("Backend running...");
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("Global error:", err);
+  res.status(err.status || 500).json({
+    error: err.message || "Internal Server Error"
+  });
 });
 
 export default app;

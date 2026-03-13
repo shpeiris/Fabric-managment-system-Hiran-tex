@@ -88,10 +88,15 @@ export const canAccessRoute = (userRole, routeRole) => {
 export const apiCall = async (url, options = {}) => {
   try {
     const token = localStorage.getItem('token');
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers
-    };
+    const headers = { ...options.headers };
+
+    // Don't set Content-Type for FormData, browser will set it with boundary
+    const isFormData = options.body instanceof FormData || 
+                       (options.body && options.body.constructor && options.body.constructor.name === 'FormData');
+
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;

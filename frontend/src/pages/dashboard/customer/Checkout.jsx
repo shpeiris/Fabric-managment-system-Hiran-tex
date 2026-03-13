@@ -63,7 +63,20 @@ const Checkout = () => {
 
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    const deliveryFee = orderData.deliveryMethod === "HOME_DELIVERY" ? 500 : 0;
+    let deliveryFee = 0;
+    
+    switch (orderData.deliveryMethod) {
+      case 'GAMPAHA':
+      case 'GAMPAHA_SUBURBS':
+        deliveryFee = 500;
+        break;
+      case 'OUT_OF_GAMPAHA':
+        deliveryFee = 750;
+        break;
+      default:
+        deliveryFee = 0;
+    }
+    
     return subtotal + deliveryFee;
   };
 

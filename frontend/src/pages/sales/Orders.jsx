@@ -185,10 +185,23 @@ export default function Orders() {
                     {order.payment_status === 'PENDING' && (
                       <button
                         onClick={() => confirmPayment(order, 'COMPLETED')}
-                        title="Confirm Payment"
-                        style={{ background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', padding: '0 8px' }}
+                        title="Verify & Confirm Order"
+                        style={{ 
+                          background: '#1e40af', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '6px', 
+                          cursor: 'pointer', 
+                          padding: '8px 12px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
                       >
-                        ✓
+                        <span>Verify & Confirm</span>
+                        <span>✓</span>
                       </button>
                     )}
                   </div>
