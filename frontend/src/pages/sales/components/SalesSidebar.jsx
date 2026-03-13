@@ -26,10 +26,10 @@ const SalesSidebar = () => {
   };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/sales/dashboard', icon: '📊' },
-    { name: 'Customers', path: '/sales/customers', icon: '👥' },
-    { name: 'Orders', path: '/sales/orders', icon: '📦' },
-    { name: 'Reports', path: '/sales/reports', icon: '📈' }
+    { name: 'Dashboard', path: '/sales/dashboard' },
+    { name: 'Customers', path: '/sales/customers' },
+    { name: 'Orders', path: '/sales/orders' },
+    { name: 'Reports', path: '/sales/reports' }
   ];
 
   return (
@@ -49,8 +49,7 @@ const SalesSidebar = () => {
         background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '28px', filter: 'drop-shadow(0 0 5px rgba(124, 255, 0, 0.5))' }}>💼</span>
-          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px' }}>Hiran Fabrics</span>
+          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px', color: '#7cff00' }}>Hiran Fabrics</span>
         </div>
       </div>
 
@@ -73,9 +72,6 @@ const SalesSidebar = () => {
               background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent'
             })}
           >
-            <span style={{ marginRight: '15px', fontSize: '18px', width: '20px', textAlign: 'center' }}>
-              {item.icon}
-            </span>
             {item.name}
           </NavLink>
         ))}
@@ -150,7 +146,7 @@ const SalesSidebar = () => {
             e.target.style.color = 'white';
           }}
         >
-          <span>🚪</span> Logout
+          Logout
         </button>
       </div>
     </aside>

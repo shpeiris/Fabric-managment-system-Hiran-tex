@@ -32,32 +32,30 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside className="admin-sidebar">
         <div className="sidebar-header">
-          <span className="sidebar-logo-icon">👑</span>
-          <span className="sidebar-title">Hiran Fabrics</span>
+          <span className="sidebar-title" style={{ color: '#7cff00' }}>Hiran Fabrics</span>
         </div>
 
         <nav className="sidebar-nav">
           <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">📊</span>
             Dashboard
           </NavLink>
           <NavLink to="/admin/users" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">👥</span>
             User Management
           </NavLink>
+          <NavLink to="/admin/fabrics" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+            Fabric Management
+          </NavLink>
           <NavLink to="/admin/suppliers" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">🏭</span>
             Suppliers
           </NavLink>
           <NavLink to="/admin/reports" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">📑</span>
             Reports
           </NavLink>
         </nav>
 
         <div className="sidebar-footer">
           <button className="logout-btn" onClick={handleLogout}>
-            <span>🚪</span> Logout
+            Logout
           </button>
         </div>
       </aside>
@@ -67,7 +65,6 @@ export default function AdminLayout() {
         {/* Top Header */}
         <header className="admin-header">
           <div className="header-search">
-            <span className="search-icon">🔍</span>
             <input type="text" placeholder="Search..." />
           </div>
 

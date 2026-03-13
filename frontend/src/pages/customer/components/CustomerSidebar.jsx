@@ -15,8 +15,8 @@ export default function CustomerSidebar() {
     }}>
       {/* Logo/Brand */}
       <div style={{ padding: '0 20px', marginBottom: '30px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#22c55e', marginBottom: '5px' }}>
-          Hiran Fabric Textile
+        <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#7cff00', marginBottom: '5px' }}>
+          Hiran Fabrics
         </h2>
         <p style={{ fontSize: '12px', color: '#94a3b8' }}>Customer Portal</p>
       </div>

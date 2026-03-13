@@ -91,59 +91,95 @@ export default function Reports() {
 
           <div className="inventory-summary">
             <div className="summary-card">
-              <h3>Total Inventory Value</h3>
-              <p>Rs. {Number(inventoryReport.totalValue).toLocaleString()}</p>
+              <h3>Total Meters in Stock</h3>
+              <p>{Number(inventoryReport.totalMeters).toLocaleString()} m</p>
+            </div>
+            <div className="summary-card">
+              <h3>Low Stock Items</h3>
+              <p style={{ color: '#f59e0b' }}>{inventoryReport.lowStockCount}</p>
+            </div>
+            <div className="summary-card">
+              <h3>Out of Stock</h3>
+              <p style={{ color: '#dc2626' }}>{inventoryReport.outOfStockCount}</p>
             </div>
           </div>
 
-          <h3>Low Stock Alert</h3>
-          <table className="report-table">
-            <thead>
-              <tr>
-                <th>Fabric Name</th>
-                <th>Current Stock</th>
-                <th>Reorder Level</th>
-                <th>Expected Restock</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {inventoryReport.lowStock.length > 0 ? (
-                inventoryReport.lowStock.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{item.name}</td>
-                    <td>{item.stock_available_quantity}</td>
-                    <td>{item.reorder_level}</td>
-                    <td style={{ color: item.stock_available_quantity === 0 ? '#dc2626' : '#059669', fontWeight: '500' }}>
-                      {item.restock_date || 'Not Set'}
-                    </td>
-                    <td className="low">{item.stock_available_quantity === 0 ? 'Out of Stock' : 'Low Stock'}</td>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', margin: '30px 0' }}>
+            <div className="report-box">
+              <h3>Material Distribution</h3>
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Material Type</th>
+                    <th>Count</th>
+                    <th>Total Meters</th>
                   </tr>
-                ))
-              ) : (
-                <tr><td colSpan="5">No items below reorder level.</td></tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {inventoryReport.materialDistribution.map((m, idx) => (
+                    <tr key={idx}>
+                      <td>{m.material_type || 'Unspecified'}</td>
+                      <td>{m.count}</td>
+                      <td>{Number(m.total_meters).toLocaleString()} m</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          <h3>Top Selling Fabrics</h3>
+            <div className="report-box">
+              <h3>Low Stock Alert</h3>
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Fabric Name</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventoryReport.lowStock.length > 0 ? (
+                    inventoryReport.lowStock.slice(0, 5).map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{item.name}</td>
+                        <td>{item.stock_available_quantity}</td>
+                        <td className="low">{item.stock_available_quantity === 0 ? 'Out of Stock' : 'Low Stock'}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="3">All stock levels OK.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <h3>Fabric Inventory Overview</h3>
           <table className="report-table">
             <thead>
               <tr>
                 <th>Fabric Name</th>
-                <th>Total Sold (meters)</th>
+                <th>Material</th>
+                <th>Width</th>
+                <th>Stock (m)</th>
+                <th>Price /m</th>
+                <th>Total Value</th>
               </tr>
             </thead>
             <tbody>
-              {inventoryReport.topSelling.length > 0 ? (
-                inventoryReport.topSelling.map((item, idx) => (
+              {inventoryReport.allFabrics.length > 0 ? (
+                inventoryReport.allFabrics.map((item, idx) => (
                   <tr key={idx}>
                     <td>{item.name}</td>
-                    <td>{item.total_sold}</td>
+                    <td>{item.material_type}</td>
+                    <td>{item.width || '—'}</td>
+                    <td>{item.stock_available_quantity}</td>
+                    <td>Rs. {Number(item.price_per_meter).toFixed(2)}</td>
+                    <td>Rs. {Number(item.value).toLocaleString()}</td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="2">No sales data yet.</td></tr>
+                <tr><td colSpan="5">No fabrics in system.</td></tr>
               )}
             </tbody>
           </table>

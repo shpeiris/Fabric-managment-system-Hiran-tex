@@ -25,10 +25,10 @@ export default function Sidebar() {
           margin: 0, 
           fontSize: "18px", 
           fontWeight: "700", 
-          color: "#28a745",
+          color: "#7cff00",
           letterSpacing: "0.5px"
         }}>
-          Hiran Fabric Textile
+          Hiran Fabrics
         </h3>
       </div>
 
@@ -40,8 +40,8 @@ export default function Sidebar() {
               to="/admin/dashboard" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/dashboard") ? "rgba(40, 167, 69, 0.2)" : "transparent",
-                borderLeft: isActive("/admin/dashboard") ? "4px solid #28a745" : "4px solid transparent"
+                background: isActive("/admin/dashboard") ? "rgba(124, 255, 0, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/dashboard") ? "4px solid #7cff00" : "4px solid transparent"
               }}
             >
               Dashboard
@@ -52,8 +52,8 @@ export default function Sidebar() {
               to="/admin/users" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/users") ? "rgba(40, 167, 69, 0.2)" : "transparent",
-                borderLeft: isActive("/admin/users") ? "4px solid #28a745" : "4px solid transparent"
+                background: isActive("/admin/users") ? "rgba(124, 255, 0, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/users") ? "4px solid #7cff00" : "4px solid transparent"
               }}
             >
               User Management
@@ -64,8 +64,8 @@ export default function Sidebar() {
               to="/admin/suppliers" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/suppliers") ? "rgba(40, 167, 69, 0.2)" : "transparent",
-                borderLeft: isActive("/admin/suppliers") ? "4px solid #28a745" : "4px solid transparent"
+                background: isActive("/admin/suppliers") ? "rgba(124, 255, 0, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/suppliers") ? "4px solid #7cff00" : "4px solid transparent"
               }}
             >
               Supplier Management
@@ -76,8 +76,8 @@ export default function Sidebar() {
               to="/admin/reports" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/reports") ? "rgba(40, 167, 69, 0.2)" : "transparent",
-                borderLeft: isActive("/admin/reports") ? "4px solid #28a745" : "4px solid transparent"
+                background: isActive("/admin/reports") ? "rgba(124, 255, 0, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/reports") ? "4px solid #7cff00" : "4px solid transparent"
               }}
             >
               Reports and Analytics
@@ -86,19 +86,6 @@ export default function Sidebar() {
         </ul>
       </div>
 
-      {/* Fabric Image */}
-      <div style={{ padding: "20px" }}>
-        <img 
-          src="/fabric-rolls.jpg" 
-          alt="Fabric Collection" 
-          style={{ 
-            width: "100%", 
-            borderRadius: "8px",
-            maxHeight: "200px",
-            objectFit: "cover"
-          }} 
-        />
-      </div>
     </div>
   );
 }

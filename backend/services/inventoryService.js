@@ -44,13 +44,14 @@ const addFabric = async (fabricData) => {
     stock_quantity,
     reorder_level,
     image_url,
+    width,
     restock_date
   } = fabricData;
 
   const query = `
     INSERT INTO fabrics (name, material_type, color, design, price_per_meter, 
-                        stock_quantity, reorder_level, image_url, restock_date)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                        stock_quantity, reorder_level, image_url, width, restock_date)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING fabric_id
   `;
 
@@ -63,6 +64,7 @@ const addFabric = async (fabricData) => {
     stock_quantity || 0,
     reorder_level || 50,
     image_url || null,
+    width || null,
     restock_date || null
   ]);
 
@@ -79,6 +81,7 @@ const updateFabric = async (id, fabricData) => {
     stock_quantity,
     reorder_level,
     image_url,
+    width,
     restock_date,
   } = fabricData;
 
@@ -86,8 +89,8 @@ const updateFabric = async (id, fabricData) => {
     UPDATE fabrics 
     SET name = $1, material_type = $2, color = $3, design = $4, 
         price_per_meter = $5, stock_quantity = $6, reorder_level = $7, 
-        image_url = $8, restock_date = $9
-    WHERE fabric_id = $10
+        image_url = $8, width = $9, restock_date = $10
+    WHERE fabric_id = $11
   `;
 
   const result = await pool.query(query, [
@@ -99,6 +102,7 @@ const updateFabric = async (id, fabricData) => {
     stock_quantity,
     reorder_level,
     image_url || null,
+    width || null,
     restock_date || null,
     id
   ]);

@@ -108,10 +108,28 @@
 }
 
 .summary-card p {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   color: #001a66;
   margin: 0;
+}
+
+.report-box {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.report-box h3 {
+  font-size: 16px;
+  color: #001a66;
+  margin-bottom: 20px;
+  border-left: 4px solid #7cff00;
+  padding-left: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .placeholder {

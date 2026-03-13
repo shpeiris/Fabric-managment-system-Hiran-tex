@@ -79,8 +79,8 @@ const BrowseFabrics = () => {
     return (
         <div className="browse-container">
             <header className="browse-header">
-                <h1>Our Collection</h1>
-                <p className="browse-subtitle">Discover premium quality fabrics for your next masterpiece</p>
+                <h1>Browse Fabrics</h1>
+                <p className="browse-subtitle">Discover premium quality fabrics for your needs</p>
             </header>
 
             <div className="filters-bar">
@@ -133,16 +133,16 @@ const BrowseFabrics = () => {
                             <div className="product-header-row">
                                 <span className="product-category">{fabric.material_type}</span>
                                 <span className="stock-tag-inline">
-                                    {fabric.stock_quantity > 0 ? `${fabric.stock_quantity}m` : 'Out of Stock'}
+                                    {fabric.width ? `${fabric.width} | ` : ''}{fabric.stock_quantity > 0 ? `${fabric.stock_quantity}m` : 'Out of Stock'}
                                 </span>
                             </div>
                             <h3 className="product-name">{fabric.name}</h3>
                             <div className="product-price">Rs. {parseFloat(fabric.price_per_meter).toFixed(2)}</div>
 
                             {/* Restock Date Info */}
-                            {(fabric.stock_quantity <= (fabric.reorder_level || 50)) && fabric.restock_date && (
+                            {fabric.stock_quantity <= (fabric.reorder_level || 50) && fabric.restock_date && (
                                 <div className="restock-info-banner">
-                                    📅 Restocking on: {new Date(fabric.restock_date).toLocaleDateString()}
+                                    Restocking on: {new Date(fabric.restock_date).toLocaleDateString()}
                                 </div>
                             )}
 
@@ -159,7 +159,7 @@ const BrowseFabrics = () => {
                                     onClick={() => navigate(`/customer/fabric/${fabric.fabric_id}`)}
                                     title="View Details"
                                 >
-                                    👁️
+                                    View Details
                                 </button>
                             </div>
                         </div>

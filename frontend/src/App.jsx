@@ -66,6 +66,7 @@ function App() {
         }>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="fabrics" element={<FabricList />} />
           <Route path="suppliers" element={<InventorySuppliers />} />
           <Route path="reports" element={<Reports />} />
         </Route>

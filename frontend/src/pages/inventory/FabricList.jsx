@@ -17,7 +17,8 @@ export default function FabricManagement() {
     stock_quantity: '',
     reorder_level: '100',
     restock_date: '',
-    image_url: ''
+    image_url: '',
+    width: ''
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageSource, setImageSource] = useState('select'); // 'select' or 'upload'
@@ -101,7 +102,8 @@ export default function FabricManagement() {
       restock_date: fabric.restock_date && !isNaN(new Date(fabric.restock_date))
         ? new Date(fabric.restock_date).toISOString().split('T')[0]
         : '',
-      image_url: fabric.image_url || ''
+      image_url: fabric.image_url || '',
+      width: fabric.width || ''
     });
     setSelectedFile(null);
     setImageSource(fabric.image_url?.startsWith('uploads/') ? 'upload' : 'select');
@@ -139,7 +141,8 @@ export default function FabricManagement() {
       stock_quantity: '',
       reorder_level: '100',
       restock_date: '',
-      image_url: ''
+      image_url: '',
+      width: ''
     });
     setEditingFabric(null);
     setSelectedFile(null);
@@ -182,6 +185,7 @@ export default function FabricManagement() {
               <th>ID</th>
               <th>Name</th>
               <th>Material</th>
+              <th>Width</th>
               <th>Design</th>
               <th>Price/m</th>
               <th>Stock</th>
@@ -195,6 +199,7 @@ export default function FabricManagement() {
                 <td>#{fabric.fabric_id}</td>
                 <td>{fabric.name}</td>
                 <td>{fabric.material_type}</td>
+                <td>{fabric.width || '—'}</td>
                 <td>{fabric.design}</td>
                 <td>Rs. {Number(fabric.price_per_meter).toFixed(2)}</td>
                 <td>{fabric.stock_quantity} m</td>
@@ -266,6 +271,15 @@ export default function FabricManagement() {
                     type="text"
                     value={formData.design}
                     onChange={(e) => setFormData({ ...formData, design: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Width (e.g. 45", 60")</label>
+                  <input
+                    type="text"
+                    value={formData.width}
+                    onChange={(e) => setFormData({ ...formData, width: e.target.value })}
                   />
                 </div>
 

@@ -61,6 +61,7 @@ CREATE TABLE fabrics (
     stock_available_quantity DECIMAL(10, 2) DEFAULT 0,
     reorder_level DECIMAL(10, 2) DEFAULT 50,
     image_url TEXT,
+    width VARCHAR(50),
     restock_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
