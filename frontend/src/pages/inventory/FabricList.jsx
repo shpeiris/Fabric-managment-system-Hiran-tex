@@ -2,12 +2,43 @@ import { useState, useEffect } from 'react';
 import { apiCall } from "../../utils/auth.js";
 import "./FabricManagement.css";
 
+const FABRIC_COLORS = [
+  { name: 'Espresso', hex: '#1a1515' },
+  { name: 'Peach', hex: '#fcdfd4' },
+  { name: 'Tan', hex: '#a87958' },
+  { name: 'Cream', hex: '#eae8d4' },
+  { name: 'Sage', hex: '#718a83' },
+  { name: 'Ice Blue', hex: '#e8eff0' },
+  { name: 'Indigo', hex: '#3b4d61' },
+  { name: 'Oxford Blue', hex: '#2a3d54' },
+  { name: 'Royal Blue', hex: '#164893' },
+  { name: 'Black', hex: '#000000' },
+  { name: 'Maroon', hex: '#2d0a14' },
+  { name: 'Mauve', hex: '#b58d97' },
+  { name: 'Pink', hex: '#df7892' },
+  { name: 'Salmon', hex: '#e996a0' },
+  { name: 'Crimson', hex: '#a1142e' },
+  { name: 'Auburn', hex: '#693438' },
+  { name: 'Coral', hex: '#e3444d' },
+  { name: 'Gold', hex: '#ffd700' },
+  { name: 'Mustard', hex: '#e1ad01' },
+  { name: 'Emerald', hex: '#2e8b57' },
+  { name: 'Olive', hex: '#808000' },
+  { name: 'Mint', hex: '#aaf0d1' }
+];
+
 export default function FabricManagement() {
   const [fabrics, setFabrics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingFabric, setEditingFabric] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [colorFilter, setColorFilter] = useState('all');
+  const [selectedColors, setSelectedColors] = useState([]);
+  const [customColors, setCustomColors] = useState([]); // New custom colors picked via wheel
+  const [variantQuantities, setVariantQuantities] = useState({}); // { '#hex': quantity_string }
+  const [variantRestockDates, setVariantRestockDates] = useState({}); // { '#hex': 'YYYY-MM-DD' }
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -48,45 +79,67 @@ export default function FabricManagement() {
     e.preventDefault();
 
     try {
+      setIsSubmitting(true);
       const url = editingFabric
         ? `http://localhost:5000/api/inventory/fabrics/${editingFabric.fabric_id}`
         : 'http://localhost:5000/api/inventory/fabrics';
 
       const method = editingFabric ? 'PUT' : 'POST';
 
-      let response;
-      if (imageSource === 'upload' && selectedFile) {
-        const formDataToSend = new FormData();
-        Object.keys(formData).forEach(key => {
-          formDataToSend.append(key, formData[key]);
-        });
-        formDataToSend.append('image', selectedFile);
+      // If editing, we only update one color. If adding, we may have multiple.
+      const colorsToProcess = editingFabric ? [formData.color] : (selectedColors.length > 0 ? selectedColors : [formData.color]);
+      
+      let successCount = 0;
+      let lastError = null;
 
-        response = await apiCall(url, {
-          method,
-          body: formDataToSend,
-          headers: {} // apiCall usually sets JSON headers, we need to let the browser set boundary for FormData
-        });
-      } else {
-        response = await apiCall(url, {
-          method,
-          body: JSON.stringify(formData)
-        });
+      for (const color of colorsToProcess) {
+        let response;
+        // Use individual variant quantity if available, otherwise fallback to main stock_quantity
+        const quantityToUse = variantQuantities[color] || formData.stock_quantity;
+        const restockDateToUse = variantRestockDates[color] || formData.restock_date;
+        const currentFormData = { ...formData, color, stock_quantity: quantityToUse, restock_date: restockDateToUse };
+
+        if (imageSource === 'upload' && selectedFile) {
+          const formDataToSend = new FormData();
+          Object.keys(currentFormData).forEach(key => {
+            if (currentFormData[key] !== null && currentFormData[key] !== '') {
+              formDataToSend.append(key, currentFormData[key]);
+            }
+          });
+          formDataToSend.append('image', selectedFile);
+
+          response = await apiCall(url, {
+            method,
+            body: formDataToSend,
+            headers: {} 
+          });
+        } else {
+          response = await apiCall(url, {
+            method,
+            body: JSON.stringify(currentFormData)
+          });
+        }
+
+        if (response.ok) {
+          successCount++;
+        } else {
+          lastError = await response.json();
+        }
       }
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(data.message);
+      if (successCount === colorsToProcess.length) {
+        alert(editingFabric ? 'Fabric updated successfully' : `Successfully added ${successCount} fabric variant(s)!`);
         setShowModal(false);
         resetForm();
         fetchFabrics();
       } else {
-        alert(data.error || 'Operation failed');
+        alert(lastError?.error || `Failed to process all variants. Successful: ${successCount}`);
       }
     } catch (err) {
       console.error('Error saving fabric:', err);
       alert('Failed to save fabric');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,6 +159,7 @@ export default function FabricManagement() {
       width: fabric.width || ''
     });
     setSelectedFile(null);
+    setSelectedColors([fabric.color]);
     setImageSource(fabric.image_url?.startsWith('uploads/') ? 'upload' : 'select');
     setShowModal(true);
   };
@@ -146,13 +200,21 @@ export default function FabricManagement() {
     });
     setEditingFabric(null);
     setSelectedFile(null);
+    setSelectedColors([]);
+    setCustomColors([]);
+    setVariantQuantities({});
+    setVariantRestockDates({});
     setImageSource('select');
   };
 
-  const filteredFabrics = fabrics.filter(f =>
-    f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.material_type?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredFabrics = fabrics.filter(f => {
+    const matchesSearch = f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         f.material_type?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesColor = colorFilter === 'all' || f.color === colorFilter;
+    return matchesSearch && matchesColor;
+  });
+
+  const getVariants = (name) => fabrics.filter(f => f.name === name);
 
   return (
     <div className="fabric-management">
@@ -175,6 +237,16 @@ export default function FabricManagement() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
         />
+        <select 
+          className="color-filter-select"
+          value={colorFilter}
+          onChange={(e) => setColorFilter(e.target.value)}
+        >
+          <option value="all">Filter by Color</option>
+          {FABRIC_COLORS.map(c => (
+            <option key={c.hex} value={c.hex}>{c.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Fabrics Table */}
@@ -185,6 +257,7 @@ export default function FabricManagement() {
               <th>ID</th>
               <th>Name</th>
               <th>Material</th>
+              <th>Color</th>
               <th>Width</th>
               <th>Design</th>
               <th>Price/m</th>
@@ -199,10 +272,30 @@ export default function FabricManagement() {
                 <td>#{fabric.fabric_id}</td>
                 <td>{fabric.name}</td>
                 <td>{fabric.material_type}</td>
+                <td>
+                  <div className="variant-dots">
+                    {getVariants(fabric.name).map(v => (
+                      <div 
+                        key={v.fabric_id} 
+                        className="variant-dot" 
+                        style={{ 
+                          backgroundColor: v.color,
+                          border: v.fabric_id === fabric.fabric_id ? '2px solid #001a66' : '1px solid #ddd'
+                        }}
+                        title={`${FABRIC_COLORS.find(c => c.hex === v.color)?.name || 'Custom'}: ${v.stock_quantity}m`}
+                      />
+                    ))}
+                  </div>
+                </td>
                 <td>{fabric.width || '—'}</td>
                 <td>{fabric.design}</td>
                 <td>Rs. {Number(fabric.price_per_meter).toFixed(2)}</td>
-                <td>{fabric.stock_quantity} m</td>
+                <td>
+                  <strong>{fabric.stock_quantity} m</strong>
+                  <div style={{ fontSize: '0.75rem', color: '#666' }}>
+                    ({FABRIC_COLORS.find(c => c.hex === fabric.color)?.name || 'Custom'})
+                  </div>
+                </td>
                 <td>
                   {(() => {
                     const status = fabric.stock_status || 'OK';
@@ -264,6 +357,67 @@ export default function FabricManagement() {
                   />
                 </div>
 
+                <div className="form-group full-width">
+                  <label>{editingFabric ? 'Fabric Color *' : 'Available Colors * (Select all that apply)'}</label>
+                  <div className="color-swatch-grid">
+                    {[...FABRIC_COLORS, ...customColors.map(hex => ({ name: 'Custom', hex }))].map((c) => (
+                      <button
+                        key={c.hex}
+                        type="button"
+                        title={c.name}
+                        onClick={() => {
+                          if (editingFabric) {
+                            setFormData({ ...formData, color: c.hex });
+                          } else {
+                            setSelectedColors(prev => 
+                              prev.includes(c.hex) 
+                                ? prev.filter(h => h !== c.hex) 
+                                : [...prev, c.hex]
+                            );
+                          }
+                        }}
+                        className={`color-swatch-item ${
+                          (editingFabric ? formData.color === c.hex : selectedColors.includes(c.hex)) ? 'selected' : ''
+                        }`}
+                        style={{ backgroundColor: c.hex }}
+                      >
+                        {(editingFabric ? formData.color === c.hex : selectedColors.includes(c.hex)) && (
+                          <span className="check-mark">✓</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="custom-color-picker">
+                    <label className="text-xs text-gray-500 font-medium">Custom Color Wheel:</label>
+                    <input 
+                      type="color" 
+                      className="color-wheel"
+                      onChange={(e) => {
+                        const newColor = e.target.value;
+                        if (editingFabric) {
+                          setFormData({ ...formData, color: newColor });
+                        } else {
+                          // Add to custom list if not already there
+                          if (!customColors.includes(newColor)) {
+                            setCustomColors(prev => [...prev, newColor]);
+                          }
+                          // Also select it
+                          if (!selectedColors.includes(newColor)) {
+                            setSelectedColors(prev => [...prev, newColor]);
+                          }
+                        }
+                      }}
+                    />
+                    <div 
+                      className="color-preview-box" 
+                      style={{ 
+                        backgroundColor: editingFabric ? formData.color : (selectedColors[selectedColors.length - 1] || '#ffffff') 
+                      }}
+                      title="Current Pick"
+                    />
+                  </div>
+                </div>
+
 
                 <div className="form-group">
                   <label>Design</label>
@@ -295,13 +449,50 @@ export default function FabricManagement() {
                 </div>
 
                 <div className="form-group">
-                  <label>Stock Quantity</label>
+                  <label>Stock Quantity (Default)</label>
                   <input
                     type="number"
                     value={formData.stock_quantity}
                     onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                    placeholder={selectedColors.length > 1 ? "Shared default" : "Total meters"}
                   />
                 </div>
+
+                {/* Individual Variant Quantities */}
+                {!editingFabric && selectedColors.length > 1 && (
+                  <div className="form-group full-width variant-quantity-section">
+                    <label className="section-label">Set Stock per Color (Meters):</label>
+                    <div className="variant-quantity-grid">
+                      {selectedColors.map(colorHex => {
+                        const colorName = [...FABRIC_COLORS, ...customColors.map(hex => ({ name: 'Custom', hex }))].find(c => c.hex === colorHex)?.name || 'Custom';
+                        return (
+                          <div key={colorHex} className="variant-quantity-item">
+                            <div className="color-preview" style={{ backgroundColor: colorHex }}></div>
+                            <span className="color-name">{colorName}</span>
+                            <input 
+                              type="number" 
+                              placeholder="Qty (m)"
+                              value={variantQuantities[colorHex] || ''}
+                              onChange={(e) => setVariantQuantities({
+                                ...variantQuantities,
+                                [colorHex]: e.target.value
+                              })}
+                            />
+                            <input
+                              type="date"
+                              title="Restock Date"
+                              value={variantRestockDates[colorHex] || ''}
+                              onChange={(e) => setVariantRestockDates({
+                                ...variantRestockDates,
+                                [colorHex]: e.target.value
+                              })}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label>Reorder Level</label>
@@ -319,69 +510,29 @@ export default function FabricManagement() {
                     value={formData.restock_date}
                     onChange={(e) => setFormData({ ...formData, restock_date: e.target.value })}
                   />
-                </div>
-
-                <div className="form-group full-width">
-                  <label>Image Selection</label>
-                  <div className="image-source-toggle">
-                    <button 
-                      type="button" 
-                      className={`btn-toggle ${imageSource === 'select' ? 'active' : ''}`}
-                      onClick={() => setImageSource('select')}
-                    >
-                      Select Existing
-                    </button>
-                    <button 
-                      type="button" 
-                      className={`btn-toggle ${imageSource === 'upload' ? 'active' : ''}`}
-                      onClick={() => setImageSource('upload')}
-                    >
-                      Upload from PC
-                    </button>
-                  </div>
-
-                  <div className="image-selection-container">
-                    {imageSource === 'select' ? (
-                      <select
-                        className="image-select"
-                        value={formData.image_url}
-                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      >
-                        <option value="">No Image</option>
-                        <option value="satin_orange.jpg">Satin Orange</option>
-                        <option value="satin_cream.jpg">Satin Cream</option>
-                        <option value="satin_maroon.jpg">Satin Maroon</option>
-                        <option value="linen_green.jpg">Linen Green</option>
-                        <option value="fabric-collage.jpg">Fabric Collage (Default)</option>
-                      </select>
-                    ) : (
-                      <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => setSelectedFile(e.target.files[0])}
-                        className="file-input"
-                      />
-                    )}
-                    
-                    {(formData.image_url || selectedFile) && (
-                      <div className="image-preview-modal">
-                        <img 
-                          src={selectedFile 
-                            ? URL.createObjectURL(selectedFile) 
-                            : (formData.image_url?.startsWith('uploads/') 
-                                ? `http://localhost:5000/${formData.image_url}` 
-                                : (formData.image_url?.startsWith('http') 
-                                    ? formData.image_url 
-                                    : `/src/assets/Fabrics/${formData.image_url || 'fabric-collage.jpg'}`))
-                          } 
-                          alt="Preview" 
-                          onError={(e) => {
-                            e.target.src = '/src/assets/Fabrics/fabric-collage.jpg';
-                          }}
-                        />
+                                <div className="form-group full-width">
+                  <label>Fabric Image</label>
+                  <label className="upload-drop-zone">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => setSelectedFile(e.target.files[0])}
+                    />
+                    {selectedFile ? (
+                      <div className="upload-preview">
+                        <img src={URL.createObjectURL(selectedFile)} alt="Upload preview" />
+                        <span className="upload-filename">{selectedFile.name}</span>
+                        <span className="upload-change-hint">Click to change</span>
                       </div>
+                    ) : (
+                      <>
+                        <div className="upload-icon">📁</div>
+                        <p>Click to browse or drag &amp; drop an image</p>
+                        <span>JPG, PNG, WEBP supported</span>
+                      </>
                     )}
-                  </div>
+                  </label>
                 </div>
               </div>
 
@@ -389,8 +540,8 @@ export default function FabricManagement() {
                 <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); resetForm(); }}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-save">
-                  {editingFabric ? 'Update' : 'Add'} Fabric
+                <button type="submit" className="btn-save" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : (editingFabric ? 'Update' : 'Add')} Fabric
                 </button>
               </div>
             </form>

@@ -1,5 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { apiCall } from '../../../utils/auth.js';
+
+const FABRIC_COLORS = [
+  { name: 'Espresso', hex: '#1a1515' },
+  { name: 'Peach', hex: '#fcdfd4' },
+  { name: 'Tan', hex: '#a87958' },
+  { name: 'Cream', hex: '#eae8d4' },
+  { name: 'Sage', hex: '#718a83' },
+  { name: 'Ice Blue', hex: '#e8eff0' },
+  { name: 'Indigo', hex: '#3b4d61' },
+  { name: 'Oxford Blue', hex: '#2a3d54' },
+  { name: 'Royal Blue', hex: '#164893' },
+  { name: 'Black', hex: '#000000' },
+  { name: 'Maroon', hex: '#2d0a14' },
+  { name: 'Mauve', hex: '#b58d97' },
+  { name: 'Pink', hex: '#df7892' },
+  { name: 'Salmon', hex: '#e996a0' },
+  { name: 'Crimson', hex: '#a1142e' },
+  { name: 'Auburn', hex: '#693438' },
+  { name: 'Coral', hex: '#e3444d' },
+  { name: 'Gold', hex: '#ffd700' },
+  { name: 'Mustard', hex: '#e1ad01' },
+  { name: 'Emerald', hex: '#2e8b57' },
+  { name: 'Olive', hex: '#808000' },
+  { name: 'Mint', hex: '#aaf0d1' }
+];
 
 const InventoryFabricManagement = () => {
   const [fabrics, setFabrics] = useState([]);
@@ -9,9 +34,13 @@ const InventoryFabricManagement = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [colorFilter, setColorFilter] = useState('all');
+  const [selectedColors, setSelectedColors] = useState([]); // Multi-select for Add/Edit
+  const [customColors, setCustomColors] = useState([]); // Dynamic custom colors picked via wheel
+  const [variantQuantities, setVariantQuantities] = useState({}); // { '#hex': quantity_string }
+  const [variantRestockDates, setVariantRestockDates] = useState({}); // { '#hex': 'YYYY-MM-DD' }
   const [formData, setFormData] = useState({
     fabric_id: '',
     name: '',
@@ -100,52 +129,82 @@ const InventoryFabricManagement = () => {
     e.preventDefault();
     try {
       setFormSubmitting(true);
-      const data = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== null && formData[key] !== '') {
-          data.append(key, formData[key]);
+      
+      // If adding new, handle multiple colors
+      const colorsToProcess = isEditing ? [formData.color] : (selectedColors.length > 0 ? selectedColors : [formData.color]);
+      
+      let successCount = 0;
+      let lastError = null;
+
+      for (const color of colorsToProcess) {
+        const data = new FormData();
+        // Use individual variant quantity if available, otherwise fallback to main stock_quantity
+        const quantityToUse = variantQuantities[color] || formData.stock_quantity;
+        const restockDateToUse = variantRestockDates[color] || formData.restock_date;
+
+        Object.keys(formData).forEach(key => {
+          if (formData[key] !== null && formData[key] !== '' && key !== 'color' && key !== 'stock_quantity' && key !== 'restock_date') {
+            data.append(key, formData[key]);
+          }
+        });
+        
+        data.append('color', color); // Set the specific color for this record
+        data.append('stock_quantity', quantityToUse); // Set specific quantity
+        if (restockDateToUse) data.append('restock_date', restockDateToUse); // Set specific restock date
+
+        if (imageFile) {
+          data.append('image', imageFile);
         }
-      });
-      if (imageFile) {
-        data.append('image', imageFile);
+
+        const url = isEditing 
+          ? `http://localhost:5000/api/inventory/fabrics/${formData.fabric_id}`
+          : 'http://localhost:5000/api/inventory/fabrics';
+        
+        const response = await apiCall(url, {
+          method: isEditing ? 'PUT' : 'POST',
+          body: data
+        });
+
+        if (response.ok) {
+          successCount++;
+        } else {
+          lastError = await response.json();
+        }
       }
 
-      const url = isEditing 
-        ? `http://localhost:5000/api/inventory/fabrics/${formData.fabric_id}`
-        : 'http://localhost:5000/api/inventory/fabrics';
-      
-      const response = await apiCall(url, {
-        method: isEditing ? 'PUT' : 'POST',
-        body: data // apiCall handles FormData headers
-      });
-
-      if (response.ok) {
-        alert(`Fabric ${isEditing ? 'updated' : 'added'} successfully!`);
+      if (successCount === colorsToProcess.length) {
+        alert(isEditing ? 'Fabric updated successfully!' : `Successfully added ${successCount} fabric variant(s)!`);
         setShowModal(false);
         resetForm();
         fetchFabrics();
       } else {
-        let errorMessage = 'Operation failed';
-        try {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const errorData = await response.json();
-            errorMessage = errorData.error || errorMessage;
-          } else {
-            const textError = await response.text();
-            console.error('Non-JSON error:', textError);
-          }
-        } catch (e) {
-          console.error('Error parsing error response:', e);
-        }
-        alert(errorMessage);
+        alert(lastError?.error || `Failed to process all variants. Successful: ${successCount}`);
       }
     } catch (err) {
       console.error('Error submitting form:', err);
       alert('An error occurred. Please try again.');
     } finally {
-      setFormSubmitting(false);
     }
+  };
+
+  const handleEdit = (fabric) => {
+    setFormData({
+      fabric_id: fabric.fabric_id,
+      name: fabric.name,
+      material_type: fabric.material_type || '',
+      color: fabric.color || '',
+      design: fabric.design || '',
+      price_per_meter: fabric.price,
+      stock_quantity: fabric.stock,
+      reorder_level: fabric.reorder_level,
+      width: fabric.width || '',
+      restock_date: fabric.restock_date ? fabric.restock_date.split('T')[0] : '',
+      existing_image_url: fabric.image_url || ''
+    });
+    setSelectedColors([fabric.color]); // Set current color for editing
+    setImagePreview(fabric.image);
+    setIsEditing(true);
+    setShowModal(true);
   };
 
   const resetForm = () => {
@@ -162,28 +221,13 @@ const InventoryFabricManagement = () => {
       restock_date: '',
       existing_image_url: ''
     });
+    setSelectedColors([]);
+    setCustomColors([]);
+    setVariantQuantities({});
+    setVariantRestockDates({});
     setImageFile(null);
     setImagePreview(null);
     setIsEditing(false);
-  };
-
-  const handleEdit = (fabric) => {
-    setFormData({
-      fabric_id: fabric.fabric_id,
-      name: fabric.name,
-      material_type: fabric.material_type || '',
-      color: fabric.color || '',
-      design: fabric.design || '',
-      price_per_meter: fabric.price,
-      stock_quantity: fabric.stock,
-      reorder_level: fabric.reorder_level,
-      width: fabric.width || '',
-      restock_date: fabric.restock_date ? fabric.restock_date.split('T')[0] : '',
-      existing_image_url: fabric.image_url || '' // fabric.image_url is the original raw path
-    });
-    setImagePreview(fabric.image);
-    setIsEditing(true);
-    setShowModal(true);
   };
 
   const handleDelete = async (id) => {
@@ -208,9 +252,15 @@ const InventoryFabricManagement = () => {
                          (fabric.material_type && fabric.material_type.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = categoryFilter === 'all' || fabric.category === categoryFilter;
     const matchesStatus = statusFilter === 'all' || fabric.status === statusFilter;
+    const matchesColor = colorFilter === 'all' || fabric.color === colorFilter;
     
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch && matchesCategory && matchesStatus && matchesColor;
   });
+
+  // Get other variants for a card
+  const getVariants = (fabricName) => {
+    return fabrics.filter(f => f.name === fabricName);
+  };
 
   if (loading) {
     return (
@@ -284,6 +334,16 @@ const InventoryFabricManagement = () => {
               <option value="low-stock">Low Stock</option>
               <option value="out-of-stock">Out of Stock</option>
             </select>
+            <select 
+              className="border p-2 rounded"
+              value={colorFilter}
+              onChange={(e) => setColorFilter(e.target.value)}
+            >
+              <option value="all">All Colors</option>
+              {FABRIC_COLORS.map(c => (
+                <option key={c.hex} value={c.hex}>{c.name}</option>
+              ))}
+            </select>
           </div>
           <div className="flex gap-2">
             <button 
@@ -327,7 +387,21 @@ const InventoryFabricManagement = () => {
                 </div>
                 <p className="text-sm text-gray-600 mb-1">ID: {fabric.id}</p>
                 <p className="text-sm text-gray-600 mb-1">Stock: {fabric.stock} m</p>
-                <p className="text-sm text-gray-600 mb-3">Price: Rs. {fabric.price}</p>
+                <p className="text-sm text-gray-600 mb-2">Price: Rs. {fabric.price}</p>
+                
+                {/* Available colors indicator */}
+                <div className="flex gap-1 mb-3">
+                  <span className="text-xs text-gray-400 mr-1 self-center">Available:</span>
+                  {getVariants(fabric.name).map(v => (
+                    <div 
+                      key={v.id} 
+                      className={`w-3 h-3 rounded-full border border-gray-200 ${v.fabric_id === fabric.fabric_id ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
+                      style={{ backgroundColor: v.color }}
+                      title={`${FABRIC_COLORS.find(c => c.hex === v.color)?.name || 'Custom'}: ${v.stock}m`}
+                    />
+                  ))}
+                </div>
+
                 <div className="flex gap-2">
                   <button 
                     className="text-blue-600 text-sm hover:underline"
@@ -376,7 +450,12 @@ const InventoryFabricManagement = () => {
                     </td>
                     <td className="p-3 text-blue-600 font-medium">{fabric.id}</td>
                     <td className="p-3 font-medium">{fabric.name}</td>
-                    <td className="p-3 text-center">{fabric.stock}</td>
+                    <td className="p-3 text-center">
+                      <div className="font-bold">{fabric.stock}</div>
+                      <div className="text-[10px] text-gray-500 whitespace-nowrap">
+                        ({FABRIC_COLORS.find(c => c.hex === fabric.color)?.name || 'Custom'})
+                      </div>
+                    </td>
                     <td className="p-3 text-center">{fabric.price}</td>
                     <td className="p-3 text-center">
                       <span className={`px-2 py-1 text-xs rounded ${getStatusColor(fabric.status)}`}>
@@ -456,15 +535,86 @@ const InventoryFabricManagement = () => {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                    <input 
-                      name="color"
-                      value={formData.color}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" 
-                      placeholder="e.g. Midnight Blue" 
-                    />
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {isEditing ? 'Fabric Color *' : 'Available Colors * (Select all that apply)'}
+                    </label>
+                    <div className="flex flex-wrap gap-3 mb-3 p-3 bg-gray-50 rounded-lg border">
+                      {[...FABRIC_COLORS, ...customColors.map(hex => ({ name: 'Custom', hex }))].map((c) => (
+                        <button
+                          key={c.hex}
+                          type="button"
+                          title={c.name}
+                          onClick={() => {
+                            if (isEditing) {
+                              setFormData(prev => ({ ...prev, color: c.hex }));
+                            } else {
+                              setSelectedColors(prev => 
+                                prev.includes(c.hex) 
+                                  ? prev.filter(h => h !== c.hex) 
+                                  : [...prev, c.hex]
+                              );
+                            }
+                          }}
+                          className={`w-10 h-10 rounded-lg border-2 transition-all transform hover:scale-110 shadow-sm relative ${
+                            (isEditing ? formData.color === c.hex : selectedColors.includes(c.hex))
+                              ? 'border-blue-500 scale-110 ring-2 ring-blue-200' 
+                              : 'border-white'
+                          }`}
+                          style={{ backgroundColor: c.hex }}
+                        >
+                          {(isEditing ? formData.color === c.hex : selectedColors.includes(c.hex)) && (
+                            <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">✓</span>
+                          )}
+                        </button>
+                      ))}
+                      <div className="flex items-center gap-3 ml-2 pl-4 border-l border-gray-300">
+                        <div className="flex flex-col items-center gap-1">
+                          <label className="text-[10px] text-gray-400 uppercase font-bold">Wheel</label>
+                          <input
+                            type="color"
+                            className="w-8 h-8 rounded-full cursor-pointer border-2 border-white shadow-sm appearance-none"
+                            style={{ padding: 0, overflow: 'hidden' }}
+                            onChange={(e) => {
+                              const newColor = e.target.value;
+                              if (isEditing) {
+                                setFormData(prev => ({ ...prev, color: newColor }));
+                              } else {
+                                if (!customColors.includes(newColor)) {
+                                  setCustomColors(prev => [...prev, newColor]);
+                                }
+                                if (!selectedColors.includes(newColor)) {
+                                  setSelectedColors(prev => [...prev, newColor]);
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <label className="text-[10px] text-gray-400 uppercase font-bold">Pick</label>
+                          <div 
+                            className="w-8 h-8 rounded-lg border border-gray-200 shadow-inner"
+                            style={{ backgroundColor: isEditing ? formData.color : (selectedColors[selectedColors.length - 1] || '#ffffff') }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        {isEditing ? 'Selected Color:' : `Selected Count: ${selectedColors.length}`}
+                      </span>
+                      {isEditing ? (
+                        <code className="bg-gray-100 px-2 py-0.5 rounded text-xs font-mono border">
+                          {formData.color}
+                        </code>
+                      ) : (
+                        <div className="flex gap-1 overflow-x-auto max-w-[300px] pb-1">
+                          {selectedColors.map(hex => (
+                            <div key={hex} className="w-4 h-4 rounded-full border flex-shrink-0" style={{ backgroundColor: hex }} title={hex} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -490,7 +640,7 @@ const InventoryFabricManagement = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Initial Stock (meters) *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity (Default) *</label>
                     <input 
                       required
                       type="number" 
@@ -498,9 +648,47 @@ const InventoryFabricManagement = () => {
                       value={formData.stock_quantity}
                       onChange={handleInputChange}
                       className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" 
-                      placeholder="0.00" 
+                      placeholder={selectedColors.length > 1 ? "Shared default" : "0.00"} 
                     />
                   </div>
+
+                  {/* Individual Variant Quantities */}
+                  {!isEditing && selectedColors.length > 1 && (
+                    <div className="col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                      <label className="block text-sm font-semibold text-blue-900 mb-3">Set Stock per Color (Meters):</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {selectedColors.map(colorHex => {
+                          const colorName = [...FABRIC_COLORS, ...customColors.map(hex => ({ name: 'Custom', hex }))].find(c => c.hex === colorHex)?.name || 'Custom';
+                          return (
+                            <div key={colorHex} className="bg-white p-2 rounded-lg border flex flex-col items-center gap-2 shadow-sm">
+                              <div className="w-5 h-5 rounded-full border" style={{ backgroundColor: colorHex }}></div>
+                              <span className="text-[10px] text-gray-500 font-medium text-center truncate w-full">{colorName}</span>
+                              <input 
+                                type="number" 
+                                placeholder="Qty (m)"
+                                className="w-full text-center text-xs border rounded p-1 focus:ring-1 focus:ring-blue-400 outline-none"
+                                value={variantQuantities[colorHex] || ''}
+                                onChange={(e) => setVariantQuantities({
+                                  ...variantQuantities,
+                                  [colorHex]: e.target.value
+                                })}
+                              />
+                              <input
+                                type="date"
+                                title="Restock Date"
+                                className="w-full text-center text-[10px] border rounded p-1 focus:ring-1 focus:ring-blue-400 outline-none"
+                                value={variantRestockDates[colorHex] || ''}
+                                onChange={(e) => setVariantRestockDates({
+                                  ...variantRestockDates,
+                                  [colorHex]: e.target.value
+                                })}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Price per meter (Rs.) *</label>

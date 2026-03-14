@@ -312,6 +312,66 @@
     color: #991b1b;
 }
 
+/* Color Swatches */
+.color-selection-section {
+    margin-bottom: 35px;
+    padding-top: 25px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.section-title {
+    font-size: 15px;
+    color: #475569;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.swatch-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.swatch-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    padding: 0;
+}
+
+.swatch-item:hover {
+    transform: scale(1.15);
+    z-index: 10;
+}
+
+.swatch-item.active {
+    box-shadow: 0 0 0 2px #001a66;
+    transform: scale(1.1);
+}
+
+.active-indicator {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 8px;
+    height: 8px;
+    background: #001a66;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.selected-color-name {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 5px;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .details-container {

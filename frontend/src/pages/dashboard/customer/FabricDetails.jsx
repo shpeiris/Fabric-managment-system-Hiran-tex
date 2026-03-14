@@ -8,6 +8,7 @@ const FabricDetails = () => {
     const navigate = useNavigate();
 
     const [fabric, setFabric] = useState(null);
+    const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [quantity, setQuantity] = useState(1);
@@ -25,11 +26,13 @@ const FabricDetails = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Ensure price is a number
                 const fabricData = data.fabric;
                 fabricData.price_per_meter = parseFloat(fabricData.price_per_meter);
                 setFabric(fabricData);
                 setError(null);
+                
+                // Fetch other variants of the same fabric
+                fetchVariants(fabricData.name);
             } else {
                 setError(data.error || 'Fabric not found');
             }
@@ -38,6 +41,20 @@ const FabricDetails = () => {
             setError('Failed to load fabric details');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchVariants = async (name) => {
+        try {
+            const response = await apiCall(`http://localhost:5000/api/fabrics?search=${encodeURIComponent(name)}`);
+            const data = await response.json();
+            if (response.ok) {
+                // Filter to ensure exact name match and include current fabric
+                const matches = (data.fabrics || []).filter(f => f.name === name);
+                setVariants(matches);
+            }
+        } catch (err) {
+            console.error('Error fetching variants:', err);
         }
     };
 
@@ -158,12 +175,12 @@ const FabricDetails = () => {
                             <span className="attr-value">{fabric.material_type}</span>
                         </div>
                         <div className="attr-item">
-                            <span className="attr-label">Color</span>
-                            <span className="attr-value">{fabric.color}</span>
-                        </div>
-                        <div className="attr-item">
                             <span className="attr-label">Design</span>
                             <span className="attr-value">{fabric.design}</span>
+                        </div>
+                        <div className="attr-item">
+                            <span className="attr-label">Width</span>
+                            <span className="attr-value">{fabric.width || 'Standard'}</span>
                         </div>
                         <div className="attr-item">
                             <span className="attr-label">Availability</span>
@@ -172,6 +189,29 @@ const FabricDetails = () => {
                             </span>
                         </div>
                     </div>
+
+                    {/* Color Swatch Section */}
+                    {variants.length > 0 && (
+                        <div className="color-selection-section">
+                            <h3 className="section-title">Fabric Color</h3>
+                            <div className="swatch-grid">
+                                {variants.map((variant) => (
+                                    <button
+                                        key={variant.fabric_id}
+                                        className={`swatch-item ${variant.fabric_id === fabric.fabric_id ? 'active' : ''}`}
+                                        style={{ backgroundColor: variant.color || '#cccccc' }}
+                                        onClick={() => navigate(`/customer/fabric/${variant.fabric_id}`)}
+                                        title={variant.color}
+                                    >
+                                        {variant.fabric_id === fabric.fabric_id && <span className="active-indicator"></span>}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="selected-color-name">
+                                Current: <strong>{fabric.color && fabric.color.startsWith('#') ? 'Selected Tone' : fabric.color}</strong>
+                            </p>
+                        </div>
+                    )}
 
                     {/* Restock Date Section */}
                     {fabric.restock_date && fabric.stock_quantity <= (fabric.reorder_level || 50) && (
