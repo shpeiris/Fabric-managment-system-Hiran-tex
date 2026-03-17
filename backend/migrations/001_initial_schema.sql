@@ -22,7 +22,7 @@ DROP TYPE IF EXISTS payment_status CASCADE;
 -- Create custom ENUM types for PostgreSQL
 CREATE TYPE employee_role AS ENUM ('ADMIN', 'INVENTORY', 'SALES');
 CREATE TYPE user_status AS ENUM ('ACTIVE', 'INACTIVE');
-CREATE TYPE order_status AS ENUM ('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED');
+CREATE TYPE order_status AS ENUM ('PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED');
 CREATE TYPE payment_status AS ENUM ('PENDING', 'COMPLETED', 'FAILED');
 
 -- 1. Employees Table (Staff)

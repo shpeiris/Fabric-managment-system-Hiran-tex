@@ -5,15 +5,13 @@ const getUserOrders = async (userId) => {
       SELECT o.order_id, o.customer_name, o.order_status, o.total_amount, 
              o.delivery_address, o.delivery_type, o.order_date,
              COUNT(oi.order_item_id) as item_count,
-             i.status as invoice_status,
              p.payment_status as latest_payment_status,
              p.bank_slip_url
       FROM orders o
       LEFT JOIN order_items oi ON o.order_id = oi.order_id
-      LEFT JOIN invoices i ON o.order_id = i.order_id
       LEFT JOIN payments p ON o.order_id = p.order_id
       WHERE o.customer_id = $1
-      GROUP BY o.order_id, i.status, p.payment_status, p.bank_slip_url
+      GROUP BY o.order_id, p.payment_status, p.bank_slip_url
       ORDER BY o.order_date DESC
     `;
     const result = await pool.query(query, [userId]);

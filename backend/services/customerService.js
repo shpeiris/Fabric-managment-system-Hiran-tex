@@ -12,7 +12,7 @@ export const getCustomerDashboardStats = async (customerId) => {
         `,
         pendingOrders: `
             SELECT COUNT(*) as total FROM orders 
-            WHERE customer_id = $1 AND order_status IN ('PENDING', 'PROCESSING', 'SHIPPED')
+            WHERE customer_id = $1 AND order_status IN ('PENDING', 'PROCESSING')
         `,
         cartItems: `
             SELECT COUNT(*) as total FROM cart WHERE customer_id = $1

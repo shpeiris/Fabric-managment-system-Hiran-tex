@@ -49,18 +49,35 @@ const MyOrders = () => {
         return
       }
 
-      for (const item of items) {
-        await cartService.addToCart({
+      setLoading(true)
+      const reorderPromises = items.map(item => 
+        cartService.addToCart({
           fabric_id: item.fabric_id,
           quantity: item.quantity
         })
-      }
+      )
+      
+      await Promise.all(reorderPromises)
+      setLoading(false)
       
       alert("Items added to cart successfully!")
       navigate('/customer/cart')
     } catch (err) {
       console.error("Reorder error:", err)
+      setLoading(false)
       alert("Failed to reorder items. Some items might be out of stock.")
+    }
+  }
+
+  const handleReorderFromList = async (orderId) => {
+    try {
+      setLoading(true)
+      const data = await orderService.getOrderById(orderId)
+      await handleReorder(data.items)
+    } catch (err) {
+      console.error("Reorder from list error:", err)
+      setLoading(false)
+      alert("Failed to fetch order items for reorder.")
     }
   }
 
@@ -79,7 +96,6 @@ const MyOrders = () => {
           <option value="all">All Orders</option>
           <option value="pending">Pending</option>
           <option value="processing">Processing</option>
-          <option value="shipped">Shipped</option>
           <option value="delivered">Delivered</option>
           <option value="cancelled">Cancelled</option>
         </select>
@@ -112,6 +128,12 @@ const MyOrders = () => {
                   <button className="btn-view" onClick={() => handleViewDetails(order.order_id)}>
                     View Details
                   </button>
+                  <button 
+                    className="btn-reorder-small" 
+                    onClick={() => handleReorderFromList(order.order_id)}
+                  >
+                    Reorder
+                  </button>
                 </div>
               </div>
             ))}
@@ -123,11 +145,17 @@ const MyOrders = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
-            <h2>Order Details #{selectedOrder.order.order_id}</h2>
+            <div className="modal-header">
+              <h2>Order Details #{selectedOrder.order.order_id}</h2>
+              <span className={`order-status status-${selectedOrder.order.order_status.toLowerCase()}`}>
+                {selectedOrder.order.order_status}
+              </span>
+            </div>
+            
             <div className="order-info-summary">
-              <p><strong>Status:</strong> {selectedOrder.order.order_status}</p>
-              <p><strong>Date:</strong> {new Date(selectedOrder.order.order_date).toLocaleString()}</p>
-              <p><strong>Delivery:</strong> {selectedOrder.order.delivery_type} to {selectedOrder.order.delivery_address}</p>
+              <p><strong>Date Placed:</strong> {new Date(selectedOrder.order.order_date).toLocaleString()}</p>
+              <p><strong>Delivery Method:</strong> {selectedOrder.order.delivery_type.replace('_', ' ')}</p>
+              <p><strong>Delivery Address:</strong> {selectedOrder.order.delivery_address}</p>
             </div>
             
             <div className="order-details-list">

@@ -80,7 +80,7 @@ CREATE TABLE cart (
 CREATE TABLE orders (
     order_id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL REFERENCES customers(customer_id) ON DELETE CASCADE,
-    order_status VARCHAR(20) DEFAULT 'PENDING' CHECK (order_status IN ('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED')),
+    order_status VARCHAR(20) DEFAULT 'PENDING' CHECK (order_status IN ('PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED')),
     total_amount DECIMAL(12, 2) NOT NULL,
     delivery_address TEXT,
     delivery_type VARCHAR(50) DEFAULT 'STANDARD',

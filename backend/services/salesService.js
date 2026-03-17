@@ -186,7 +186,7 @@ const sendConfirmation = async (orderId, type, sentBy, senderId) => {
                 SELECT o.order_id, o.customer_id, c.full_name, c.email, c.tel 
                 FROM orders o 
                 LEFT JOIN customers c ON o.customer_id = c.customer_id 
-                WHERE o.order_status IN ('PROCESSING', 'SHIPPED', 'DELIVERED')
+                WHERE o.order_status IN ('PROCESSING', 'DELIVERED')
                 AND (c.email IS NOT NULL OR c.tel IS NOT NULL)
             `;
 
