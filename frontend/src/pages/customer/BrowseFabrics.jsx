@@ -46,7 +46,6 @@ const BrowseFabrics = () => {
             });
 
             if (response.ok) {
-                // Could show a toast here
                 alert('Added to cart!');
             } else {
                 const data = await response.json();
@@ -67,6 +66,23 @@ const BrowseFabrics = () => {
         const matchesCategory = selectedCategory === 'All' || fabric.material_type === selectedCategory;
         return matchesSearch && matchesCategory;
     });
+
+    // Group fabrics by name — one card per fabric name
+    const groupedFabrics = Object.values(
+        filteredFabrics.reduce((acc, fabric) => {
+            if (!acc[fabric.name]) {
+                acc[fabric.name] = { ...fabric, variants: [fabric] };
+            } else {
+                acc[fabric.name].variants.push(fabric);
+                // Prefer an in-stock variant as the representative
+                if (acc[fabric.name].stock_quantity <= 0 && fabric.stock_quantity > 0) {
+                    const variants = acc[fabric.name].variants;
+                    acc[fabric.name] = { ...fabric, variants };
+                }
+            }
+            return acc;
+        }, {})
+    );
 
     if (loading) {
         return (
@@ -109,19 +125,19 @@ const BrowseFabrics = () => {
             {error && <div className="error-message">{error}</div>}
 
             <div className="products-grid">
-                {filteredFabrics.map(fabric => (
+                {groupedFabrics.map(fabric => (
                     <div key={fabric.fabric_id} className="product-card">
                         <div className="product-image-container">
-                            <img 
-                                src={!fabric.image_url 
-                                    ? '/src/assets/Fabrics/fabric-collage.jpg' 
-                                    : (fabric.image_url.startsWith('uploads/') 
-                                        ? `http://localhost:5000/${fabric.image_url}` 
-                                        : (fabric.image_url.startsWith('http') 
-                                            ? fabric.image_url 
+                            <img
+                                src={!fabric.image_url
+                                    ? '/src/assets/Fabrics/fabric-collage.jpg'
+                                    : (fabric.image_url.startsWith('uploads/')
+                                        ? `http://localhost:5000/${fabric.image_url}`
+                                        : (fabric.image_url.startsWith('http')
+                                            ? fabric.image_url
                                             : `/src/assets/Fabrics/${fabric.image_url}`))
-                                } 
-                                alt={fabric.name} 
+                                }
+                                alt={fabric.name}
                                 className="product-image"
                                 onError={(e) => {
                                     e.target.onerror = null;
@@ -138,6 +154,30 @@ const BrowseFabrics = () => {
                             </div>
                             <h3 className="product-name">{fabric.name}</h3>
                             <div className="product-price">Rs. {parseFloat(fabric.price_per_meter).toFixed(2)}</div>
+
+                            {/* Color variant dots */}
+                            {fabric.variants && fabric.variants.length > 0 && (
+                                <div className="color-dots-row">
+                                    {fabric.variants.map(v => (
+                                        <span
+                                            key={v.fabric_id}
+                                            className="color-dot"
+                                            style={{
+                                                backgroundColor: v.color || '#cccccc',
+                                                border: v.fabric_id === fabric.fabric_id
+                                                    ? '2px solid #001a66'
+                                                    : '2px solid #ddd'
+                                            }}
+                                            title={v.color || 'Color'}
+                                        />
+                                    ))}
+                                    {fabric.variants.length > 1 && (
+                                        <span className="color-count-hint">
+                                            {fabric.variants.length} colors
+                                        </span>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Restock Date Info */}
                             {fabric.stock_quantity <= (fabric.reorder_level || 50) && fabric.restock_date && (
@@ -157,9 +197,9 @@ const BrowseFabrics = () => {
                                 <button
                                     className="btn-details"
                                     onClick={() => navigate(`/customer/fabric/${fabric.fabric_id}`)}
-                                    title="View Details"
+                                    title="View Details & Select Color"
                                 >
-                                    View Details
+                                    More Details
                                 </button>
                             </div>
                         </div>
@@ -167,7 +207,7 @@ const BrowseFabrics = () => {
                 ))}
             </div>
 
-            {filteredFabrics.length === 0 && !loading && (
+            {groupedFabrics.length === 0 && !loading && (
                 <div className="no-results">No fabrics found matching your criteria.</div>
             )}
         </div>

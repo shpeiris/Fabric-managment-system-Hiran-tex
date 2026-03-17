@@ -78,6 +78,12 @@ export default function FabricManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate: at least one color must be selected when adding
+    if (!editingFabric && selectedColors.length === 0) {
+      alert('Please select at least one color for the fabric.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const url = editingFabric
@@ -87,7 +93,7 @@ export default function FabricManagement() {
       const method = editingFabric ? 'PUT' : 'POST';
 
       // If editing, we only update one color. If adding, we may have multiple.
-      const colorsToProcess = editingFabric ? [formData.color] : (selectedColors.length > 0 ? selectedColors : [formData.color]);
+      const colorsToProcess = editingFabric ? [formData.color] : selectedColors;
       
       let successCount = 0;
       let lastError = null;
@@ -99,7 +105,7 @@ export default function FabricManagement() {
         const restockDateToUse = variantRestockDates[color] || formData.restock_date;
         const currentFormData = { ...formData, color, stock_quantity: quantityToUse, restock_date: restockDateToUse };
 
-        if (imageSource === 'upload' && selectedFile) {
+        if (selectedFile) {
           const formDataToSend = new FormData();
           Object.keys(currentFormData).forEach(key => {
             if (currentFormData[key] !== null && currentFormData[key] !== '') {
@@ -142,6 +148,7 @@ export default function FabricManagement() {
       setIsSubmitting(false);
     }
   };
+
 
   const handleEdit = (fabric) => {
     setEditingFabric(fabric);
@@ -510,7 +517,9 @@ export default function FabricManagement() {
                     value={formData.restock_date}
                     onChange={(e) => setFormData({ ...formData, restock_date: e.target.value })}
                   />
-                                <div className="form-group full-width">
+                </div>
+
+                <div className="form-group full-width">
                   <label>Fabric Image</label>
                   <label className="upload-drop-zone">
                     <input

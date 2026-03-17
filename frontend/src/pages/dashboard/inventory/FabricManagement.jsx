@@ -37,6 +37,7 @@ const InventoryFabricManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [colorFilter, setColorFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedColors, setSelectedColors] = useState([]); // Multi-select for Add/Edit
   const [customColors, setCustomColors] = useState([]); // Dynamic custom colors picked via wheel
   const [variantQuantities, setVariantQuantities] = useState({}); // { '#hex': quantity_string }
@@ -127,11 +128,18 @@ const InventoryFabricManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate: at least one color must be selected when adding
+    if (!isEditing && selectedColors.length === 0) {
+      alert('Please select at least one color for the fabric.');
+      return;
+    }
+
     try {
       setFormSubmitting(true);
       
       // If adding new, handle multiple colors
-      const colorsToProcess = isEditing ? [formData.color] : (selectedColors.length > 0 ? selectedColors : [formData.color]);
+      const colorsToProcess = isEditing ? [formData.color] : selectedColors;
       
       let successCount = 0;
       let lastError = null;
@@ -184,8 +192,10 @@ const InventoryFabricManagement = () => {
       console.error('Error submitting form:', err);
       alert('An error occurred. Please try again.');
     } finally {
+      setFormSubmitting(false);
     }
   };
+
 
   const handleEdit = (fabric) => {
     setFormData({
@@ -390,16 +400,25 @@ const InventoryFabricManagement = () => {
                 <p className="text-sm text-gray-600 mb-2">Price: Rs. {fabric.price}</p>
                 
                 {/* Available colors indicator */}
-                <div className="flex gap-1 mb-3">
+                <div className="flex gap-1 mb-3 flex-wrap">
                   <span className="text-xs text-gray-400 mr-1 self-center">Available:</span>
-                  {getVariants(fabric.name).map(v => (
-                    <div 
-                      key={v.id} 
-                      className={`w-3 h-3 rounded-full border border-gray-200 ${v.fabric_id === fabric.fabric_id ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
-                      style={{ backgroundColor: v.color }}
-                      title={`${FABRIC_COLORS.find(c => c.hex === v.color)?.name || 'Custom'}: ${v.stock}m`}
-                    />
-                  ))}
+                  {getVariants(fabric.name).map(v => {
+                    // Support colors stored as hex ('#rrggbb') or as a color name
+                    const resolvedHex = v.color
+                      ? (v.color.startsWith('#')
+                          ? v.color
+                          : FABRIC_COLORS.find(c => c.name.toLowerCase() === v.color.toLowerCase())?.hex || v.color)
+                      : '#cccccc';
+                    const colorLabel = FABRIC_COLORS.find(c => c.hex === resolvedHex || c.name.toLowerCase() === (v.color || '').toLowerCase())?.name || v.color || 'Unknown';
+                    return (
+                      <div 
+                        key={v.id} 
+                        className={`w-4 h-4 rounded-full border border-gray-300 ${v.fabric_id === fabric.fabric_id ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`}
+                        style={{ backgroundColor: resolvedHex }}
+                        title={`${colorLabel}: ${v.stock}m`}
+                      />
+                    );
+                  })}
                 </div>
 
                 <div className="flex gap-2">

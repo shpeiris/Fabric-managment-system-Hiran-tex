@@ -230,3 +230,57 @@
         transform: translateY(0);
     }
 }
+
+/* Color variant dots row on fabric card */
+.color-dots-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.color-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    cursor: default;
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+.color-dot:hover {
+    transform: scale(1.2);
+}
+
+.color-count-hint {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-left: 2px;
+}
+
+/* No results */
+.no-results {
+    text-align: center;
+    padding: 60px;
+    color: #94a3b8;
+    font-size: 16px;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 60px;
+    color: #64748b;
+    font-size: 16px;
+}
+
+.error-message {
+    text-align: center;
+    padding: 20px;
+    color: #ef4444;
+    background: #fee2e2;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
