@@ -47,7 +47,7 @@ const orderService = {
   /**
    * Update order status
    * @param {number} orderId
-   * @param {string} status - PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+   * @param {string} status - PENDING, PROCESSING, DELIVERED, CANCELLED
    * @returns {Promise} Updated order
    */
   updateOrderStatus: async (orderId, status) => {
@@ -81,7 +81,7 @@ const orderService = {
    */
   getMyOrders: async () => {
     try {
-      const response = await apiClient.get("/api/orders/my-orders");
+      const response = await apiClient.get("/api/orders");
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: "Failed to fetch your orders" };

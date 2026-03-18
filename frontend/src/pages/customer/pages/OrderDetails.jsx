@@ -1,30 +1,64 @@
+import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import orderService from '../../../services/orderService'
+import cartService from '../../../services/cartService'
+
 export default function OrderDetails() {
-  const order = {
-    id: 'ORD001',
-    date: '2024-01-20',
-    status: 'Delivered',
-    trackingNumber: 'TRK123456',
-    items: [
-      { id: 'FAB001', name: 'Cotton Blend Blue', price: 250, quantity: 5, image: 'https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?w=400' },
-      { id: 'FAB002', name: 'Silk Satin Red', price: 650, quantity: 3, image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400' },
-      { id: 'FAB003', name: 'Linen White', price: 420, quantity: 8, image: 'https://images.unsplash.com/photo-1593032465171-b9a5cc3c52b8?w=400' }
-    ],
-    shipping: {
-      name: 'John Doe',
-      address: '123 Main Street',
-      city: 'Colombo',
-      postalCode: '00100',
-      phone: '+94 77 123 4567'
-    },
-    payment: {
-      method: 'Credit Card',
-      last4: '4242',
-      amount: 9650
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [orderData, setOrderData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (id) {
+      fetchOrderDetails()
+    }
+  }, [id])
+
+  const fetchOrderDetails = async () => {
+    try {
+      setLoading(true)
+      const data = await orderService.getOrderById(id)
+      setOrderData(data)
+      setLoading(false)
+    } catch (err) {
+      console.error("Error fetching order details:", err)
+      setError("Failed to load order details.")
+      setLoading(false)
     }
   }
 
-  const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const shipping = 500
+  const handleReorder = async () => {
+    try {
+      if (!orderData || !orderData.items) return
+      
+      setLoading(true)
+      const reorderPromises = orderData.items.map(item => 
+        cartService.addToCart({
+          fabric_id: item.fabric_id,
+          quantity: item.quantity
+        })
+      )
+      
+      await Promise.all(reorderPromises)
+      alert("Items added to cart successfully!")
+      navigate('/customer/cart')
+    } catch (err) {
+      console.error("Reorder error:", err)
+      alert("Failed to reorder items. Some items might be out of stock.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading && !orderData) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading order details...</div>
+  if (error) return <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>{error}</div>
+  if (!orderData) return <div style={{ padding: '40px', textAlign: 'center' }}>Order not found.</div>
+
+  const { order, items } = orderData
+  const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseFloat(item.quantity)), 0)
+  const shipping = 500 // Assuming flat rate or fetched from elsewhere if available
   const tax = subtotal * 0.08
 
   return (
@@ -32,7 +66,7 @@ export default function OrderDetails() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <div>
           <h1 style={{ fontSize: '24px', marginBottom: '5px', color: '#1f2937', fontWeight: '600' }}>Order Details</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px' }}>Order #{order.id} • Placed on {order.date}</p>
+          <p style={{ color: '#6b7280', fontSize: '14px' }}>Order #{order.order_id} • Placed on {new Date(order.order_date).toLocaleString()}</p>
         </div>
         <span style={{
           background: '#d1fae5',
@@ -42,7 +76,7 @@ export default function OrderDetails() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          {order.status}
+          {order.order_status}
         </span>
       </div>
 
@@ -58,25 +92,32 @@ export default function OrderDetails() {
             marginBottom: '20px'
           }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Order Items</h2>
-            {order.items.map(item => (
-              <div key={item.id} style={{
+            {items.map(item => (
+              <div key={item.order_item_id} style={{
                 display: 'flex',
                 gap: '15px',
                 paddingBottom: '15px',
                 marginBottom: '15px',
                 borderBottom: '1px solid #f3f4f6'
               }}>
-                <img 
-                  src={item.image} 
-                  alt={item.name}
-                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px' }}
-                />
+                <div style={{ 
+                  width: '80px', 
+                  height: '80px', 
+                  background: '#f3f4f6', 
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px'
+                }}>
+                  🧶
+                </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', marginBottom: '5px' }}>{item.name}</h3>
-                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>{item.id}</p>
+                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', marginBottom: '5px' }}>{item.fabric_name}</h3>
+                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>#{item.fabric_id}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: '14px', color: '#6b7280' }}>Quantity: {item.quantity} meters</p>
-                    <p style={{ fontSize: '16px', fontWeight: '600', color: '#2563eb' }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                    <p style={{ fontSize: '16px', fontWeight: '600', color: '#2563eb' }}>Rs. {parseFloat(item.total_price).toFixed(2)}</p>
                   </div>
                 </div>
               </div>
@@ -94,19 +135,14 @@ export default function OrderDetails() {
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Shipping Information</h2>
             <div style={{ display: 'grid', gap: '12px' }}>
               <div>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Recipient</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.shipping.name}</p>
+                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Delivery Type</p>
+                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.delivery_type?.replace('_', ' ')}</p>
               </div>
               <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Address</p>
                 <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>
-                  {order.shipping.address}<br/>
-                  {order.shipping.city} {order.shipping.postalCode}
+                  {order.delivery_address}
                 </p>
-              </div>
-              <div>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Phone</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.shipping.phone}</p>
               </div>
             </div>
           </div>
@@ -121,16 +157,12 @@ export default function OrderDetails() {
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Payment Information</h2>
             <div style={{ display: 'grid', gap: '12px' }}>
               <div>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Payment Method</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.payment.method} •••• {order.payment.last4}</p>
-              </div>
-              <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Transaction Date</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.date}</p>
+                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{new Date(order.order_date).toLocaleString()}</p>
               </div>
               <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Amount Paid</p>
-                <p style={{ fontSize: '16px', fontWeight: '700', color: '#22c55e' }}>Rs. {order.payment.amount.toLocaleString()}</p>
+                <p style={{ fontSize: '16px', fontWeight: '700', color: '#22c55e' }}>Rs. {parseFloat(order.total_amount).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -138,35 +170,6 @@ export default function OrderDetails() {
 
         {/* Right Column - Summary & Actions */}
         <div>
-          {/* Tracking */}
-          <div style={{
-            background: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '25px',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '15px' }}>Tracking</h2>
-            <div style={{ background: '#f9fafb', padding: '15px', borderRadius: '6px', marginBottom: '15px' }}>
-              <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Tracking Number</p>
-              <p style={{ fontSize: '16px', fontWeight: '600', color: '#2563eb' }}>{order.trackingNumber}</p>
-            </div>
-            <button style={{
-              background: '#2563eb',
-              color: 'white',
-              border: 'none',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              width: '100%'
-            }}>
-              Track Shipment
-            </button>
-          </div>
-
-          {/* Order Summary */}
           <div style={{
             background: 'white',
             border: '1px solid #e5e7eb',
@@ -191,7 +194,7 @@ export default function OrderDetails() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937' }}>Total</span>
-              <span style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>Rs. {order.payment.amount.toLocaleString()}</span>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>Rs. {parseFloat(order.total_amount).toLocaleString()}</span>
             </div>
           </div>
 
@@ -228,8 +231,8 @@ export default function OrderDetails() {
               fontWeight: '500',
               width: '100%',
               marginBottom: '10px'
-            }}>
-              Reorder Items
+            }} onClick={handleReorder}>
+              Reorder All Items
             </button>
             <button style={{
               background: 'transparent',

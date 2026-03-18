@@ -1,36 +1,46 @@
-import { useState } from 'react'
-import { useNavigate } from "react-router-dom";
-import { apiCall } from "../../utils/auth.js";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { apiCall } from '../../utils/auth.js';
+
+const API = 'http://localhost:5000';
 
 export default function Orders() {
-  const [selectedTab, setSelectedTab] = useState('all')
+  const navigate = useNavigate();
+  const [selectedTab, setSelectedTab] = useState('all');
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const orders = [
-    { id: 'ORD001', date: '2024-01-20', items: 3, total: 'Rs. 15,000', status: 'Delivered', trackingNumber: 'TRK123456' },
-    { id: 'ORD002', date: '2024-01-18', items: 2, total: 'Rs. 8,500', status: 'In Transit', trackingNumber: 'TRK123457' },
-    { id: 'ORD003', date: '2024-01-15', items: 5, total: 'Rs. 22,000', status: 'Processing', trackingNumber: 'TRK123458' },
-    { id: 'ORD004', date: '2024-01-12', items: 4, total: 'Rs. 18,500', status: 'Delivered', trackingNumber: 'TRK123459' },
-    { id: 'ORD005', date: '2024-01-10', items: 2, total: 'Rs. 9,200', status: 'Cancelled', trackingNumber: 'TRK123460' }
-  ]
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const res = await apiCall(`${API}/api/orders`);
+        const data = await res.json();
+        if (res.ok) {
+          setOrders(data.orders || []);
+        }
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
 
   const filteredOrders = selectedTab === 'all'
     ? orders
-    : orders.filter(order => order.status.toLowerCase() === selectedTab)
+    : orders.filter(order => order.order_status.toLowerCase() === selectedTab);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Delivered':
-        return { bg: '#d1fae5', color: '#065f46' }
-      case 'In Transit':
-        return { bg: '#dbeafe', color: '#1e40af' }
-      case 'Processing':
-        return { bg: '#fef3c7', color: '#92400e' }
-      case 'Cancelled':
-        return { bg: '#fee2e2', color: '#991b1b' }
-      default:
-        return { bg: '#f3f4f6', color: '#6b7280' }
+  const getStatusStyle = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'DELIVERED': return { bg: '#d1fae5', color: '#065f46' };
+      case 'PROCESSING': return { bg: '#fef3c7', color: '#92400e' };
+      case 'CANCELLED': return { bg: '#fee2e2', color: '#991b1b' };
+      case 'PENDING': return { bg: '#e0f2fe', color: '#075985' };
+      default: return { bg: '#f3f4f6', color: '#6b7280' };
     }
-  }
+  };
 
   return (
     <div>
@@ -39,140 +49,84 @@ export default function Orders() {
 
       {/* Status Tabs */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #e5e7eb' }}>
-        {['all', 'processing', 'in transit', 'delivered', 'cancelled'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setSelectedTab(tab)}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              background: 'transparent',
-              color: selectedTab === tab ? '#2563eb' : '#6b7280',
-              borderBottom: selectedTab === tab ? '2px solid #2563eb' : 'none',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: selectedTab === tab ? '600' : '400',
-              textTransform: 'capitalize'
-            }}
+        {['all', 'pending', 'processing', 'delivered', 'cancelled'].map(tab => (
+          <button key={tab} onClick={() => setSelectedTab(tab)}
+            style={{ padding: '12px 20px', border: 'none', background: 'transparent', color: selectedTab === tab ? '#2563eb' : '#6b7280', borderBottom: selectedTab === tab ? '2px solid #2563eb' : '2px solid transparent', fontSize: '14px', cursor: 'pointer', fontWeight: selectedTab === tab ? '600' : '400', textTransform: 'capitalize', marginBottom: '-1px' }}
           >
-            {tab}
+            {tab} {tab !== 'all' && orders.filter(o => o.order_status.toLowerCase() === tab).length > 0 &&
+              <span style={{ background: '#e0f2fe', color: '#075985', borderRadius: '10px', padding: '2px 6px', fontSize: '11px', marginLeft: '4px' }}>
+                {orders.filter(o => o.order_status.toLowerCase() === tab).length}
+              </span>
+            }
           </button>
         ))}
       </div>
 
-      {/* Orders List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {filteredOrders.map(order => {
-          const statusStyle = getStatusColor(order.status)
-          return (
-            <div key={order.id} style={{
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              padding: '20px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
-                <div>
-                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '5px' }}>
-                    Order {order.id}
-                  </h3>
-                  <p style={{ fontSize: '13px', color: '#6b7280' }}>
-                    Placed on {order.date} • {order.items} items
-                  </p>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>Loading orders...</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          {filteredOrders.map(order => {
+            const statusStyle = getStatusStyle(order.order_status);
+            const orderId = `ORD${order.order_id.toString().padStart(3, '0')}`;
+            return (
+              <div key={order.order_id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '4px' }}>Order {orderId}</h3>
+                    <p style={{ fontSize: '13px', color: '#6b7280' }}>
+                      Placed on {new Date(order.order_date).toLocaleDateString()}
+                      {order.delivery_type && ` • ${order.delivery_type}`}
+                    </p>
+                  </div>
+                  <span style={{ background: statusStyle.bg, color: statusStyle.color, padding: '6px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: '500' }}>
+                    {order.order_status}
+                  </span>
                 </div>
-                <span style={{
-                  background: statusStyle.bg,
-                  color: statusStyle.color,
-                  padding: '6px 14px',
-                  borderRadius: '12px',
-                  fontSize: '13px',
-                  fontWeight: '500'
-                }}>
-                  {order.status}
-                </span>
-              </div>
 
-              <div style={{ background: '#f9fafb', padding: '12px', borderRadius: '6px', marginBottom: '15px' }}>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Tracking Number</p>
-                <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>{order.trackingNumber}</p>
-              </div>
+                {order.delivery_address && (
+                  <div style={{ background: '#f9fafb', padding: '10px 12px', borderRadius: '6px', marginBottom: '15px' }}>
+                    <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '2px' }}>Delivery Address</p>
+                    <p style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>{order.delivery_address}</p>
+                  </div>
+                )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Total Amount</p>
-                  <p style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>{order.total}</p>
-                </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button style={{
-                    background: 'transparent',
-                    color: '#2563eb',
-                    border: '1px solid #2563eb',
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    fontWeight: '500'
-                  }}>
-                    View Details
-                  </button>
-                  {order.status === 'In Transit' && (
-                    <button style={{
-                      background: '#2563eb',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      fontWeight: '500'
-                    }}>
-                      Track Order
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '3px' }}>Total Amount</p>
+                    <p style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>Rs. {parseFloat(order.total_amount).toLocaleString()}</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={() => navigate(`/customer/orders/${order.order_id}`)}
+                      style={{ background: 'transparent', color: '#2563eb', border: '1px solid #2563eb', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}
+                    >
+                      View Details
                     </button>
-                  )}
-                  {order.status === 'Delivered' && (
-                    <button style={{
-                      background: '#22c55e',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      fontWeight: '500'
-                    }}>
-                      Reorder
-                    </button>
-                  )}
+                  </div>
                 </div>
               </div>
+            );
+          })}
+
+          {filteredOrders.length === 0 && (
+            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '60px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '40px', marginBottom: '16px' }}>📦</div>
+              <p style={{ fontSize: '16px', color: '#6b7280', marginBottom: '20px' }}>
+                {orders.length === 0 ? 'No orders yet. Start shopping!' : `No ${selectedTab} orders.`}
+              </p>
+              {orders.length === 0 && (
+                <button
+                  onClick={() => navigate('/customer/browse')}
+                  style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}
+                >
+                  Browse Fabrics
+                </button>
+              )}
             </div>
-          )
-        })}
-      </div>
-
-      {filteredOrders.length === 0 && (
-        <div style={{
-          background: 'white',
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-          padding: '60px 20px',
-          textAlign: 'center'
-        }}>
-          <p style={{ fontSize: '16px', color: '#6b7280', marginBottom: '20px' }}>No orders found</p>
-          <button style={{
-            background: '#2563eb',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            fontSize: '14px',
-            cursor: 'pointer',
-            fontWeight: '500'
-          }}>
-            Start Shopping
-          </button>
+          )}
         </div>
       )}
     </div>
-  )
+  );
 }

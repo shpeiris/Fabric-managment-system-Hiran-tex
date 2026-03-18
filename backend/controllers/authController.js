@@ -236,4 +236,47 @@ const resetPassword = async (req, res) => {
   }
 };
 
-export { login, logout, getMe, register, forgotPassword, verifyOTP, resetPassword };
+const updateProfile = async (req, res) => {
+  const userId = req.user.id;
+  const { full_name, phone, address } = req.body;
+
+  if (!full_name) {
+    return res.status(400).json({ error: "Full name is required" });
+  }
+
+  try {
+    const { pool } = await import('../config/db.js');
+    const result = await pool.query(
+      `UPDATE customers
+       SET full_name = $1, tel = $2, address = $3
+       WHERE customer_id = $4
+       RETURNING customer_id, full_name, email, tel, address, created_at`,
+      [full_name, phone || null, address || null, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const updated = result.rows[0];
+
+    // Update localStorage-stored token data via response
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: updated.customer_id,
+        full_name: updated.full_name,
+        email: updated.email,
+        phone: updated.tel,
+        address: updated.address,
+        created_at: updated.created_at,
+        role: 'CUSTOMER'
+      }
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: "Server error updating profile" });
+  }
+};
+
+export { login, logout, getMe, register, forgotPassword, verifyOTP, resetPassword, updateProfile };

@@ -82,11 +82,6 @@
     color: white;
 }
 
-.status-badge.shipped {
-    background: #007bff;
-    color: white;
-}
-
 .status-badge.delivered {
     background: #7cff00;
     color: #001a66;

@@ -1,73 +1,84 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import cartService from "../../../services/cartService";
 import "./ShoppingCart.css";
 
 const ShoppingCart = () => {
   const navigate = useNavigate();
-  // Hardcoded initial state
-  const [cartItems, setCartItems] = useState([
-    {
-      cart_id: 1,
-      fabric_id: 101,
-      material_type: "Cotton",
-      fabric_name: "Premium Cotton Blue",
-      color: "Blue",
-      price_per_meter: "450.00",
-      quantity: 5,
-    },
-    {
-      cart_id: 2,
-      fabric_id: 102,
-      material_type: "Silk",
-      fabric_name: "Elegant Silk Red",
-      color: "Red",
-      price_per_meter: "1200.00",
-      quantity: 2,
-    },
-    {
-      cart_id: 3,
-      fabric_id: 103,
-      material_type: "Linen",
-      fabric_name: "Pure Linen White",
-      color: "White",
-      price_per_meter: "850.00",
-      quantity: 3,
-    },
-  ]);
-  const [updating, setUpdating] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [updating, setUpdating] = useState(null);
+
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      const data = await cartService.getCart();
+      setCartItems(data.cart || []);
+    } catch (err) {
+      console.error("Error fetching cart:", err);
+      setError("Failed to load cart. Please refresh.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchCart(); }, []);
 
   const updateQuantity = async (cartId, newQuantity) => {
     if (newQuantity < 1) return;
-
-    // Simulate update delay
-    setUpdating(true);
-    setTimeout(() => {
+    setUpdating(cartId);
+    try {
+      await cartService.updateCartItem(cartId, newQuantity);
       setCartItems((prev) =>
         prev.map((item) =>
-          item.cart_id === cartId ? { ...item, quantity: newQuantity } : item,
-        ),
+          item.cart_id === cartId
+            ? { ...item, quantity: newQuantity, total_price: newQuantity * parseFloat(item.price_per_meter) }
+            : item
+        )
       );
-      setUpdating(false);
-    }, 300);
+    } catch (err) {
+      console.error("Error updating quantity:", err);
+    } finally {
+      setUpdating(null);
+    }
   };
 
   const removeItem = async (cartId) => {
     if (!confirm("Remove this item from cart?")) return;
-
-    setUpdating(true);
-    setTimeout(() => {
+    setUpdating(cartId);
+    try {
+      await cartService.removeFromCart(cartId);
       setCartItems((prev) => prev.filter((item) => item.cart_id !== cartId));
-      setUpdating(false);
-    }, 300);
+    } catch (err) {
+      console.error("Error removing item:", err);
+    } finally {
+      setUpdating(null);
+    }
   };
 
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {
       const price = parseFloat(item.price_per_meter || 0);
-      const quantity = parseInt(item.quantity || 0);
+      const quantity = parseFloat(item.quantity || 0);
       return total + price * quantity;
     }, 0);
   };
+
+  if (loading) return (
+    <div className="shopping-cart-container">
+      <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>Loading cart...</div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="shopping-cart-container">
+      <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444' }}>
+        <p>{error}</p>
+        <button onClick={fetchCart} style={{ marginTop: '12px', padding: '8px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Retry</button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="shopping-cart-container">

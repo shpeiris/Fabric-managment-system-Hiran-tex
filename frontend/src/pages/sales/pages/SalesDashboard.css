@@ -161,11 +161,6 @@
     color: white;
 }
 
-.status-badge.shipped {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
-}
-
 .status-badge.delivered {
     background: linear-gradient(135deg, #7cff00 0%, #6ee000 100%);
     color: #001a66;

@@ -21,7 +21,7 @@ const MyOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const data = await orderService.getAllOrders()
+      const data = await orderService.getMyOrders()
       // The backend returns { orders: [...] }
       setOrders(data.orders || [])
       setLoading(false)
@@ -153,9 +153,20 @@ const MyOrders = () => {
             </div>
             
             <div className="order-info-summary">
-              <p><strong>Date Placed:</strong> {new Date(selectedOrder.order.order_date).toLocaleString()}</p>
-              <p><strong>Delivery Method:</strong> {selectedOrder.order.delivery_type.replace('_', ' ')}</p>
-              <p><strong>Delivery Address:</strong> {selectedOrder.order.delivery_address}</p>
+              <div className="order-info-grid">
+                <div className="order-info-item">
+                  <span className="info-label">📅 Date Placed</span>
+                  <span className="info-value">{new Date(selectedOrder.order.order_date).toLocaleString()}</span>
+                </div>
+                <div className="order-info-item">
+                  <span className="info-label">🚚 Delivery Method</span>
+                  <span className="info-value">{selectedOrder.order.delivery_type?.replace('_', ' ')}</span>
+                </div>
+                <div className="order-info-item" style={{gridColumn: '1 / -1'}}>
+                  <span className="info-label">📍 Delivery Address</span>
+                  <span className="info-value">{selectedOrder.order.delivery_address || 'N/A'}</span>
+                </div>
+              </div>
             </div>
             
             <div className="order-details-list">

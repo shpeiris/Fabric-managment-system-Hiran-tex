@@ -35,7 +35,7 @@ import CustomerLayout from "./pages/customer/layout/CustomerLayout";
 import CustomerDashboard from "./pages/customer/pages/Dashboard"; // Left behind
 import Shop from "./pages/customer/Shop";
 import Cart from "./pages/dashboard/customer/ShoppingCart"; // Updated cart component
-import MyOrders from "./pages/customer/MyOrders";
+import MyOrders from "./pages/dashboard/customer/MyOrders";
 import Payments from "./pages/customer/Payments";
 import Profile from "./pages/customer/pages/Profile"; // Left behind
 import Checkout from "./pages/dashboard/customer/Checkout"; // Updated checkout component
