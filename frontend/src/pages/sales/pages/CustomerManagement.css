@@ -1,15 +1,7 @@
-/* Customer Management - Premium Theme */
 .customer-management {
-    padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    min-height: 100vh;
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+    padding: 0;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .header h1 {

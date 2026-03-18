@@ -59,11 +59,20 @@ export default function CustomerManagement() {
 
     return (
         <div className="customer-management">
-            <div className="header">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div>
-                    <h1>Customer Management</h1>
-                    <p className="subtitle">Manage your customer relationships</p>
+                    <h1>Customer Relationships</h1>
+                    <p className="subtitle">Manage and track your client base</p>
                 </div>
+                <button 
+                  onClick={fetchCustomers} 
+                  disabled={loading}
+                  className="action-btn orders-btn" 
+                  style={{ padding: '8px 16px', fontSize: '12px', border: 'none', background: '#001a66', color: 'white', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }}
+                >
+                  <span style={{ fontSize: '14px' }}>🔄</span>
+                  {loading ? 'Syncing...' : 'Sync Customers'}
+                </button>
             </div>
 
             {/* Search */}

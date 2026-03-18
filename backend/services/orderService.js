@@ -4,14 +4,16 @@ const getUserOrders = async (userId) => {
     const query = `
       SELECT o.order_id, o.customer_name, o.order_status, o.total_amount, 
              o.delivery_address, o.delivery_type, o.order_date,
-             COUNT(oi.order_item_id) as item_count,
+             (SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) as item_count,
              p.payment_status as latest_payment_status,
              p.bank_slip_url
       FROM orders o
-      LEFT JOIN order_items oi ON o.order_id = oi.order_id
-      LEFT JOIN payments p ON o.order_id = p.order_id
+      LEFT JOIN (
+          SELECT DISTINCT ON (order_id) order_id, payment_status, bank_slip_url
+          FROM payments
+          ORDER BY order_id, payment_date DESC
+      ) p ON o.order_id = p.order_id
       WHERE o.customer_id = $1
-      GROUP BY o.order_id, p.payment_status, p.bank_slip_url
       ORDER BY o.order_date DESC
     `;
     const result = await pool.query(query, [userId]);

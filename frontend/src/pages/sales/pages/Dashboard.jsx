@@ -231,7 +231,18 @@ export default function SalesDashboard() {
 
   return (
     <div className="sales-dashboard">
-      <h1>Sales Dashboard</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <h1>Sales Dashboard</h1>
+        <button 
+          onClick={fetchDashboardData} 
+          disabled={loading}
+          className="action-btn orders-btn" 
+          style={{ padding: '8px 16px', fontSize: '12px', border: 'none', background: '#001a66', color: 'white', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }}
+        >
+          <Zap size={14} color="white" />
+          {loading ? 'Syncing...' : 'Sync Dashboard'}
+        </button>
+      </div>
       <p className="subtitle">Track your sales performance and manage orders</p>
 
       {/* Stats Cards */}
@@ -475,6 +486,21 @@ export default function SalesDashboard() {
                       <li>✓ Order amount correct</li>
                     </ul>
                   </div>
+
+                  {selectedOrder.bank_slip_url && (
+                    <div className="slip-preview">
+                      <h5>Bank Slip Proof:</h5>
+                      <div className="slip-image-container">
+                        <img 
+                          src={`http://localhost:5000/${selectedOrder.bank_slip_url}`} 
+                          alt="Bank Slip" 
+                          className="bank-slip-img"
+                          onClick={() => window.open(`http://localhost:5000/${selectedOrder.bank_slip_url}`, '_blank')}
+                        />
+                      </div>
+                      <p className="slip-hint">Click image to enlarge</p>
+                    </div>
+                  )}
                   
                   <div className="verification-actions">
                     <button 
@@ -499,23 +525,27 @@ export default function SalesDashboard() {
                 <div className="pending-verifications">
                   <h4>Orders Requiring Verification ({pendingVerifications.length})</h4>
                   {pendingVerifications.map(order => (
-                    <div key={order.order_id} className="verification-item">
+                    <div 
+                      key={order.order_id} 
+                      className="verification-item clickable"
+                      onClick={() => setSelectedOrder(order)}
+                      style={{ cursor: 'pointer', transition: 'background 0.2s' }}
+                    >
                       <div className="order-info">
                         <strong>Order #{order.order_id}</strong>
                         <span>{order.customer_name} - Rs. {Number(order.total_amount).toLocaleString()}</span>
+                        {order.bank_slip_url && <small style={{ color: '#001a66' }}>📎 Has Payment Proof</small>}
                       </div>
                       <div className="verification-buttons">
                         <button 
-                          onClick={() => handleVerifyOrder(order.order_id, 'approve')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedOrder(order);
+                            handleVerifyOrder(order.order_id, 'approve');
+                          }}
                           disabled={actionLoading}
                         >
                           <CheckCircle size={14} /> Approve
-                        </button>
-                        <button 
-                          onClick={() => handleVerifyOrder(order.order_id, 'reject')}
-                          disabled={actionLoading}
-                        >
-                          <XCircle size={14} /> Reject
                         </button>
                       </div>
                     </div>
@@ -529,12 +559,12 @@ export default function SalesDashboard() {
 
       {/* Payment Processing Modal */}
       {showPaymentModal && (
-        <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
+        <div className="modal-overlay" onClick={() => { setShowPaymentModal(false); setSelectedOrder(null); }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <CreditCard size={20} color="#001a66" />
               <h3>Payment Settlement</h3>
-              <button className="close-btn" onClick={() => setShowPaymentModal(false)}>×</button>
+              <button className="close-btn" onClick={() => { setShowPaymentModal(false); setSelectedOrder(null); }}>×</button>
             </div>
             <div className="modal-content">
               {selectedOrder ? (
@@ -582,7 +612,12 @@ export default function SalesDashboard() {
                 <div className="pending-payments">
                   <h4>Payments Requiring Processing ({pendingPayments.length})</h4>
                   {pendingPayments.map(order => (
-                    <div key={order.order_id} className="payment-item">
+                    <div 
+                      key={order.order_id} 
+                      className="payment-item clickable"
+                      onClick={() => setSelectedOrder(order)}
+                      style={{ cursor: 'pointer', transition: 'background 0.2s' }}
+                    >
                       <div className="order-info">
                         <strong>Order #{order.order_id}</strong>
                         <span>{order.customer_name} - Rs. {Number(order.total_amount).toLocaleString()}</span>
@@ -590,16 +625,14 @@ export default function SalesDashboard() {
                       </div>
                       <div className="payment-buttons">
                         <button 
-                          onClick={() => handleConfirmPayment(order.payment_id, order.payment_method)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedOrder(order);
+                            handleConfirmPayment(order.payment_id, order.payment_method);
+                          }}
                           disabled={actionLoading}
                         >
                           <CheckCircle size={14} /> Confirm
-                        </button>
-                        <button 
-                          onClick={() => handleConfirmPayment(order.payment_id, 'FAILED')}
-                          disabled={actionLoading}
-                        >
-                          <XCircle size={14} /> Flag
                         </button>
                       </div>
                     </div>

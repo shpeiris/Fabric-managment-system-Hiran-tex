@@ -86,17 +86,22 @@ const getCustomerStats = async () => {
 const getPendingVerifications = async () => {
     try {
         const query = `
-            SELECT o.order_id, o.customer_id, o.total_amount, o.order_date,
-                   c.full_name as customer_name, c.email,
-                   c.tel as phone_number
-            FROM orders o 
-            LEFT JOIN customers c ON o.customer_id = c.customer_id 
-            WHERE o.order_status = 'PENDING' 
+            SELECT DISTINCT ON (o.order_id)
+                   o.*, 
+                   c.full_name as customer_name,
+                   p.bank_slip_url,
+                   p.payment_status,
+                   p.payment_method
+            FROM orders o
+            JOIN customers c ON o.customer_id = c.customer_id
+            LEFT JOIN payments p ON o.order_id = p.order_id
+            WHERE o.order_status = 'PENDING'
             AND o.verified_at IS NULL
-            ORDER BY o.order_date ASC
+            ORDER BY o.order_id, p.payment_date DESC
         `;
         const result = await pool.query(query);
         const orders = result.rows || [];
+        
         return {
             count: orders.length,
             orders
@@ -110,17 +115,19 @@ const getPendingVerifications = async () => {
 const getPendingPayments = async () => {
     try {
         const query = `
-            SELECT o.order_id, o.customer_id, o.total_amount, o.order_date,
-                   c.full_name as customer_name, c.email,
-                   c.tel as phone_number,
-                   p.payment_id, p.payment_method, p.payment_status,
+            SELECT DISTINCT ON (o.order_id)
+                   o.*, 
+                   c.full_name as customer_name,
+                   p.payment_id,
+                   p.payment_status,
+                   p.payment_method,
                    p.bank_slip_url
-            FROM orders o 
-            LEFT JOIN customers c ON o.customer_id = c.customer_id 
+            FROM orders o
+            JOIN customers c ON o.customer_id = c.customer_id
             LEFT JOIN payments p ON o.order_id = p.order_id
             WHERE p.payment_status = 'PENDING' 
-            OR (o.order_status IN ('PROCESSING', 'PENDING') AND p.payment_id IS NULL)
-            ORDER BY o.order_date ASC
+               OR (o.order_status IN ('PROCESSING', 'PENDING') AND p.payment_id IS NULL)
+            ORDER BY o.order_id, p.payment_date DESC NULLS LAST
         `;
         const result = await pool.query(query);
         const orders = result.rows || [];
@@ -148,22 +155,9 @@ const verifyOrder = async (orderId, action, verifiedBy, verifierId) => {
 
         const result = await pool.query(updateQuery, [newStatus, verifierId, orderId]);
 
-        // Log status change in history
-        const historyQuery = `
-            INSERT INTO order_status_history (order_id, new_status, changed_by, notes)
-            VALUES ($1, $2, $3, $4)
-        `;
-
-        await pool.query(historyQuery, [
-            orderId,
-            newStatus,
-            verifierId,
-            `Order ${action}d by ${verifiedBy}`
-        ]);
-
         // Log the verification activity
         const activityQuery = `
-            INSERT INTO activity_logs (actor_id, actor_type, action, details)
+            INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
             VALUES ($1, 'EMPLOYEE', $2, $3)
         `;
 
@@ -247,28 +241,25 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
 
         // Create confirmation record
         const confirmationQuery = `
-            INSERT INTO confirmation_logs (order_id, confirmation_type, sent_by, recipient_email, recipient_phone, message_content, recipient_type)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO confirmation_logs (order_id, confirmation_type, sent_by, recipient_email, recipient_phone, message_content)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *
         `;
 
         const confirmationMessage = generateConfirmationMessage(orderId, type, customerInfo);
-        const recipientType = customerInfo.email && customerInfo.phone ? 'BOTH' :
-            customerInfo.email ? 'EMAIL' : 'SMS';
 
         await pool.query(confirmationQuery, [
             orderId,
-            type.toUpperCase(),
+            type,
             senderId,
             customerInfo.email,
             customerInfo.phone,
-            confirmationMessage,
-            recipientType
+            confirmationMessage
         ]);
 
         // Log the activity
         const activityQuery = `
-            INSERT INTO activity_logs (actor_id, actor_type, action, details)
+            INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
             VALUES ($1, 'EMPLOYEE', $2, $3)
         `;
 

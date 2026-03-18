@@ -4,14 +4,13 @@ const getPayments = async () => {
     try {
         const query = `
             SELECT p.payment_id, p.order_id, p.amount, p.payment_status, 
-                   p.reference_number, p.bank_slip_url, p.payment_date,
-                   pm.method_name as payment_method,
+                   p.bank_slip_url, p.payment_date,
+                   p.payment_method,
                    c.full_name as customer_name,
                    o.total_amount as order_total
             FROM payments p
             JOIN orders o ON p.order_id = o.order_id
             JOIN customers c ON o.customer_id = c.customer_id
-            JOIN payment_methods pm ON p.method_id = pm.method_id
             ORDER BY p.payment_date DESC
         `;
         const result = await pool.query(query);
@@ -34,15 +33,6 @@ const uploadBankSlip = async (userId, orderId, slipUrl) => {
 
         const order = orderResult.rows[0];
 
-        // Get bank transfer method ID
-        const methodQuery = `SELECT method_id FROM payment_methods WHERE method_name = 'BANK_TRANSFER'`;
-        const methodResult = await pool.query(methodQuery);
-        const methodId = methodResult.rows[0]?.method_id;
-
-        if (!methodId) {
-            throw new Error("Bank transfer payment method not configured");
-        }
-
         // Check if payment record exists
         const paymentQuery = `SELECT * FROM payments WHERE order_id = $1`;
         const paymentResult = await pool.query(paymentQuery, [orderId]);
@@ -51,19 +41,19 @@ const uploadBankSlip = async (userId, orderId, slipUrl) => {
             // Update existing payment
             const updateQuery = `
                 UPDATE payments 
-                SET bank_slip_url = $1, payment_status = 'PENDING', method_id = $2, reference_number = $3
-                WHERE order_id = $4
+                SET bank_slip_url = $1, payment_status = 'PENDING', payment_method = 'BANK_TRANSFER'
+                WHERE order_id = $2
                 RETURNING *
             `;
-            await pool.query(updateQuery, [slipUrl, methodId, `SLIP_${Date.now()}`, orderId]);
+            await pool.query(updateQuery, [slipUrl, orderId]);
         } else {
             // Insert new payment
             const insertQuery = `
-                INSERT INTO payments (order_id, method_id, amount, payment_status, bank_slip_url, reference_number) 
-                VALUES ($1, $2, $3, 'PENDING', $4, $5)
+                INSERT INTO payments (order_id, payment_method, amount, payment_status, bank_slip_url) 
+                VALUES ($1, 'BANK_TRANSFER', $2, 'PENDING', $3)
                 RETURNING *
             `;
-            await pool.query(insertQuery, [orderId, methodId, order.total_amount, slipUrl, `SLIP_${Date.now()}`]);
+            await pool.query(insertQuery, [orderId, order.total_amount, slipUrl]);
         }
 
         return { message: "Bank slip uploaded successfully" };
@@ -85,9 +75,8 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
             SET payment_status = $1, 
                 verified_by = $2, 
                 confirmed_by = $3,
-                confirmation_date = NOW(),
-                notes = $4
-            WHERE payment_id = $5
+                confirmation_date = NOW()
+            WHERE payment_id = $4
             RETURNING *
         `;
         
@@ -95,7 +84,6 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
             status, 
             verifierId, 
             verifierId,
-            `Payment ${status.toLowerCase()} by ${options.confirmedBy || 'system'}`,
             paymentId
         ]);
 
@@ -106,68 +94,29 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
         const payment = paymentResult.rows[0];
 
         if (status === 'COMPLETED') {
-            // Get processing status ID
-            const statusQuery = `SELECT status_id FROM order_statuses WHERE status_name = 'PROCESSING'`;
-            const statusResult = await client.query(statusQuery);
-            const processingStatusId = statusResult.rows[0]?.status_id;
-            
-            if (processingStatusId) {
-                // Get current order status for history
-                const currentOrderQuery = `
-                    SELECT o.status_id, os.status_name 
-                    FROM orders o 
-                    JOIN order_statuses os ON o.status_id = os.status_id 
-                    WHERE o.order_id = $1
-                `;
-                const currentOrderResult = await client.query(currentOrderQuery, [payment.order_id]);
-                const currentStatusId = currentOrderResult.rows[0]?.status_id;
-                
-                // Update order status to PROCESSING when payment is confirmed
-                const updateOrderQuery = `
-                    UPDATE orders 
-                    SET status_id = $1
-                    WHERE order_id = $2 AND status_id != $1
-                    RETURNING *
-                `;
-                
-                const orderResult = await client.query(updateOrderQuery, [processingStatusId, payment.order_id]);
-                
-                if (orderResult.rows.length > 0) {
-                    // Log status change in history
-                    const historyQuery = `
-                        INSERT INTO order_status_history (order_id, old_status_id, new_status_id, changed_by, reason)
-                        VALUES ($1, $2, $3, $4, $5)
-                    `;
-                    
-                    await client.query(historyQuery, [
-                        payment.order_id, 
-                        currentStatusId,
-                        processingStatusId, 
-                        verifierId, 
-                        'Payment confirmed - order moved to processing'
-                    ]);
-                }
-            }
-        }
-
-        // Log the payment confirmation activity
-        await client.query(activityQuery, [
-            verifierId, 
-            `Payment ${status.toLowerCase()} for Order #${payment.order_id} by ${confirmedBy || 'system'}`, 
-            payment.payment_id
-        ]);
-
-        if (status === 'COMPLETED') {
-            // Simulate sending notification to customer
-            const notificationQuery = `
-                INSERT INTO activity_logs (actor_id, actor_type, action_type, description, target_table, target_id)
-                VALUES ($1, 'SYSTEM', 'NOTIFICATION_SENT', $2, 'orders', $3)
+            // Update order status to PROCESSING when payment is confirmed
+            const updateOrderQuery = `
+                UPDATE orders 
+                SET order_status = 'PROCESSING'
+                WHERE order_id = $1 AND order_status != 'PROCESSING'
+                RETURNING *
             `;
-            await client.query(notificationQuery, [
-                verifierId,
-                `Order confirmation notification sent to customer for Order #${payment.order_id}`,
-                payment.order_id
-            ]);
+            
+            const orderResult = await client.query(updateOrderQuery, [payment.order_id]);
+            
+            if (orderResult.rows.length > 0) {
+                // Log activity
+                const activityQuery = `
+                    INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
+                    VALUES ($1, 'EMPLOYEE', $2, $3)
+                `;
+                
+                await client.query(activityQuery, [
+                    verifierId, 
+                    'PAYMENT_CONFIRMATION',
+                    `Payment confirmed and order #${payment.order_id} moved to PROCESSING`
+                ]);
+            }
         }
 
         await client.query('COMMIT');

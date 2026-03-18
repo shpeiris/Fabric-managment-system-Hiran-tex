@@ -113,16 +113,86 @@ export default function Checkout() {
     </div>
   );
 
+  const [slipFile, setSlipFile] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  const handleUploadBankSlip = async () => {
+    if (!slipFile) return alert("Please select a bank slip image");
+    try {
+      setUploadLoading(true);
+      const formDataUpload = new FormData();
+      formDataUpload.append('order_id', orderSuccess);
+      formDataUpload.append('slip', slipFile);
+
+      const response = await apiCall(`${API}/api/payments/upload-slip`, {
+        method: 'POST',
+        body: formDataUpload
+      });
+
+      if (response.ok) {
+        setUploadSuccess(true);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Failed to upload slip");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error uploading slip");
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
   if (step === 3 && orderSuccess) {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+      <div style={{ textAlign: 'center', padding: '60px 20px', maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎉</div>
         <h2 style={{ fontSize: '26px', fontWeight: '700', color: '#1f2937', marginBottom: '12px' }}>Order Placed Successfully!</h2>
         <p style={{ fontSize: '16px', color: '#6b7280', marginBottom: '8px' }}>
-          Your order <strong style={{ color: '#2563eb' }}>#{String(orderSuccess).padStart(3, '0')}</strong> has been received.
+          Your order <strong style={{ color: '#2563eb' }}>#{String(orderSuccess).padStart(4, '0')}</strong> has been received.
         </p>
-        <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '30px' }}>We'll contact you at {formData.phone} to confirm your order.</p>
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+
+        {formData.paymentMethod === 'bank-transfer' && !uploadSuccess ? (
+          <div style={{ marginTop: '30px', padding: '30px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #001a66' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#001a66', marginBottom: '10px' }}>🏦 Action Required: Upload Bank Slip</h3>
+            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>To process your order, please upload your payment proof below.</p>
+            
+            <div 
+              style={{ border: '1px solid #e2e8f0', background: 'white', padding: '20px', borderRadius: '8px', cursor: 'pointer', marginBottom: '20px' }}
+              onClick={() => document.getElementById('checkout-slip-input').click()}
+            >
+              <span style={{ fontSize: '24px', display: 'block' }}>📎</span>
+              <p style={{ fontSize: '14px', color: '#475569', marginTop: '8px' }}>
+                {slipFile ? slipFile.name : 'Click to select bank slip image'}
+              </p>
+              <input 
+                id="checkout-slip-input" 
+                type="file" 
+                style={{ display: 'none' }} 
+                accept="image/*" 
+                onChange={(e) => setSlipFile(e.target.files[0])} 
+              />
+            </div>
+
+            <button
+              onClick={handleUploadBankSlip}
+              disabled={uploadLoading || !slipFile}
+              style={{ background: '#001a66', color: 'white', border: 'none', padding: '12px 30px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', opacity: (uploadLoading || !slipFile) ? 0.6 : 1, width: '100%' }}
+            >
+              {uploadLoading ? 'Uploading...' : 'Submit Payment Proof'}
+            </button>
+          </div>
+        ) : formData.paymentMethod === 'bank-transfer' && uploadSuccess ? (
+          <div style={{ marginTop: '30px', padding: '20px', background: '#f0fdf4', borderRadius: '12px', border: '1px solid #22c55e' }}>
+            <p style={{ color: '#15803d', fontWeight: '600' }}>✅ Payment proof received!</p>
+            <p style={{ fontSize: '13px', color: '#166534', marginTop: '4px' }}>Our team will verify your payment and update your order shortly.</p>
+          </div>
+        ) : (
+          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '30px' }}>We'll contact you at {formData.phone} to confirm your order.</p>
+        )}
+
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '40px' }}>
           <button
             onClick={() => navigate('/customer/orders')}
             style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}
