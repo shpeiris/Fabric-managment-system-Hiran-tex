@@ -1,4 +1,4 @@
-jjjjjjj  import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { apiCall } from "../../utils/auth";
 
 export default function Payments() {
@@ -193,7 +193,7 @@ export default function Payments() {
                     Cancel
                   </button>
                   <button 
-                    onClick={handleUploadBankSlip} 
+                    onClick={handleUploadSlip} 
                     disabled={loading}
                     style={{ background: '#001a66', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', opacity: loading ? 0.7 : 1 }}
                   >
