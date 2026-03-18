@@ -3,41 +3,16 @@ import { useNavigate } from "react-router-dom";
 import CompleteOrder from "./CompleteOrder.jsx";
 import PaymentMethod from "./PaymentMethod.jsx";
 import OrderConfirmation from "./OrderConfirmation.jsx";
+import cartService from "../../../services/cartService";
+import orderService from "../../../services/orderService";
+import paymentService from "../../../services/paymentService";
+import { getUser } from "../../../utils/auth";
 import "./Checkout.css";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  // Hardcoded cart data matching ShoppingCart.jsx
-  const [cartItems, setCartItems] = useState([
-    {
-      cart_id: 1,
-      fabric_id: 101,
-      material_type: "Cotton",
-      fabric_name: "Premium Cotton Blue",
-      color: "Blue",
-      price_per_meter: "450.00",
-      quantity: 5,
-    },
-    {
-      cart_id: 2,
-      fabric_id: 102,
-      material_type: "Silk",
-      fabric_name: "Elegant Silk Red",
-      color: "Red",
-      price_per_meter: "1200.00",
-      quantity: 2,
-    },
-    {
-      cart_id: 3,
-      fabric_id: 103,
-      material_type: "Linen",
-      fabric_name: "Pure Linen White",
-      color: "White",
-      price_per_meter: "850.00",
-      quantity: 3,
-    },
-  ]);
+  const [cartItems, setCartItems] = useState([]);
   const [orderData, setOrderData] = useState({
     fullName: "",
     phoneNumber: "",
@@ -51,7 +26,39 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Removed useEffect fetchCart call since data is hardcoded
+  useEffect(() => {
+    const fetchCartAndUser = async () => {
+      try {
+        setLoading(true);
+        // Fetch cart
+        const cartData = await cartService.getCart();
+        const items = cartData.cart || [];
+        if (items.length === 0) {
+          navigate("/customer/cart");
+          return;
+        }
+        setCartItems(items);
+
+        // Pre-fill user data
+        const user = getUser();
+        if (user) {
+          setOrderData(prev => ({
+            ...prev,
+            fullName: user.full_name || user.name || "",
+            phoneNumber: user.phone || user.tel || "",
+            deliveryAddress: user.address || ""
+          }));
+        }
+      } catch (err) {
+        console.error("Error initializing checkout:", err);
+        setError("Failed to load checkout data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartAndUser();
+  }, [navigate]);
 
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
@@ -99,15 +106,50 @@ const Checkout = () => {
   const submitOrder = async () => {
     try {
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setOrderId(Math.floor(Math.random() * 10000) + 1000); // Generate random order ID
+      setError(null);
+
+      const itemsPayload = cartItems.map(item => ({
+        fabric_id: item.fabric_id,
+        quantity: item.quantity,
+        unit_price: parseFloat(item.price_per_meter)
+      }));
+
+      const payload = {
+        items: itemsPayload,
+        delivery_address: orderData.deliveryAddress,
+        delivery_type: orderData.deliveryMethod,
+        payment_method: orderData.paymentMethod,
+        customer_name: orderData.fullName,
+        phone_number: orderData.phoneNumber,
+        special_instructions: orderData.specialInstructions
+      };
+
+      const result = await orderService.createOrder(payload);
+      
+      if (result.order_id) {
+        setOrderId(result.order_id);
+
+        // If bank transfer and file selected, upload slip
+        if (orderData.paymentMethod === 'BANK_TRANSFER' && orderData.bankSlipFile) {
+          const formData = new FormData();
+          formData.append('order_id', result.order_id);
+          formData.append('slip', orderData.bankSlipFile);
+          
+          try {
+            await paymentService.uploadPaymentProof(formData);
+          } catch (uploadErr) {
+            console.error("Slip upload failed:", uploadErr);
+            // We don't fail the whole order if just the slip upload failed
+            // maybe show a warning later
+          }
+        }
+
         setCurrentStep(4); // Go to confirmation
-        setLoading(false);
-      }, 1500);
+      }
     } catch (err) {
       console.error("Error placing order:", err);
-      setError(err.message || "Failed to place order");
+      setError(err.error || "Failed to place order. Please try again.");
+    } finally {
       setLoading(false);
     }
   };

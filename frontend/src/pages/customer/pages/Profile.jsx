@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiCall } from '../../../utils/auth.js';
+import { apiCall, getUser } from '../../../utils/auth.js';
+import customerService from '../../../services/customerService.js';
 
 const API = 'http://localhost:5000';
 
@@ -84,29 +85,22 @@ export default function Profile() {
     setErrorMsg('');
     setSuccessMsg('');
     try {
-      const res = await apiCall(`${API}/api/customer/profile`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          full_name: formData.full_name,
-          phone: formData.phone,
-          address: formData.address,
-        })
+      const data = await customerService.updateProfile({
+        full_name: formData.full_name,
+        phone: formData.phone,
+        address: formData.address,
       });
-      const data = await res.json();
-      if (res.ok) {
-        // Update localStorage user
-        const stored = JSON.parse(localStorage.getItem('user') || '{}');
-        const updated = { ...stored, ...data.user };
-        localStorage.setItem('user', JSON.stringify(updated));
-        setUser(updated);
-        setSuccessMsg('Profile updated successfully!');
-        setIsEditing(false);
-        setTimeout(() => setSuccessMsg(''), 3000);
-      } else {
-        setErrorMsg(data.error || 'Failed to update profile');
-      }
+      
+      // Update localStorage user
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      const updated = { ...stored, ...data.user };
+      localStorage.setItem('user', JSON.stringify(updated));
+      setUser(updated);
+      setSuccessMsg('Profile updated successfully!');
+      setIsEditing(false);
+      setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err) {
-      setErrorMsg('Could not connect to server');
+      setErrorMsg(err.error || 'Failed to update profile');
     } finally {
       setSaving(false);
     }

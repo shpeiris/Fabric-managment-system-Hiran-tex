@@ -12,6 +12,24 @@ const customerService = {
     } catch (error) {
       throw error.response?.data || { error: "Failed to fetch dashboard statistics" };
     }
+  },
+
+  updateProfile: async (profileData) => {
+    try {
+      const response = await apiClient.patch("/api/customer/profile", profileData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: "Failed to update profile" };
+    }
+  },
+
+  submitFeedback: async (feedbackData) => {
+    try {
+      const response = await apiClient.post("/api/customer/feedback", feedbackData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: "Failed to submit feedback" };
+    }
   }
 };
 

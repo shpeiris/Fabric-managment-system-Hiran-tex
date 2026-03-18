@@ -79,10 +79,10 @@ const paymentService = {
    * @param {FormData} formData - File upload
    * @returns {Promise}
    */
-  uploadPaymentProof: async (paymentId, formData) => {
+  uploadPaymentProof: async (formData) => {
     try {
       const response = await apiClient.post(
-        `/api/payments/${paymentId}/upload`,
+        `/api/payments/upload-slip`,
         formData,
         {
           headers: {

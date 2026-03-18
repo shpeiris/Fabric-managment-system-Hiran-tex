@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { apiCall } from '../../../utils/auth.js';
+import customerService from '../../../services/customerService.js';
 
 const API = 'http://localhost:5000';
 
@@ -26,25 +27,17 @@ export default function Feedback() {
     setSubmitting(true);
 
     try {
-      const res = await apiCall(`${API}/api/customer/feedback`, {
-        method: 'POST',
-        body: JSON.stringify({
-          overall_rating: rating,
-          order_experience: feedback.orderExperience || null,
-          fabric_quality: feedback.fabricQuality || null,
-          delivery: feedback.delivery || null,
-          customer_service: feedback.customerService || null,
-          comments: feedback.comments || null
-        })
+      await customerService.submitFeedback({
+        overall_rating: rating,
+        order_experience: feedback.orderExperience || null,
+        fabric_quality: feedback.fabricQuality || null,
+        delivery: feedback.delivery || null,
+        customer_service: feedback.customerService || null,
+        comments: feedback.comments || null
       });
-      const data = await res.json();
-      if (res.ok) {
-        setSubmitted(true);
-      } else {
-        setError(data.error || 'Failed to submit feedback. Please try again.');
-      }
+      setSubmitted(true);
     } catch (err) {
-      setError('Could not connect to server. Please try again.');
+      setError(err.error || 'Failed to submit feedback. Please try again.');
     } finally {
       setSubmitting(false);
     }
