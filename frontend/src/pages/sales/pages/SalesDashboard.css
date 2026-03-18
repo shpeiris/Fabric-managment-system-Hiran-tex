@@ -1,8 +1,10 @@
 /* Sales Dashboard - Premium Theme */
 .sales-dashboard {
-    padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    min-height: 100vh;
+    padding: 0;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: transparent;
+    min-height: auto;
 }
 
 .sales-dashboard h1 {
@@ -21,9 +23,9 @@
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
 }
 
 .stat-card {
@@ -66,16 +68,15 @@
     color: #001a66;
 }
 
-.stat-icon {
-    font-size: 40px;
-    width: 70px;
-    height: 70px;
+.stat-icon-container {
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(124, 255, 0, 0.15) 0%, rgba(0, 26, 102, 0.05) 100%);
-    border-radius: 16px;
-    border: 2px solid rgba(124, 255, 0, 0.2);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .stat-info h4 {
@@ -99,11 +100,19 @@
     margin-bottom: 40px;
 }
 
-.section h3 {
+/* Section Header with Icon */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.section-header h3 {
     font-size: 20px;
     font-weight: 700;
     color: #001a66;
-    margin-bottom: 20px;
+    margin: 0;
 }
 
 /* Table */
@@ -214,8 +223,8 @@
 }
 
 .quick-actions h3 {
+    margin: 0;
     color: #001a66;
-    margin-bottom: 20px;
     font-size: 20px;
     font-weight: 700;
 }
@@ -610,4 +619,61 @@
         align-self: stretch;
         justify-content: center;
     }
+}
+
+/* Bank Slip Preview */
+.slip-preview {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.slip-preview h5 {
+    margin-bottom: 12px;
+    color: #001a66;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.slip-image-container {
+    width: 60%;
+    max-height: 400px;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    cursor: zoom-in;
+    transition: all 0.2s ease;
+    margin: 0 auto;
+}
+
+.slip-image-container:hover {
+    border-color: #001a66;
+}
+
+.bank-slip-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.slip-hint {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.mini-btn.slip {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.mini-btn.slip:hover {
+    background: #e2e8f0;
+    color: #0f172a;
 }

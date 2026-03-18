@@ -27,7 +27,8 @@ const getSalesDashboardStats = async () => {
                    c.tel as phone_number,
                    p.payment_status,
                    p.payment_id,
-                   p.payment_method
+                   p.payment_method,
+                   p.bank_slip_url
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.customer_id 
             LEFT JOIN payments p ON o.order_id = p.order_id
@@ -112,7 +113,8 @@ const getPendingPayments = async () => {
             SELECT o.order_id, o.customer_id, o.total_amount, o.order_date,
                    c.full_name as customer_name, c.email,
                    c.tel as phone_number,
-                   p.payment_id, p.payment_method, p.payment_status
+                   p.payment_id, p.payment_method, p.payment_status,
+                   p.bank_slip_url
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.customer_id 
             LEFT JOIN payments p ON o.order_id = p.order_id

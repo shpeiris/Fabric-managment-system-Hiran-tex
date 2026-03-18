@@ -121,7 +121,13 @@ export class SalesLogger {
     dataFetch: (details) => SalesLogger.info('Dashboard', 'Data Fetch', details),
     dataFetchError: (error) => SalesLogger.error('Dashboard', 'Data Fetch Failed', { error: error.message }),
     statCardClick: (cardType) => SalesLogger.info('Dashboard', 'Stat Card Clicked', { cardType }),
-    refresh: () => SalesLogger.info('Dashboard', 'Data Refreshed', {})
+    refresh: () => SalesLogger.info('Dashboard', 'Data Refreshed', {}),
+    orderAction: (details) => SalesLogger.info('Dashboard', 'Order Action', details),
+    orderActionError: (error) => SalesLogger.error('Dashboard', 'Order Action Failed', { error: error.message }),
+    paymentAction: (details) => SalesLogger.info('Dashboard', 'Payment Action', details),
+    paymentActionError: (error) => SalesLogger.error('Dashboard', 'Payment Action Failed', { error: error.message }),
+    notificationAction: (details) => SalesLogger.info('Dashboard', 'Notification Action', details),
+    notificationActionError: (error) => SalesLogger.error('Dashboard', 'Notification Action Failed', { error: error.message })
   };
 
   static orders = {

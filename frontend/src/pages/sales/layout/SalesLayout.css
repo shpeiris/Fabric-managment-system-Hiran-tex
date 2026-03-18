@@ -6,8 +6,8 @@
 
 .sales-main-content {
   flex: 1;
-  margin-left: 250px; /* Width of sidebar */
-  padding: 2rem;
+  margin-left: 260px; /* Synchronized with Sidebar width */
+  padding: 2.5rem;
   background-color: #f8f9fa;
   min-height: 100vh;
 }

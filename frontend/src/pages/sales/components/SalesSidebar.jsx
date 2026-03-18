@@ -35,12 +35,16 @@ const SalesSidebar = () => {
   return (
     <aside style={{
       width: '260px',
-      minHeight: '100vh',
+      height: '100vh',
+      position: 'fixed',
+      left: 0,
+      top: 0,
       background: '#001a66',
       color: 'white',
       display: 'flex',
       flexDirection: 'column',
-      boxShadow: '4px 0 15px rgba(0, 0, 0, 0.3)'
+      boxShadow: '4px 0 15px rgba(0, 0, 0, 0.3)',
+      zIndex: 100
     }}>
       {/* Header */}
       <div style={{

@@ -4,6 +4,66 @@ import { apiCall } from "../../../utils/auth.js";
 import SalesLogger from "../../../utils/salesLogger.js";
 import "./SalesDashboard.css";
 
+// Professional SVG Components
+const IconWrapper = ({ children, color = "currentColor", size = 20 }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke={color} 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    {children}
+  </svg>
+);
+
+const DollarSign = (props) => (
+  <IconWrapper {...props}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></IconWrapper>
+);
+
+const TrendingUp = (props) => (
+  <IconWrapper {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></IconWrapper>
+);
+
+const Users = (props) => (
+  <IconWrapper {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></IconWrapper>
+);
+
+const Package = (props) => (
+  <IconWrapper {...props}><line x1="16.5" y1="9.4" x2="16.5" y2="4.01"></line><path d="M20.94 11l-9.11 5.23-9.11-5.23L12.72 5.77 20.94 11z"></path><path d="M2.06 14.5l9.11 5.23 9.11-5.23"></path><line x1="2.06" y1="11" x2="2.06" y2="14.5"></line><line x1="21.88" y1="11" x2="21.88" y2="14.5"></line><line x1="12" y1="21" x2="12" y2="15"></line></IconWrapper>
+);
+
+const CheckCircle = (props) => (
+  <IconWrapper {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></IconWrapper>
+);
+
+const CreditCard = (props) => (
+  <IconWrapper {...props}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></IconWrapper>
+);
+
+const Zap = (props) => (
+  <IconWrapper {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></IconWrapper>
+);
+
+const Clipboard = (props) => (
+  <IconWrapper {...props}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></IconWrapper>
+);
+
+const Mail = (props) => (
+  <IconWrapper {...props}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2-2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></IconWrapper>
+);
+
+const XCircle = (props) => (
+  <IconWrapper {...props}><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></IconWrapper>
+);
+
+const Truck = (props) => (
+  <IconWrapper {...props}><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></IconWrapper>
+);
+
 export default function SalesDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
@@ -71,6 +131,104 @@ export default function SalesDashboard() {
     }
   };
 
+  const handleVerifyOrder = async (orderId, action) => {
+    try {
+      setActionLoading(true);
+      SalesLogger.dashboard.orderAction({ action: `verify_${action}`, orderId });
+      
+      const response = await apiCall(`http://localhost:5000/api/sales/verify-order/${orderId}`, {
+        method: 'POST',
+        body: JSON.stringify({ 
+          action, 
+          verifiedBy: 'Salesperson' // In a real app, this would be the logged-in user's name
+        })
+      });
+
+      if (response.ok) {
+        SalesLogger.dashboard.orderAction({ success: true, orderId, action });
+        await fetchDashboardData();
+        setShowVerificationModal(false);
+        // Automatically open notification modal for the verified order
+        setShowConfirmationModal(true);
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || `Failed to ${action} order`);
+      }
+    } catch (err) {
+      console.error(`Error ${action}ing order:`, err);
+      SalesLogger.dashboard.orderActionError(err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmPayment = async (paymentId, methodOrStatus) => {
+    try {
+      setActionLoading(true);
+      SalesLogger.dashboard.paymentAction({ action: 'confirm_payment', paymentId });
+      
+      const response = await apiCall('http://localhost:5000/api/payments/confirm', {
+        method: 'POST',
+        body: JSON.stringify({
+          payment_id: paymentId,
+          status: methodOrStatus === 'FAILED' ? 'FAILED' : 'COMPLETED',
+          confirmedBy: 'Salesperson',
+          method: methodOrStatus === 'FAILED' ? 'N/A' : methodOrStatus
+        })
+      });
+
+      if (response.ok) {
+        SalesLogger.dashboard.paymentAction({ success: true, paymentId });
+        await fetchDashboardData();
+        setShowPaymentModal(false);
+        // Automatically open notification modal for the settled order
+        setShowConfirmationModal(true);
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to process payment');
+      }
+    } catch (err) {
+      console.error('Error processing payment:', err);
+      SalesLogger.dashboard.paymentActionError(err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSendConfirmation = async (orderId, type) => {
+    try {
+      setActionLoading(true);
+      SalesLogger.dashboard.notificationAction({ type, orderId });
+      
+      const response = await apiCall('http://localhost:5000/api/sales/send-confirmation', {
+        method: 'POST',
+        body: JSON.stringify({
+          orderId,
+          type,
+          sentBy: 'Salesperson'
+        })
+      });
+
+      if (response.ok) {
+        SalesLogger.dashboard.notificationAction({ success: true, orderId, type });
+        alert(`${type.replace('_', ' ')} sent successfully!`);
+        setShowConfirmationModal(false);
+        setSelectedOrder(null);
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send confirmation');
+      }
+    } catch (err) {
+      console.error('Error sending confirmation:', err);
+      SalesLogger.dashboard.notificationActionError(err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <div className="sales-dashboard">
       <h1>Sales Dashboard</h1>
@@ -79,67 +237,82 @@ export default function SalesDashboard() {
       {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon">💰</div>
+          <div className="stat-icon-container">
+            <DollarSign size={32} color="#001a66" />
+          </div>
           <div className="stat-info">
-            <h4>Total Sales</h4>
+            <h4>Total Revenue</h4>
             <h2>Rs. {Number(stats.totalSales).toLocaleString()}</h2>
           </div>
         </div>
 
         <div className="stat-card highlight">
-          <div className="stat-icon">📈</div>
+          <div className="stat-icon-container">
+            <TrendingUp size={32} color="#001a66" />
+          </div>
           <div className="stat-info">
-            <h4>Monthly Sales</h4>
+            <h4>Monthly Growth</h4>
             <h2>Rs. {Number(stats.monthlySales).toLocaleString()}</h2>
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">👥</div>
+          <div className="stat-icon-container">
+            <Users size={32} color="#001a66" />
+          </div>
           <div className="stat-info">
-            <h4>Total Customers</h4>
+            <h4>Active Customers</h4>
             <h2>{stats.totalCustomers}</h2>
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">📦</div>
+          <div className="stat-icon-container">
+            <Package size={32} color="#001a66" />
+          </div>
           <div className="stat-info">
-            <h4>Pending Orders</h4>
+            <h4>Orders to Fulfill</h4>
             <h2>{stats.pendingOrders}</h2>
           </div>
         </div>
 
         <div className="stat-card verification" onClick={() => setShowVerificationModal(true)}>
-          <div className="stat-icon">✅</div>
+          <div className="stat-icon-container">
+            <CheckCircle size={32} color="#856404" />
+          </div>
           <div className="stat-info">
-            <h4>Need Verification</h4>
+            <h4>Security Checks</h4>
             <h2>{stats.verificationRequired}</h2>
-            <p className="stat-subtitle">Click to review</p>
+            <p className="stat-subtitle">Verify pending orders</p>
           </div>
         </div>
 
         <div className="stat-card payment" onClick={() => setShowPaymentModal(true)}>
-          <div className="stat-icon">💳</div>
+          <div className="stat-icon-container">
+            <CreditCard size={32} color="#155724" />
+          </div>
           <div className="stat-info">
-            <h4>Pending Payments</h4>
+            <h4>Payment Queue</h4>
             <h2>{stats.pendingPayments}</h2>
-            <p className="stat-subtitle">Click to process</p>
+            <p className="stat-subtitle">Process incoming payments</p>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="quick-actions">
-        <h3>🚀 Quick Actions</h3>
+        <div className="section-header">
+          <Zap size={24} color="#001a66" />
+          <h3>Management Toolbar</h3>
+        </div>
         <div className="action-buttons">
           <button 
             className="action-btn verify-btn"
             onClick={() => setShowVerificationModal(true)}
             disabled={stats.verificationRequired === 0}
           >
-            <span className="btn-icon">✅</span>
-            Verify Orders ({stats.verificationRequired})
+            <CheckCircle size={18} />
+            <span>Review Verifications ({stats.verificationRequired})</span>
           </button>
           
           <button 
@@ -147,31 +320,34 @@ export default function SalesDashboard() {
             onClick={() => setShowPaymentModal(true)}
             disabled={stats.pendingPayments === 0}
           >
-            <span className="btn-icon">💳</span>
-            Process Payments ({stats.pendingPayments})
+            <CreditCard size={18} />
+            <span>Release Payments ({stats.pendingPayments})</span>
           </button>
           
           <button 
             className="action-btn confirm-btn"
             onClick={() => setShowConfirmationModal(true)}
           >
-            <span className="btn-icon">📧</span>
-            Send Confirmations
+            <Mail size={18} />
+            <span>Notify Customers</span>
           </button>
           
           <button 
             className="action-btn orders-btn"
             onClick={() => navigate('/sales/orders')}
           >
-            <span className="btn-icon">📋</span>
-            All Orders
+            <Clipboard size={18} />
+            <span>Order Database</span>
           </button>
         </div>
       </div>
 
       {/* Recent Orders */}
       <div className="section">
-        <h3>📋 Recent Orders</h3>
+        <div className="section-header">
+          <Clipboard size={24} color="#001a66" />
+          <h3>Transaction History</h3>
+        </div>
         <div className="table-container">
           <table className="data-table">
             <thead>
@@ -217,9 +393,9 @@ export default function SalesDashboard() {
                               setSelectedOrder(order);
                               setShowVerificationModal(true);
                             }}
-                            title="Verify Order"
+                            title="Verify Order Security"
                           >
-                            ✅
+                            <CheckCircle size={14} />
                           </button>
                         )}
                         {order.payment_status === 'PENDING' && (
@@ -229,10 +405,21 @@ export default function SalesDashboard() {
                               setSelectedOrder(order);
                               setShowPaymentModal(true);
                             }}
-                            title="Process Payment"
+                            title="Process Payment Transaction"
                           >
-                            💳
+                            <CreditCard size={14} />
                           </button>
+                        )}
+                        {order.bank_slip_url && (
+                          <a 
+                            href={`http://localhost:5000/${order.bank_slip_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mini-btn slip"
+                            title="View Bank Slip Proof"
+                          >
+                            <Package size={14} />
+                          </a>
                         )}
                         <button 
                           className="mini-btn confirm" 
@@ -240,9 +427,9 @@ export default function SalesDashboard() {
                             setSelectedOrder(order);
                             setShowConfirmationModal(true);
                           }}
-                          title="Send Confirmation"
+                          title="Contact Customer"
                         >
-                          📧
+                          <Mail size={14} />
                         </button>
                       </div>
                     </td>
@@ -265,7 +452,8 @@ export default function SalesDashboard() {
         <div className="modal-overlay" onClick={() => setShowVerificationModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>📋 Order Verification</h3>
+              <Clipboard size={20} color="#001a66" />
+              <h3>Security Verification</h3>
               <button className="close-btn" onClick={() => setShowVerificationModal(false)}>×</button>
             </div>
             <div className="modal-content">
@@ -294,14 +482,16 @@ export default function SalesDashboard() {
                       onClick={() => handleVerifyOrder(selectedOrder.order_id, 'approve')}
                       disabled={actionLoading}
                     >
-                      ✅ Approve Order
+                      <CheckCircle size={16} />
+                      Approve Order
                     </button>
                     <button 
                       className="btn verify-reject"
                       onClick={() => handleVerifyOrder(selectedOrder.order_id, 'reject')}
                       disabled={actionLoading}
                     >
-                      ❌ Reject Order
+                      <XCircle size={16} />
+                      Reject Order
                     </button>
                   </div>
                 </div>
@@ -319,13 +509,13 @@ export default function SalesDashboard() {
                           onClick={() => handleVerifyOrder(order.order_id, 'approve')}
                           disabled={actionLoading}
                         >
-                          ✅ Approve
+                          <CheckCircle size={14} /> Approve
                         </button>
                         <button 
                           onClick={() => handleVerifyOrder(order.order_id, 'reject')}
                           disabled={actionLoading}
                         >
-                          ❌ Reject
+                          <XCircle size={14} /> Reject
                         </button>
                       </div>
                     </div>
@@ -342,7 +532,8 @@ export default function SalesDashboard() {
         <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>💳 Payment Processing</h3>
+              <CreditCard size={20} color="#001a66" />
+              <h3>Payment Settlement</h3>
               <button className="close-btn" onClick={() => setShowPaymentModal(false)}>×</button>
             </div>
             <div className="modal-content">
@@ -354,6 +545,21 @@ export default function SalesDashboard() {
                     <p><strong>Amount:</strong> Rs. {Number(selectedOrder.total_amount).toLocaleString()}</p>
                     <p><strong>Method:</strong> {selectedOrder.payment_method || 'Not specified'}</p>
                   </div>
+
+                  {selectedOrder.bank_slip_url && (
+                    <div className="slip-preview">
+                      <h5>Bank Slip Proof:</h5>
+                      <div className="slip-image-container">
+                        <img 
+                          src={`http://localhost:5000/${selectedOrder.bank_slip_url}`} 
+                          alt="Bank Slip" 
+                          className="bank-slip-img"
+                          onClick={() => window.open(`http://localhost:5000/${selectedOrder.bank_slip_url}`, '_blank')}
+                        />
+                      </div>
+                      <p className="slip-hint">Click image to enlarge</p>
+                    </div>
+                  )}
                   
                   <div className="payment-actions">
                     <button 
@@ -361,14 +567,14 @@ export default function SalesDashboard() {
                       onClick={() => handleConfirmPayment(selectedOrder.payment_id, selectedOrder.payment_method)}
                       disabled={actionLoading}
                     >
-                      ✅ Confirm Payment
+                      <CheckCircle size={16} /> Confirm Receipt
                     </button>
                     <button 
                       className="btn payment-reject"
                       onClick={() => handleConfirmPayment(selectedOrder.payment_id, 'FAILED')}
                       disabled={actionLoading}
                     >
-                      ❌ Reject Payment
+                      <XCircle size={16} /> Flag Issue
                     </button>
                   </div>
                 </div>
@@ -387,13 +593,13 @@ export default function SalesDashboard() {
                           onClick={() => handleConfirmPayment(order.payment_id, order.payment_method)}
                           disabled={actionLoading}
                         >
-                          ✅ Confirm
+                          <CheckCircle size={14} /> Confirm
                         </button>
                         <button 
                           onClick={() => handleConfirmPayment(order.payment_id, 'FAILED')}
                           disabled={actionLoading}
                         >
-                          ❌ Reject
+                          <XCircle size={14} /> Flag
                         </button>
                       </div>
                     </div>
@@ -410,7 +616,8 @@ export default function SalesDashboard() {
         <div className="modal-overlay" onClick={() => setShowConfirmationModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>📧 Send Customer Confirmation</h3>
+              <Mail size={20} color="#001a66" />
+              <h3>Client Communication</h3>
               <button className="close-btn" onClick={() => setShowConfirmationModal(false)}>×</button>
             </div>
             <div className="modal-content">
@@ -430,21 +637,21 @@ export default function SalesDashboard() {
                       onClick={() => handleSendConfirmation(selectedOrder.order_id, 'order_confirmation')}
                       disabled={actionLoading}
                     >
-                      📋 Order Confirmation
+                      <Clipboard size={16} /> Order Status Update
                     </button>
                     <button 
                       className="btn confirmation-type"
                       onClick={() => handleSendConfirmation(selectedOrder.order_id, 'payment_confirmation')}
                       disabled={actionLoading}
                     >
-                      💳 Payment Confirmation
+                      <CreditCard size={16} /> Payment Receipt
                     </button>
                     <button 
                       className="btn confirmation-type"
                       onClick={() => handleSendConfirmation(selectedOrder.order_id, 'delivery_update')}
                       disabled={actionLoading}
                     >
-                      🚚 Delivery Update
+                      <Truck size={16} /> Shipping Logistics
                     </button>
                   </div>
                 </div>
@@ -459,21 +666,21 @@ export default function SalesDashboard() {
                       onClick={() => handleSendConfirmation('all', 'order_confirmation')}
                       disabled={actionLoading}
                     >
-                      📋 Send Order Confirmations
+                      <Clipboard size={16} /> Batch Order Notifications
                     </button>
                     <button 
                       className="btn bulk-confirmation"
                       onClick={() => handleSendConfirmation('all', 'payment_confirmation')}
                       disabled={actionLoading}
                     >
-                      💳 Send Payment Confirmations
+                      <CreditCard size={16} /> Batch Payment Acknowledgements
                     </button>
                     <button 
                       className="btn bulk-confirmation"
                       onClick={() => handleSendConfirmation('all', 'delivery_update')}
                       disabled={actionLoading}
                     >
-                      🚚 Send Delivery Updates
+                      <Truck size={16} /> Batch Dispatch Alerts
                     </button>
                   </div>
                 </div>

@@ -19,53 +19,15 @@ export default function CustomerManagement() {
         }
     }, [searchTerm]);
 
-    const HARDCODED_SRI_LANKAN_CUSTOMERS = [
-        {
-            id: 'H1',
-            full_name: 'Anura Kumara Dissanayake',
-            email: 'anura.k@example.lk',
-            phone: '+94 11 234 5678',
-            total_orders: 12,
-            total_spent: 45000,
-            created_at: '2024-01-15T10:30:00Z'
-        },
-        {
-            id: 'H2',
-            full_name: 'Nimmi Harasgama',
-            email: 'nimmi.h@example.lk',
-            phone: '+94 77 123 4567',
-            total_orders: 8,
-            total_spent: 28500,
-            created_at: '2024-02-20T14:45:00Z'
-        },
-        {
-            id: 'H3',
-            full_name: 'Pathum Nissanka',
-            email: 'pathum.n@example.lk',
-            phone: '+94 71 987 6543',
-            total_orders: 5,
-            total_spent: 15200,
-            created_at: '2024-03-05T09:15:00Z'
-        },
-        {
-            id: 'H4',
-            full_name: 'Chamari Athapaththu',
-            email: 'chamari.a@example.lk',
-            phone: '+94 76 555 4433',
-            total_orders: 15,
-            total_spent: 62000,
-            created_at: '2023-11-12T11:20:00Z'
-        },
-        {
-            id: 'H5',
-            full_name: 'Wanindu Hasaranga',
-            email: 'wanindu.h@example.lk',
-            phone: '+94 72 333 2211',
-            total_orders: 3,
-            total_spent: 9800,
-            created_at: '2024-05-01T16:00:00Z'
-        }
-    ];
+    const SAMPLE_CUSTOMER = {
+        customer_id: 'PRE-001',
+        full_name: 'Pathum Nissanka (Sample)',
+        email: 'pathum.n@example.lk',
+        phone: '+94 71 987 6543',
+        total_orders: 5,
+        total_spent: 15200,
+        registration_date: '2024-03-05T09:15:00Z'
+    };
 
     const fetchCustomers = async () => {
         try {
@@ -75,16 +37,16 @@ export default function CustomerManagement() {
             const data = await response.json();
 
             if (response.ok) {
-                const fetchedCustomers = data.customers || [];
-                setCustomers([...HARDCODED_SRI_LANKAN_CUSTOMERS, ...fetchedCustomers]);
-                SalesLogger.customers.customersFetch((data.customers?.length || 0) + HARDCODED_SRI_LANKAN_CUSTOMERS.length);
+                const fetched = data.customers || [];
+                setCustomers([SAMPLE_CUSTOMER, ...fetched]);
+                SalesLogger.customers.customersFetch(fetched.length + 1);
             } else {
-                setCustomers(HARDCODED_SRI_LANKAN_CUSTOMERS);
+                setCustomers([SAMPLE_CUSTOMER]);
             }
         } catch (err) {
             console.error('Error fetching customers:', err);
             SalesLogger.customers.customersFetchError(err);
-            setCustomers(HARDCODED_SRI_LANKAN_CUSTOMERS);
+            setCustomers([SAMPLE_CUSTOMER]);
         } finally {
             setLoading(false);
         }
@@ -131,14 +93,14 @@ export default function CustomerManagement() {
                     </thead>
                     <tbody>
                         {filteredCustomers.map(customer => (
-                            <tr key={customer.id}>
-                                <td>#{customer.id}</td>
+                            <tr key={customer.customer_id}>
+                                <td>#{customer.customer_id}</td>
                                 <td>{customer.full_name}</td>
                                 <td>{customer.email}</td>
                                 <td>{customer.phone || 'N/A'}</td>
                                 <td>{customer.total_orders}</td>
                                 <td>Rs. {Number(customer.total_spent).toLocaleString()}</td>
-                                <td>{new Date(customer.created_at).toLocaleDateString()}</td>
+                                <td>{new Date(customer.registration_date).toLocaleDateString()}</td>
                             </tr>
                         ))}
                     </tbody>
