@@ -191,17 +191,18 @@ export default function Cart() {
               onClick={() => navigate('/customer/checkout')}
               disabled={cartItems.length === 0}
               style={{
-                background: cartItems.length === 0 ? '#d1d5db' : '#22c55e',
-                color: 'white', border: 'none', padding: '14px', borderRadius: '8px',
+                background: cartItems.length === 0 ? '#d1d5db' : '#001a66',
+                color: 'white', border: 'none', padding: '16px', borderRadius: '8px',
                 fontSize: '15px', cursor: cartItems.length === 0 ? 'not-allowed' : 'pointer',
-                fontWeight: '600', width: '100%', marginBottom: '10px'
+                fontWeight: '700', width: '100%', marginBottom: '12px',
+                textTransform: 'uppercase', letterSpacing: '0.5px'
               }}
             >
-              Proceed to Checkout
+              Proceed to Secure Checkout
             </button>
             <button
               onClick={() => navigate('/customer/browse')}
-              style={{ background: 'transparent', color: '#2563eb', border: '1px solid #2563eb', padding: '12px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500', width: '100%' }}
+              style={{ background: 'transparent', color: '#001a66', border: '1px solid #001a66', padding: '14px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500', width: '100%' }}
             >
               Continue Shopping
             </button>
