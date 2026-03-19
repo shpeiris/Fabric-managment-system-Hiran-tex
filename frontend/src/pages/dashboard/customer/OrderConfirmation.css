@@ -309,29 +309,31 @@
   margin-top: 5px;
 }
 
-.timeline-step.completed .step-icon {
-  background-color: #10b981;
-  color: white;
-}
-
 .timeline-step.pending .step-icon {
-  background-color: #f3f4f6;
-  color: #6b7280;
+  background-color: #f8fafc;
+  color: #94a3b8;
   border: 2px solid #e2e8f0;
 }
 
+.timeline-step.completed .step-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+}
+
 .step-content h4 {
-  color: #1e40af;
-  font-size: 1rem;
-  margin: 0 0 5px 0;
-  font-weight: 600;
+  color: #1e3a8a;
+  font-size: 1.05rem;
+  margin: 0 0 4px 0;
+  font-weight: 700;
+  letter-spacing: -0.2px;
 }
 
 .step-content p {
-  color: #6b7280;
-  font-size: 0.875rem;
+  color: #64748b;
+  font-size: 0.9rem;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .timeline-step.completed .step-content h4 {

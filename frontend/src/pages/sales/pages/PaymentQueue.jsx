@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiCall } from "../../../utils/auth.js";
-import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, Search, RefreshCw } from 'lucide-react';
+import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, Search, RefreshCw, Truck } from 'lucide-react';
 import "./PaymentQueue.css";
 
 const HARDCODED_PAYMENTS = [
@@ -28,6 +28,8 @@ const PaymentQueue = () => {
     const [actionLoading, setActionLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterMethod, setFilterMethod] = useState('ALL');
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
 
     useEffect(() => {
         fetchPendingPayments();
@@ -69,6 +71,7 @@ const PaymentQueue = () => {
             });
 
             if (response.ok) {
+                alert(`Payment ${methodOrStatus === 'FAILED' ? 'rejected' : 'confirmed'} successfully.`);
                 fetchPendingPayments();
             } else {
                 const error = await response.json();
@@ -76,6 +79,33 @@ const PaymentQueue = () => {
             }
         } catch (err) {
             console.error('Error confirming payment:', err);
+            alert(`Error: ${err.message}`);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleSendConfirmation = async (orderId, type) => {
+        try {
+            setActionLoading(true);
+            const response = await apiCall('http://localhost:5000/api/sales/send-confirmation', {
+                method: 'POST',
+                body: JSON.stringify({
+                    orderId,
+                    type,
+                    sentBy: 'Salesperson'
+                })
+            });
+
+            if (response.ok) {
+                alert(`${type.replace('_', ' ')} sent successfully!`);
+                setShowConfirmationModal(false);
+                setSelectedOrder(null);
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to send confirmation');
+            }
+        } catch (err) {
             alert(`Error: ${err.message}`);
         } finally {
             setActionLoading(false);
@@ -222,6 +252,17 @@ const PaymentQueue = () => {
                                 >
                                     <XCircle size={18} /> Reject Payment
                                 </button>
+                                <button 
+                                    className="btn notify"
+                                    onClick={() => {
+                                        setSelectedOrder(order);
+                                        setShowConfirmationModal(true);
+                                    }}
+                                    disabled={actionLoading}
+                                    style={{ background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }}
+                                >
+                                    <Mail size={18} /> Notify
+                                </button>
                             </div>
                         </div>
                     ))}
@@ -231,6 +272,55 @@ const PaymentQueue = () => {
                     <div className="empty-icon">📂</div>
                     <h3>No Pending Payments</h3>
                     <p>Great job! All payment transactions have been processed.</p>
+                </div>
+            )}
+
+            {/* Customer Confirmation Modal */}
+            {showConfirmationModal && selectedOrder && (
+                <div className="modal-overlay" onClick={() => setShowConfirmationModal(false)}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ background: 'white', padding: '25px', borderRadius: '15px', maxWidth: '500px', width: '90%' }}>
+                        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Mail size={24} color="#001a66" />
+                                <h3 style={{ margin: 0 }}>Client Communication</h3>
+                            </div>
+                            <button onClick={() => setShowConfirmationModal(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button>
+                        </div>
+                        <div className="modal-content">
+                            <div className="order-summary" style={{ background: '#f8fafc', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
+                                <h4 style={{ margin: '0 0 10px 0' }}>Order #{selectedOrder.order_id}</h4>
+                                <p style={{ margin: '5px 0', fontSize: '14px' }}><strong>Customer:</strong> {selectedOrder.customer_name}</p>
+                            </div>
+                            
+                            <div className="confirmation-types" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <h5 style={{ margin: '0 0 5px 0' }}>Select Message Type:</h5>
+                                <button 
+                                    className="btn confirmation-type"
+                                    onClick={() => handleSendConfirmation(selectedOrder.order_id, 'payment_confirmation')}
+                                    disabled={actionLoading}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white' }}
+                                >
+                                    <CreditCard size={18} color="#10b981" /> <span>Payment Receipt</span>
+                                </button>
+                                <button 
+                                    className="btn confirmation-type"
+                                    onClick={() => handleSendConfirmation(selectedOrder.order_id, 'order_confirmation')}
+                                    disabled={actionLoading}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white' }}
+                                >
+                                    <Clipboard size={18} color="#3b82f6" /> <span>Order Verification</span>
+                                </button>
+                                <button 
+                                    className="btn confirmation-type"
+                                    onClick={() => handleSendConfirmation(selectedOrder.order_id, 'delivery_update')}
+                                    disabled={actionLoading}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white' }}
+                                >
+                                    <Truck size={18} color="#f59e0b" /> <span>Shipping Update</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

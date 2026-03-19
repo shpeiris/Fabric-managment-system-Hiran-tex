@@ -115,35 +115,35 @@ const MyOrders = () => {
       {notifications.filter(n => !dismissedIds.includes(n.confirmation_id)).map(notif => {
         const isRejected = notif.message_content?.startsWith('[REJECTED]');
         const message = notif.message_content?.replace('[REJECTED] ', '') || '';
+        const isOrderConf = notif.confirmation_type === 'order_confirmation';
+        
         return (
           <div key={notif.confirmation_id} style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px',
-            padding: '14px 18px',
-            borderRadius: '10px',
-            marginBottom: '12px',
-            background: isRejected ? '#fef2f2' : '#f0fdf4',
-            border: `1px solid ${isRejected ? '#fca5a5' : '#86efac'}`,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+            display: 'flex', alignItems: 'stretch', borderRadius: '12px', marginBottom: '16px',
+            overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
+            border: `1px solid ${isRejected ? '#fecaca' : isOrderConf ? '#bfdbfe' : '#a7f3d0'}`
           }}>
-            <span style={{ fontSize: '22px', flexShrink: 0 }}>{isRejected ? '❌' : '✅'}</span>
-            <div style={{ flex: 1 }}>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: isRejected ? '#991b1b' : '#166534' }}>
-                {isRejected ? 'Payment Rejected' : 'Payment Verified!'} — Order #{notif.order_id}
-              </p>
-              <p style={{ margin: '4px 0 0', fontSize: '13px', color: isRejected ? '#b91c1c' : '#166534' }}>
-                {message}
-              </p>
-              <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#6b7280' }}>
-                {new Date(notif.sent_at).toLocaleString()}
-              </p>
+            <div style={{
+              width: '12px', flexShrink: 0,
+              background: isRejected ? '#ef4444' : isOrderConf ? '#3b82f6' : '#10b981'
+            }} />
+            <div style={{
+              flex: 1, padding: '16px 20px', background: 'white'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '15px', color: '#111827', fontWeight: '700' }}>
+                    {isRejected ? '⚠️ Action Required' : isOrderConf ? '📦 Order Verified' : '✅ Payment Confirmed'} — Order #{notif.order_id}
+                  </h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#4b5563', lineHeight: '1.4' }}>{message}</p>
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#9ca3af' }}>{new Date(notif.sent_at).toLocaleString()}</p>
+                </div>
+                <button
+                  onClick={() => setDismissedIds(prev => [...prev, notif.confirmation_id])}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '18px' }}
+                >×</button>
+              </div>
             </div>
-            <button
-              onClick={() => setDismissedIds(prev => [...prev, notif.confirmation_id])}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#9ca3af', flexShrink: 0, padding: '0 4px' }}
-              title="Dismiss"
-            >×</button>
           </div>
         );
       })}

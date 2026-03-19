@@ -50,16 +50,22 @@ const getSalesDashboardStats = async () => {
                 ORDER BY order_id, payment_date DESC
             ) p ON o.order_id = p.order_id
             ORDER BY o.order_date DESC LIMIT 5
+        `,
+        verificationRequired: `
+            SELECT COUNT(*) as total 
+            FROM orders 
+            WHERE order_status = 'PENDING' AND verified_at IS NULL
         `
     };
 
     try {
-        const [totalSales, monthlySales, customers, pending, recentOrders] = await Promise.all([
+        const [totalSales, monthlySales, customers, pending, recentOrders, verificationRequired] = await Promise.all([
             pool.query(queries.totalSales),
             pool.query(queries.monthlySales),
             pool.query(queries.totalCustomers),
             pool.query(queries.pendingOrders),
-            pool.query(queries.recentOrders)
+            pool.query(queries.recentOrders),
+            pool.query(queries.verificationRequired)
         ]);
 
         return {
@@ -67,7 +73,8 @@ const getSalesDashboardStats = async () => {
                 totalSales: parseFloat(totalSales.rows[0]?.total || 0),
                 monthlySales: parseFloat(monthlySales.rows[0]?.total || 0),
                 totalCustomers: parseInt(customers.rows[0]?.total || 0),
-                pendingOrders: parseInt(pending.rows[0]?.total || 0)
+                pendingOrders: parseInt(pending.rows[0]?.total || 0),
+                verificationRequired: parseInt(verificationRequired.rows[0]?.total || 0)
             },
             recentOrders: recentOrders.rows || []
         };
@@ -214,6 +221,15 @@ const verifyOrder = async (orderId, action, verifiedBy, verifierId) => {
             verifierId,
             `Order #${orderId} ${action}d by ${verifiedBy}`
         ]);
+
+        // Send notification to customer if approved
+        if (action === 'approve') {
+            try {
+                await sendConfirmation(orderId, 'order_confirmation', verifiedBy, verifierId);
+            } catch (notifyErr) {
+                console.error("Failed to send order verification notification:", notifyErr);
+            }
+        }
 
         return { orderId, status: newStatus, action };
     } catch (error) {

@@ -78,7 +78,9 @@ export default function SalesDashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showInvoiceView, setShowInvoiceView] = useState(false);
+  const [pendingVerifications, setPendingVerifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -96,32 +98,28 @@ export default function SalesDashboard() {
       setLoading(true);
       SalesLogger.dashboard.dataFetch({ action: 'fetch_dashboard_data' });
       
-      // Fetch comprehensive dashboard data
-      const [dashboardRes, paymentsRes] = await Promise.all([
+      const [dashboardRes, paymentsRes, verificationsRes] = await Promise.all([
         apiCall('http://localhost:5000/api/sales/dashboard'),
-        apiCall('http://localhost:5000/api/sales/pending-payments')
+        apiCall('http://localhost:5000/api/sales/pending-payments'),
+        apiCall('http://localhost:5000/api/sales/pending-verifications')
       ]);
 
       const dashboardData = await dashboardRes.json();
       const paymentsData = await paymentsRes.json();
+      const verificationsData = await verificationsRes.json();
 
       if (dashboardRes.ok) {
         setStats({
           ...dashboardData.stats,
-          pendingPayments: paymentsData.count || 0
+          pendingPayments: paymentsData.count || 0,
+          verificationRequired: verificationsData.count || 0
         });
         setRecentOrders(dashboardData.recentOrders || []);
         setPendingPayments(paymentsData.orders || []);
-        
-        return {
-          stats: dashboardData.stats,
-          recentOrders: dashboardData.recentOrders || [],
-          pendingPayments: paymentsData.orders || []
-        };
+        setPendingVerifications(verificationsData.orders || []);
       }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      SalesLogger.dashboard.dataFetchError(err);
     } finally {
       setLoading(false);
     }
@@ -164,6 +162,32 @@ export default function SalesDashboard() {
     } catch (err) {
       console.error('Error processing payment:', err);
       SalesLogger.dashboard.paymentActionError(err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleVerifyOrder = async (orderId, action) => {
+    try {
+      setActionLoading(true);
+      const response = await apiCall(`http://localhost:5000/api/sales/verify-order/${orderId}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action,
+          verifiedBy: 'Salesperson'
+        })
+      });
+
+      if (response.ok) {
+        alert(`Order ${action === 'approve' ? 'approved' : 'cancelled'} and customer notified.`);
+        fetchDashboardData();
+        if (pendingVerifications.length <= 1) setShowVerificationModal(false);
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to verify order');
+      }
+    } catch (err) {
       alert(`Error: ${err.message}`);
     } finally {
       setActionLoading(false);
@@ -642,6 +666,55 @@ export default function SalesDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Verification Modal */}
+      {showVerificationModal && (
+        <div className="modal-overlay" onClick={() => setShowVerificationModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="modal-header">
+              <CheckCircle size={20} color="#001a66" />
+              <h3>Pending Verifications</h3>
+              <button className="close-btn" onClick={() => setShowVerificationModal(false)}>×</button>
+            </div>
+            <div className="modal-content">
+              <div className="verification-list">
+                {pendingVerifications.length > 0 ? (
+                  pendingVerifications.map(order => (
+                    <div key={order.order_id} className="verification-card" style={{ padding: '15px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <strong>Order #{order.order_id}</strong>
+                        <span style={{ fontSize: '12px', color: '#666' }}>{new Date(order.order_date).toLocaleDateString()}</span>
+                      </div>
+                      <p style={{ margin: '0 0 5px 0' }}>{order.customer_name}</p>
+                      <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#666' }}>Amount: Rs. {Number(order.total_amount).toLocaleString()}</p>
+                      <div className="verification-actions" style={{ display: 'flex', gap: '10px' }}>
+                        <button 
+                          className="btn verify-approve" 
+                          onClick={() => handleVerifyOrder(order.order_id, 'approve')}
+                          disabled={actionLoading}
+                          style={{ background: '#22c55e', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', flex: 1 }}
+                        >
+                          Approve & Notify
+                        </button>
+                        <button 
+                          className="btn verify-reject" 
+                          onClick={() => handleVerifyOrder(order.order_id, 'reject')}
+                          disabled={actionLoading}
+                          style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', flex: 1 }}
+                        >
+                          Cancel Order
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ textAlign: 'center', padding: '20px' }}>No orders currently awaiting verification.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
