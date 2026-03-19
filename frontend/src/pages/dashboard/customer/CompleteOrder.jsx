@@ -132,8 +132,8 @@ const CompleteOrder = ({
           </div>
 
           <div className="form-group">
-            <label>Shipping Method</label>
-            <p className="form-subtitle">Choose a shipping method</p>
+            <label>Delivery Method</label>
+            <p className="form-subtitle">Choose a delivery method</p>
             <div className="delivery-options">
               <label className="radio-option">
                 <input

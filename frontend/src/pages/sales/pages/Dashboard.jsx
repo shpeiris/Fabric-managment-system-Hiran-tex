@@ -64,6 +64,10 @@ const Truck = (props) => (
   <IconWrapper {...props}><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></IconWrapper>
 );
 
+const ShoppingCart = (props) => (
+  <IconWrapper {...props}><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></IconWrapper>
+);
+
 export default function SalesDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
@@ -427,6 +431,14 @@ export default function SalesDashboard() {
           <h3>Management Toolbar</h3>
         </div>
         <div className="action-buttons">
+          <button 
+            className="action-btn primary"
+            onClick={() => navigate('/sales/new-order')}
+          >
+            <ShoppingCart size={18} />
+            <span>New Walk-in Order</span>
+          </button>
+          
           <button 
             className="action-btn verify-btn"
             onClick={() => setShowVerificationModal(true)}

@@ -102,11 +102,11 @@ const createOrder = async (orderData) => {
 
         // Calculate true total from currently available prices
         for (const item of items) {
-            const fabricResult = await pool.query("SELECT price_per_meter, stock_quantity FROM fabrics WHERE fabric_id = $1", [item.fabric_id]);
+            const fabricResult = await pool.query("SELECT price_per_meter, stock_quantity, stock_available_quantity FROM fabrics WHERE fabric_id = $1", [item.fabric_id]);
             if (fabricResult.rows.length === 0) throw new Error(`Fabric ${item.fabric_id} not found`);
 
             const fabric = fabricResult.rows[0];
-            if (fabric.stock_quantity < item.quantity) throw new Error(`Insufficient stock for ${fabric.name}`);
+            if (fabric.stock_available_quantity < item.quantity) throw new Error(`Insufficient stock for fabric ID ${item.fabric_id}`);
 
             const itemTotal = fabric.price_per_meter * item.quantity;
             totalAmount += itemTotal;
@@ -131,7 +131,7 @@ const createOrder = async (orderData) => {
         // Insert order with all fields
         const orderResult = await pool.query(
             "INSERT INTO orders (customer_id, customer_name, phone_number, total_amount, delivery_address, delivery_type, special_instructions, order_status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING') RETURNING order_id",
-            [customer_id, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '']
+            [customer_id || null, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '']
         );
 
         const orderId = orderResult.rows[0].order_id;
@@ -145,7 +145,7 @@ const createOrder = async (orderData) => {
 
             // Deduct stock (ensure stock is available)
             await pool.query(
-                "UPDATE fabrics SET stock_quantity = stock_quantity - $1 WHERE fabric_id = $2",
+                "UPDATE fabrics SET stock_quantity = stock_quantity - $1, stock_available_quantity = stock_available_quantity - $1 WHERE fabric_id = $2",
                 [item.quantity, item.fabric_id]
             );
         }

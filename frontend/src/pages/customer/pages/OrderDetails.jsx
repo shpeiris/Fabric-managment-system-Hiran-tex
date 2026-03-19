@@ -109,18 +109,37 @@ export default function OrderDetails() {
 
   const { order, items } = orderData
   const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseFloat(item.quantity)), 0)
-  const getShippingFee = (type) => {
+  const getDeliveryFee = (type) => {
     if (type === 'GAMPAHA') return 500;
     if (type === 'OUT_OF_GAMPAHA') return 750;
     if (type === 'STORE_PICKUP') return 0;
     return 500; // Default
   }
 
-  const shipping = getShippingFee(order.delivery_type)
+  const deliveryFee = getDeliveryFee(order.delivery_type)
   const tax = 0 // Using 0 as tax is usually included in total or not applicable here yet
 
   return (
     <div>
+      <button 
+        onClick={() => navigate('/customer/orders')}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'none',
+          border: 'none',
+          color: '#6b7280',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: '600',
+          marginBottom: '20px',
+          padding: '0'
+        }}
+      >
+        <span>←</span> Back to My Orders
+      </button>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <div>
           <h1 style={{ fontSize: '24px', marginBottom: '5px', color: '#1f2937', fontWeight: '600' }}>Order Details</h1>
@@ -182,7 +201,7 @@ export default function OrderDetails() {
             ))}
           </div>
 
-          {/* Shipping Information */}
+          {/* Delivery Information */}
           <div style={{
             background: 'white',
             border: '1px solid #e5e7eb',
@@ -190,7 +209,7 @@ export default function OrderDetails() {
             padding: '25px',
             marginBottom: '20px'
           }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Shipping Information</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Delivery Information</h2>
             <div style={{ display: 'grid', gap: '12px' }}>
               <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Delivery Type</p>
@@ -362,8 +381,8 @@ export default function OrderDetails() {
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {subtotal.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <span style={{ fontSize: '14px', color: '#6b7280' }}>Shipping</span>
-                <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {shipping.toLocaleString()}</span>
+                <span style={{ fontSize: '14px', color: '#6b7280' }}>Delivery</span>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {deliveryFee.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '14px', color: '#6b7280' }}>Tax</span>

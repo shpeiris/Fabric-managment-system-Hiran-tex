@@ -77,8 +77,8 @@ export default function Cart() {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0);
-  const shipping = cartItems.length > 0 ? 500 : 0;
-  const total = subtotal + shipping;
+  const delivery = cartItems.length > 0 ? 500 : 0;
+  const total = subtotal + delivery;
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
@@ -177,9 +177,9 @@ export default function Cart() {
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {subtotal.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '14px', color: '#6b7280' }}>Shipping</span>
+                <span style={{ fontSize: '14px', color: '#6b7280' }}>Delivery</span>
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>
-                  {shipping > 0 ? `Rs. ${shipping.toLocaleString()}` : 'Free'}
+                  {delivery > 0 ? `Rs. ${delivery.toLocaleString()}` : 'Free'}
                 </span>
               </div>
             </div>

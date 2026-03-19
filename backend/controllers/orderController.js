@@ -41,10 +41,10 @@ const getOrders = async (req, res) => {
 };
 
 const createOrder = async (req, res) => {
-    const { customer_id, items, delivery_address, delivery_type, payment_method } = req.body;
+    const { customer_id, customer_name, items, delivery_address, delivery_type, payment_method } = req.body;
 
-    if (!customer_id || !items || items.length === 0) {
-        return res.status(400).json({ error: "Customer ID and items are required" });
+    if ((!customer_id && !customer_name) || !items || items.length === 0) {
+        return res.status(400).json({ error: "Customer ID or Name, and items are required" });
     }
 
     try {

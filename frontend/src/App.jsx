@@ -44,6 +44,7 @@ import OrderDetails from "./pages/customer/pages/OrderDetails"; // Left behind
 import OrderHistory from "./pages/customer/pages/OrderHistory"; // Left behind
 import Feedback from "./pages/customer/pages/Feedback"; // Left behind
 import FabricDetails from "./pages/dashboard/customer/FabricDetails";
+import Notifications from "./pages/dashboard/customer/Notifications";
 
 function App() {
   return (
@@ -116,6 +117,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="feedback" element={<Feedback />} />
           <Route path="fabric/:id" element={<FabricDetails />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>
     </BrowserRouter>

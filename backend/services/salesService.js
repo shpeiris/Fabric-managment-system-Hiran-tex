@@ -95,7 +95,6 @@ const getCustomerStats = async () => {
             LEFT JOIN customer_contacts cc_phone ON c.customer_id = cc_phone.customer_id 
                 AND cc_phone.contact_type = 'PHONE' AND cc_phone.is_primary = TRUE
             LEFT JOIN orders o ON c.customer_id = o.customer_id
-            WHERE c.status = 'ACTIVE'
             GROUP BY c.customer_id, c.full_name, c.email, c.created_at, cc_phone.contact_value
             ORDER BY total_spent DESC
         `;

@@ -51,7 +51,9 @@ export default function Dashboard() {
 
       if (fabricsRes.ok) {
         const fabricsList = fabricsData.fabrics || [];
-        const favoriteFabrics = fabricsList.slice(0, 4).map(fabric => ({
+        // Show unique materials to avoid duplication of variants
+        const uniqueFabrics = [...new Map(fabricsList.map(f => [f.name, f])).values()];
+        const favoriteFabrics = uniqueFabrics.slice(0, 4).map(fabric => ({
           id: `FAB${fabric.fabric_id.toString().padStart(3, '0')}`,
           fabric_id: fabric.fabric_id,
           name: fabric.name,
@@ -135,7 +137,7 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {orders.length > 0 ? orders.map((order) => (
-                    <tr key={order.order_id} onClick={() => navigate(`/customer/orders/${order.order_id}`)}>
+                    <tr key={order.order_id} onClick={() => navigate(`/customer/order-details/${order.order_id}`)} style={{ cursor: 'pointer' }}>
                       <td><span className="order-num">#{order.order_id.toString().padStart(3, '0')}</span></td>
                       <td>{new Date(order.order_date).toLocaleDateString()}</td>
                       <td>
@@ -202,28 +204,38 @@ export default function Dashboard() {
             </div>
             <div className="notifications-list" style={{ maxHeight: '600px', overflowY: 'auto' }}>
               {stats.notifications && stats.notifications.length > 0 ? (
-                stats.notifications.map((notif) => (
-                  <div key={notif.confirmation_id} className="notification-item" style={{ 
-                    padding: '12px', 
-                    borderBottom: '1px solid #f3f4f6',
-                    cursor: 'pointer'
-                  }} onClick={() => navigate(`/customer/orders/${notif.order_id}`)}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontWeight: '600', fontSize: '13px', color: '#1f2937' }}>
-                        {notif.confirmation_type.replace('_', ' ').toUpperCase()}
-                      </span>
-                      <span style={{ fontSize: '11px', color: '#6b7280' }}>
-                        {new Date(notif.sent_at).toLocaleDateString()}
-                      </span>
+                stats.notifications.map((notif) => {
+                  const isRejected = notif.message_content?.startsWith('[REJECTED]');
+                  const isPay = notif.confirmation_type?.startsWith('payment_');
+                  const message = notif.message_content?.replace('[REJECTED] ', '') || '';
+                  const accent = isRejected ? '#ef4444' : isPay ? '#10b981' : '#3b82f6';
+                  
+                  return (
+                    <div key={notif.confirmation_id} className="notification-item" style={{ 
+                      padding: '12px', 
+                      borderBottom: '1px solid #f3f4f6',
+                      cursor: 'pointer',
+                      borderLeft: `4px solid ${accent}`,
+                      marginBottom: '8px',
+                      background: '#fff'
+                    }} onClick={() => navigate(`/customer/order-details/${notif.order_id}`)}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontWeight: '600', fontSize: '13px', color: '#1f2937' }}>
+                          {isRejected ? '⚠️ REJECTED' : notif.confirmation_type.replace('_', ' ').toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#6b7280' }}>
+                          {new Date(notif.sent_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: '#4b5563', margin: 0, lineHeight: '1.4' }}>
+                        {message}
+                      </p>
+                      <div style={{ marginTop: '4px', fontSize: '11px', color: '#2563eb' }}>
+                        Order #{notif.order_id} • View Details →
+                      </div>
                     </div>
-                    <p style={{ fontSize: '13px', color: '#4b5563', margin: 0, lineHeight: '1.4' }}>
-                      {notif.message_content}
-                    </p>
-                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#2563eb' }}>
-                      Order #{notif.order_id} • Status: {notif.order_status}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                   No new notifications.

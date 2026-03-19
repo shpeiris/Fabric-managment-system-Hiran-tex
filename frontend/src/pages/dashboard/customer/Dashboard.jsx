@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { customerService } from '../../../services'
 import { apiCall } from '../../../utils/auth'
 import './Dashboard.css'
 
 const CustomerDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
@@ -10,31 +13,31 @@ const CustomerDashboard = () => {
     totalSpent: 0
   })
   const [notifications, setNotifications] = useState([]);
-  const [dismissedIds, setDismissedIds] = useState([]);
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [statsData, notifRes] = await Promise.all([
-          customerService.getDashboardStats(),
-          apiCall('http://localhost:5000/api/customer/notifications')
-        ]);
-        
-        setStats(statsData);
-        
-        if (notifRes.ok) {
-          const data = await notifRes.json();
-          setNotifications(data.notifications || []);
-        }
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-      } finally {
-        setLoading(false);
+  const fetchData = async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      const [statsData, notifRes] = await Promise.all([
+        customerService.getDashboardStats(),
+        apiCall('http://localhost:5000/api/customer/notifications')
+      ]);
+      setStats(statsData);
+      if (notifRes.ok) {
+        const data = await notifRes.json();
+        setNotifications(data.notifications || []);
       }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      if (showLoading) setLoading(false);
     }
-    fetchData()
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => clearInterval(interval);
   }, [])
 
   if (loading) return <div className="loading">Loading dashboard...</div>
@@ -114,13 +117,41 @@ const CustomerDashboard = () => {
           </div>
         </div>
         
-        <div className="quick-links" style={{ background: 'white', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' }}>
-          <h3>Shortcuts</h3>
-          <div className="link-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '1rem' }}>
-            <button onClick={() => window.location.hash = '#/catalog'} style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#f9fafb', cursor: 'pointer' }}>🛍️ Browse Fabrics</button>
-            <button onClick={() => window.location.hash = '#/orders'} style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#f9fafb', cursor: 'pointer' }}>📋 View Orders</button>
-            <button onClick={() => window.location.hash = '#/payments'} style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#f9fafb', cursor: 'pointer' }}>💸 Payment Proofs</button>
-            <button onClick={() => window.location.hash = '#/profile'} style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#f9fafb', cursor: 'pointer' }}>👤 My Profile</button>
+        {/* Notifications Panel - Embedded in Dashboard */}
+        <div style={{ background: 'white', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#1e293b' }}>🔔 Notifications</h3>
+            <span style={{ background: notifications.length > 0 ? '#ef4444' : '#e2e8f0', color: notifications.length > 0 ? 'white' : '#94a3b8', borderRadius: '9999px', fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px' }}>
+              {notifications.length}
+            </span>
+          </div>
+          <div style={{ overflowY: 'auto', maxHeight: '280px', padding: '0.5rem 0' }}>
+            {notifications.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>No notifications yet</p>
+              </div>
+            ) : (
+              notifications.map(notif => {
+                const isRejected = notif.message_content?.startsWith('[REJECTED]');
+                const isPay = notif.confirmation_type?.startsWith('payment_');
+                const message = notif.message_content?.replace('[REJECTED] ', '') || '';
+                const accent = isRejected ? '#ef4444' : isPay ? '#10b981' : '#3b82f6';
+                const icon = isRejected ? '⚠️' : isPay ? '✅' : '📦';
+                const sentAt = notif.sent_at ? new Date(notif.sent_at).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+                return (
+                  <div key={notif.confirmation_id} style={{ display: 'flex', gap: '12px', padding: '12px 16px', borderBottom: '1px solid #f8fafc', alignItems: 'flex-start' }}>
+                    <div style={{ width: '6px', borderRadius: '3px', flexShrink: 0, alignSelf: 'stretch', background: accent }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#1e293b' }}>{icon} Order #{notif.order_id}</span>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', flexShrink: 0 }}>{sentAt}</span>
+                      </div>
+                      <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#4b5563', lineHeight: '1.4', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{message}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

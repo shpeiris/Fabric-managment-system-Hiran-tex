@@ -156,7 +156,7 @@ const Checkout = () => {
   const renderStepProgress = () => {
     const steps = [
       { number: 1, title: "Cart", completed: currentStep > 1 },
-      { number: 2, title: "Order Details", completed: currentStep > 2 },
+      { number: 2, title: "Delivery Info", completed: currentStep > 2 },
       { number: 3, title: "Payment", completed: currentStep > 3 },
       { number: 4, title: "Confirmation", completed: currentStep > 4 },
     ];
