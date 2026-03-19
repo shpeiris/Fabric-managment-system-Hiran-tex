@@ -86,11 +86,8 @@ export default function SalesDashboard() {
     SalesLogger.dashboard.pageLoad({ timestamp: new Date().toISOString() });
     fetchDashboardData();
 
-    // Implement Live Update (Polling every 30 seconds)
-    const interval = setInterval(() => {
-      fetchDashboardData();
-    }, 30000);
-
+    // Poll every 30 seconds for live updates
+    const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -302,6 +299,47 @@ export default function SalesDashboard() {
         </button>
       </div>
       <p className="subtitle">Track your sales performance and manage orders</p>
+
+      {/* Notifications Alert Section */}
+      {pendingPayments.filter(p => p.payment_status === 'PENDING').length > 0 && (
+        <div style={{
+          background: '#e0f2fe',
+          borderLeft: '5px solid #0284c7',
+          padding: '15px 20px',
+          borderRadius: '8px',
+          marginBottom: '25px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '15px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          animation: 'pulse 2s infinite'
+        }}>
+          <div style={{ fontSize: '24px' }}>💳</div>
+          <div style={{ flex: 1 }}>
+            <h4 style={{ margin: 0, color: '#0369a1', fontSize: '15px' }}>New Verification Requests</h4>
+            <p style={{ margin: '5px 0 0', color: '#0c4a6e', fontSize: '13px', fontWeight: '500' }}>
+              There are {pendingPayments.filter(p => p.payment_status === 'PENDING').length} payments requiring verification. 
+              {pendingPayments.filter(p => p.bank_slip_url && p.payment_status === 'PENDING').length > 0 && " Some include uploaded bank slips."}
+            </p>
+          </div>
+          <button 
+            onClick={() => navigate('/sales/payments')}
+            style={{
+              background: '#0284c7',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Review Payments →
+          </button>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="stats-grid">

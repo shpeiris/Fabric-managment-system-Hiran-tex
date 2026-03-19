@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import orderService from '../../../services/orderService'
 import cartService from '../../../services/cartService'
+import { apiCall } from '../../../utils/auth.js'
 import './MyOrders.css'
 
 const MyOrders = () => {
@@ -11,24 +12,42 @@ const MyOrders = () => {
   const [error, setError] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [dismissedIds, setDismissedIds] = useState([])
   
   const navigate = useNavigate()
 
   useEffect(() => {
     fetchOrders()
+    fetchNotifications()
   }, [])
 
   const fetchOrders = async () => {
     try {
       setLoading(true)
       const data = await orderService.getMyOrders()
-      // The backend returns { orders: [...] }
       setOrders(data.orders || [])
       setLoading(false)
     } catch (err) {
       console.error("Error fetching orders:", err)
       setError("Failed to load orders. Please try again.")
       setLoading(false)
+    }
+  }
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await apiCall('http://localhost:5000/api/customer/notifications')
+      if (res.ok) {
+        const data = await res.json()
+        // Only show payment-related notifications (newest first, max 5)
+        const paymentNotifs = (data.notifications || [])
+          .filter(n => n.confirmation_type === 'payment_confirmation' || n.confirmation_type === 'payment_rejection')
+          .slice(0, 5)
+        setNotifications(paymentNotifs)
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err)
     }
   }
 
@@ -91,6 +110,43 @@ const MyOrders = () => {
   return (
     <div className="my-orders">
       <h1>My Orders</h1>
+
+      {/* Payment Verification Notifications */}
+      {notifications.filter(n => !dismissedIds.includes(n.confirmation_id)).map(notif => {
+        const isRejected = notif.message_content?.startsWith('[REJECTED]');
+        const message = notif.message_content?.replace('[REJECTED] ', '') || '';
+        return (
+          <div key={notif.confirmation_id} style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            padding: '14px 18px',
+            borderRadius: '10px',
+            marginBottom: '12px',
+            background: isRejected ? '#fef2f2' : '#f0fdf4',
+            border: `1px solid ${isRejected ? '#fca5a5' : '#86efac'}`,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+          }}>
+            <span style={{ fontSize: '22px', flexShrink: 0 }}>{isRejected ? '❌' : '✅'}</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: isRejected ? '#991b1b' : '#166534' }}>
+                {isRejected ? 'Payment Rejected' : 'Payment Verified!'} — Order #{notif.order_id}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: isRejected ? '#b91c1c' : '#166534' }}>
+                {message}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#6b7280' }}>
+                {new Date(notif.sent_at).toLocaleString()}
+              </p>
+            </div>
+            <button
+              onClick={() => setDismissedIds(prev => [...prev, notif.confirmation_id])}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#9ca3af', flexShrink: 0, padding: '0 4px' }}
+              title="Dismiss"
+            >×</button>
+          </div>
+        );
+      })}
       <div className="orders-filter">
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All Orders</option>
@@ -124,6 +180,34 @@ const MyOrders = () => {
                   <span className="item-count">{order.item_count} items</span>
                   <span className="order-total">Rs. {parseFloat(order.total_amount).toFixed(2)}</span>
                 </div>
+
+                {/* Payment / Slip Status row */}
+                {order.latest_payment_status && (
+                  <div style={{ padding: '8px 0', borderTop: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                    {order.bank_slip_url ? (
+                      <span style={{ fontSize: '12px', background: '#d1fae5', color: '#065f46', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                        ✅ Slip Uploaded — Awaiting Verification
+                      </span>
+                    ) : order.latest_payment_status === 'PENDING' ? (
+                      <span style={{ fontSize: '12px', background: '#fef3c7', color: '#92400e', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                        ⚠️ Bank Slip Required
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '12px', background: '#ede9fe', color: '#5b21b6', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                        💳 {order.latest_payment_status}
+                      </span>
+                    )}
+                    {!order.bank_slip_url && order.latest_payment_status === 'PENDING' && (
+                      <button
+                        onClick={() => navigate(`/customer/order-details/${order.order_id}`)}
+                        style={{ fontSize: '12px', background: '#ef4444', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                      >
+                        Upload Slip →
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <div className="order-actions">
                   <button className="btn-view" onClick={() => handleViewDetails(order.order_id)}>
                     View Details

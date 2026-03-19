@@ -33,7 +33,7 @@ export default function Checkout() {
     postalCode: '',
     paymentMethod: 'BANK_TRANSFER',
     specialInstructions: '',
-    deliveryType: 'HOME_DELIVERY' // Default to Home Delivery
+    deliveryType: 'STORE_PICKUP' // Default to Store Pickup (Only option)
   });
 
   useEffect(() => {
@@ -89,22 +89,27 @@ export default function Checkout() {
     fetchCart();
   }, []);
 
+  // Reset payment method if it becomes invalid for the selected delivery type
+  useEffect(() => {
+    if (formData.deliveryType === 'HOME_DELIVERY' && formData.paymentMethod === 'CASH_AT_CASHIER') {
+      setFormData(prev => ({ ...prev, paymentMethod: 'BANK_TRANSFER' }));
+    }
+  }, [formData.deliveryType]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
   };
 
   const validateStep = () => {
-    if (step === 1) {
       if (!formData.fullName || !formData.email || !formData.phone) {
         setError('Please fill in Name, Email and Phone Number.');
         return false;
       }
-      if (formData.deliveryType === 'HOME_DELIVERY' && (!formData.address || !formData.city)) {
-        setError('Please fill in Address and City for Home Delivery.');
+      if (formData.deliveryType !== 'STORE_PICKUP' && (!formData.address || !formData.city)) {
+        setError('Please fill in Address and City for Delivery.');
         return false;
       }
-    }
     return true;
   };
 
@@ -122,7 +127,9 @@ export default function Checkout() {
     setSubmitting(true);
     setError('');
 
-    const deliveryAddress = `${formData.address}, ${formData.city}${formData.postalCode ? ', ' + formData.postalCode : ''}`;
+    const deliveryAddress = formData.deliveryType === 'STORE_PICKUP' 
+      ? 'Store Pickup (Hiran Fabric Textile, Nittambuwa)' 
+      : `${formData.address}${formData.city ? ', ' + formData.city : ''}${formData.postalCode ? ', ' + formData.postalCode : ''}`;
 
     const orderPayload = {
       items: cartItems.map(item => ({
@@ -130,7 +137,7 @@ export default function Checkout() {
         quantity: parseFloat(item.quantity),
         unit_price: parseFloat(item.price_per_meter)
       })),
-      delivery_address: formData.deliveryType === 'STORE_PICKUP' ? 'Store Pickup (Hiran Fabric Textile)' : deliveryAddress,
+      delivery_address: deliveryAddress,
       delivery_type: formData.deliveryType,
       payment_method: formData.paymentMethod,
       customer_name: formData.fullName,
@@ -231,7 +238,16 @@ export default function Checkout() {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0);
-  const shipping = formData.deliveryType === 'HOME_DELIVERY' ? 500 : 0;
+  
+  const getShippingFee = () => {
+    switch (formData.deliveryType) {
+      case 'GAMPAHA': return 500;
+      case 'OUT_OF_GAMPAHA': return 750;
+      default: return 0;
+    }
+  };
+
+  const shipping = getShippingFee();
   const total = subtotal + shipping;
 
   if (loadingCart) return (
@@ -253,9 +269,9 @@ export default function Checkout() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '40px' }}>
           {/* Order Details Summary */}
-          <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+          <div className="order-summary-card" style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              📦 Order Summary
+              📦 Items Ordered
             </h3>
             <div style={{ borderBottom: '1px solid #f3f4f6', paddingBottom: '15px', marginBottom: '15px' }}>
               {cartItems.map(item => (
@@ -270,8 +286,12 @@ export default function Checkout() {
               <span style={{ fontSize: '14px', color: '#111827' }}>Rs. {subtotal.toLocaleString()}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-              <span style={{ fontSize: '14px', color: '#6b7280' }}>Shipping ({formData.deliveryType === 'STORE_PICKUP' ? 'Store Pickup' : 'Home Delivery'})</span>
-              <span style={{ fontSize: '14px', color: '#111827' }}>{shipping === 0 ? 'FREE' : `Rs. ${shipping.toLocaleString()}`}</span>
+              <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                {formData.deliveryType === 'STORE_PICKUP' ? 'Collection' : `Delivery (${formData.deliveryType === 'GAMPAHA' ? 'Gampaha' : 'Out of Gampaha'})`}
+              </span>
+              <span style={{ fontSize: '14px', color: shipping === 0 ? '#166534' : '#111827', fontWeight: shipping === 0 ? '700' : '500' }}>
+                {shipping === 0 ? 'FREE' : `Rs. ${shipping.toLocaleString()}`}
+              </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '15px', borderTop: '2px solid #f3f4f6' }}>
               <span style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>Total Amount</span>
@@ -282,17 +302,20 @@ export default function Checkout() {
           {/* Delivery & Payment Info */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '15px' }}>📦 Order Summary</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '15px' }}>📍 {formData.deliveryType === 'STORE_PICKUP' ? 'Pickup Location' : 'Delivery Details'}</h3>
+              
               <div style={{ marginBottom: '15px', borderBottom: '1px solid #f3f4f6', paddingBottom: '15px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
                   <span style={{ color: '#6b7280' }}>Delivery:</span>
                   <span style={{ fontWeight: '600', color: '#111827' }}>{formData.deliveryType === 'STORE_PICKUP' ? '🏪 Store Pickup' : '🏠 Home Delivery'}</span>
                   
                   <span style={{ color: '#6b7280' }}>Payment:</span>
-                  <span style={{ fontWeight: '600', color: '#111827' }}>{formData.paymentMethod === 'BANK_TRANSFER' ? '🏦 Bank Transfer' : '💵 Cash on Delivery'}</span>
+                  <span style={{ fontWeight: '600', color: '#111827' }}>
+                    {formData.paymentMethod === 'BANK_TRANSFER' ? '🏦 Bank Transfer' : '💵 Cash at Cashier'}
+                  </span>
                 </div>
               </div>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '15px' }}>📍 {formData.deliveryType === 'STORE_PICKUP' ? 'Pickup Location' : 'Delivery Details'}</h3>
+
               <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>{formData.fullName}</p>
               {formData.deliveryType === 'STORE_PICKUP' ? (
                 <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
@@ -309,22 +332,22 @@ export default function Checkout() {
             </div>
 
             <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '15px' }}>💳 Payment Info</h3>
-              <p style={{ fontSize: '14px', color: '#4b5563', fontWeight: '600', textTransform: 'capitalize' }}>
-                {formData.paymentMethod.replace(/_/g, ' ')}
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '15px' }}>💳 Payment Status</h3>
+              <p style={{ fontSize: '14px', color: '#4b5563', fontWeight: '600', textTransform: 'capitalize', marginBottom: '15px' }}>
+                {formData.paymentMethod.replace(/_/g, ' ').toLowerCase()}
               </p>
               
               {formData.paymentMethod === 'BANK_TRANSFER' && (
-                <div style={{ marginTop: '15px' }}>
+                <div>
                   {uploadSuccess ? (
                     <div style={{ padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', color: '#166534', fontSize: '13px' }}>
                       <span style={{ fontWeight: '700' }}>✅ Proof Uploaded</span><br />
-                      We are currently verifying your payment.
+                      Our sales team is currently verifying your payment.
                     </div>
                   ) : (
                     <div style={{ padding: '12px', background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '8px', color: '#9a3412', fontSize: '13px' }}>
                       <span style={{ fontWeight: '700' }}>⚠️ Slip Missing or Failed</span><br />
-                      Please upload proof to avoid delays.
+                      Please upload your bank slip so the salesperson can confirm your order.
                       
                       <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                         <input 
@@ -343,6 +366,13 @@ export default function Checkout() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {formData.paymentMethod === 'CASH_AT_CASHIER' && (
+                <div style={{ padding: '12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', color: '#1e40af', fontSize: '13px' }}>
+                  <span style={{ fontWeight: '700' }}>💵 Pay at Store</span><br />
+                  Please present your Order ID to the cashier at the time of collection.
                 </div>
               )}
             </div>
@@ -372,29 +402,42 @@ export default function Checkout() {
 
         {/* Next Steps Section */}
         <div className="no-print" style={{ background: '#f8fafc', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>What happens next?</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            🔭 What happens next?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>1</div>
-              <p style={{ fontSize: '14px', color: '#475569', margin: 0 }}>
-                {formData.paymentMethod === 'BANK_TRANSFER' 
-                  ? 'Our team will verify your payment slip once it’s reviewed by a salesperson.'
-                  : 'Your order has been sent to our sales team for processing.'}
-              </p>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>1</div>
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: '0 0 4px 0' }}>Order Processing</p>
+                <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>
+                  {formData.paymentMethod === 'BANK_TRANSFER' 
+                    ? 'Our sales team will verify your bank slip. Once confirmed, your order status will update to "Processing".'
+                    : 'Your order has been recorded. Our team will prepare your items for pickup.'}
+                </p>
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>2</div>
-              <p style={{ fontSize: '14px', color: '#475569', margin: 0 }}>
-                You will receive a notification in your dashboard when your order status changes.
-              </p>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>2</div>
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: '0 0 4px 0' }}>Notifications</p>
+                <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>
+                  You will receive updates on your dashboard. You can track all your orders in the "My Orders" section.
+                </p>
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>3</div>
-              <p style={{ fontSize: '14px', color: '#475569', margin: 0 }}>
-                {formData.deliveryType === 'STORE_PICKUP'
-                  ? 'Visit our Nittambuwa store with your Order ID to collect your items.'
-                  : 'Your fabrics will be packed and delivered to your doorstep within 3-5 business days.'}
-              </p>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>3</div>
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: '0 0 4px 0' }}>
+                  {formData.deliveryType === 'STORE_PICKUP' ? 'Collection' : 'Delivery'}
+                </p>
+                <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>
+                  {formData.deliveryType === 'STORE_PICKUP'
+                    ? 'Visit our Nittambuwa store. Bring your Order ID for a faster checkout process.'
+                    : 'Your fabrics will be packed and delivered to your address within 3-5 business days.'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -403,8 +446,17 @@ export default function Checkout() {
           {`
             @media print {
               .no-print { display: none !important; }
-              body { background: white !important; }
+              body { 
+                background: white !important; 
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact;
+              }
               div { border: none !important; box-shadow: none !important; }
+              strong { color: #001a66 !important; }
+              h2, h3 { color: #111827 !important; margin-top: 0 !important; }
+              .print-container { width: 100% !important; max-width: 100% !important; padding: 20px !important; }
+              .order-summary-card { border: 1px solid #eee !important; page-break-inside: avoid; }
             }
           `}
         </style>
@@ -443,20 +495,38 @@ export default function Checkout() {
 
           {step === 1 && (
             <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '25px', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Delivery Method</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.deliveryType === 'HOME_DELIVERY' ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', gap: '10px', background: formData.deliveryType === 'HOME_DELIVERY' ? '#eff6ff' : 'white' }}>
-                  <input type="radio" name="deliveryType" value="HOME_DELIVERY" checked={formData.deliveryType === 'HOME_DELIVERY'} onChange={handleChange} />
+              <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Delivery & Collection</h2>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+                {/* Store Pickup */}
+                <label style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.deliveryType === 'STORE_PICKUP' ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', gap: '15px', background: formData.deliveryType === 'STORE_PICKUP' ? '#eff6ff' : 'white' }}>
+                  <input type="radio" name="deliveryType" value="STORE_PICKUP" checked={formData.deliveryType === 'STORE_PICKUP'} onChange={handleChange} />
+                  <span style={{ fontSize: '24px' }}>🏪</span>
                   <div>
-                    <p style={{ fontSize: '14px', fontWeight: '600', margin: 0 }}>🏠 Home Delivery</p>
-                    <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Rs. 500.00 Fee</p>
+                    <p style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Store Pickup (Nittambuwa)</p>
+                    <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Collect from our store (Free)</p>
                   </div>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.deliveryType === 'STORE_PICKUP' ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', gap: '10px', background: formData.deliveryType === 'STORE_PICKUP' ? '#eff6ff' : 'white' }}>
-                  <input type="radio" name="deliveryType" value="STORE_PICKUP" checked={formData.deliveryType === 'STORE_PICKUP'} onChange={handleChange} />
+
+                {/* Gampaha */}
+                <label style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.deliveryType === 'GAMPAHA' ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', gap: '15px', background: formData.deliveryType === 'GAMPAHA' ? '#eff6ff' : 'white' }}>
+                  <input type="radio" name="deliveryType" value="GAMPAHA" checked={formData.deliveryType === 'GAMPAHA'} onChange={handleChange} />
+                  <span style={{ fontSize: '24px' }}>🚚</span>
                   <div>
-                    <p style={{ fontSize: '14px', fontWeight: '600', margin: 0 }}>🏪 Store Pickup</p>
-                    <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Free of Charge</p>
+                    <p style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Gampaha</p>
+                    <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0' }}>Delivered within 2-5 business days</p>
+                    <p style={{ fontSize: '11px', color: '#9ca3af', margin: 0 }}>and every Additional kilo or part thereof is LKR 100 • <strong>Rs 500.00</strong></p>
+                  </div>
+                </label>
+
+                {/* Out of Gampaha */}
+                <label style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.deliveryType === 'OUT_OF_GAMPAHA' ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', gap: '15px', background: formData.deliveryType === 'OUT_OF_GAMPAHA' ? '#eff6ff' : 'white' }}>
+                  <input type="radio" name="deliveryType" value="OUT_OF_GAMPAHA" checked={formData.deliveryType === 'OUT_OF_GAMPAHA'} onChange={handleChange} />
+                  <span style={{ fontSize: '24px' }}>🚛</span>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Out of Gampaha</p>
+                    <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0' }}>Delivered within 2-7 business days</p>
+                    <p style={{ fontSize: '11px', color: '#9ca3af', margin: 0 }}>and every Additional kilo or part thereof is LKR 100 • <strong>Rs 750.00</strong></p>
                   </div>
                 </label>
               </div>
@@ -483,7 +553,7 @@ export default function Checkout() {
                     style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 
-                {formData.deliveryType === 'HOME_DELIVERY' && (
+                {formData.deliveryType !== 'STORE_PICKUP' && (
                   <>
                     <div style={{ gridColumn: 'span 2' }}>
                       <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Street Address *</label>
@@ -506,7 +576,7 @@ export default function Checkout() {
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Special Instructions</label>
                   <textarea name="specialInstructions" value={formData.specialInstructions} onChange={handleChange} rows="2"
-                    placeholder="Any special delivery notes..."
+                    placeholder="Any special notes or requirements..."
                     style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }} />
                 </div>
               </div>
@@ -516,16 +586,48 @@ export default function Checkout() {
           {step === 1 && (
             <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '25px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Payment Method</h2>
-              {[['BANK_TRANSFER', '🏦', 'Bank Transfer', 'Upload slip after order confirmation'], ['CASH_ON_DELIVERY', '💵', 'Cash on Delivery', 'Pay when you receive']].map(([val, icon, label, desc]) => (
-                <label key={val} style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.paymentMethod === val ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', marginBottom: '10px', gap: '12px', background: formData.paymentMethod === val ? '#eff6ff' : 'white' }}>
-                  <input type="radio" name="paymentMethod" value={val} checked={formData.paymentMethod === val} onChange={handleChange} />
-                  <span style={{ fontSize: '20px' }}>{icon}</span>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '2px' }}>{label}</p>
-                    <p style={{ fontSize: '12px', color: '#6b7280' }}>{desc}</p>
-                  </div>
-                </label>
-              ))}
+              {[
+                ['BANK_TRANSFER', '🏦', 'Bank Transfer & Slip Upload', 'Upload your bank deposit slip for verification'],
+                ['CASH_AT_CASHIER', '💵', 'Cash at Store / Cashier', 'Pay directly at our outlet before collecting items']
+              ].map(([val, icon, label, desc]) => {
+                // Determine if this payment method should be disabled based on delivery type
+                const isDisabled = val === 'CASH_AT_CASHIER' && formData.deliveryType !== 'STORE_PICKUP';
+                const reason = isDisabled ? 'Only available for Store Pickup' : '';
+                
+                return (
+                  <label 
+                    key={val} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      padding: '15px', 
+                      border: `2px solid ${formData.paymentMethod === val ? '#2563eb' : '#e5e7eb'}`, 
+                      borderRadius: '8px', 
+                      cursor: isDisabled ? 'not-allowed' : 'pointer', 
+                      marginBottom: '10px', 
+                      gap: '12px', 
+                      background: formData.paymentMethod === val ? '#eff6ff' : (isDisabled ? '#f9fafb' : 'white'),
+                      opacity: isDisabled ? 0.6 : 1
+                    }}
+                  >
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value={val} 
+                      checked={formData.paymentMethod === val} 
+                      onChange={handleChange} 
+                      disabled={isDisabled}
+                    />
+                    <span style={{ fontSize: '20px' }}>{icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '2px' }}>{label}</p>
+                      <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                        {isDisabled ? reason : desc}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
             </div>
           )}
 
@@ -546,7 +648,8 @@ export default function Checkout() {
                 <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px', fontSize: '13px' }}>
                   <span style={{ color: '#6b7280' }}>Method:</span>
                   <span style={{ fontWeight: '700', color: '#111827' }}>
-                    {formData.deliveryType === 'STORE_PICKUP' ? '🏪 Store Pickup (Free)' : '🏠 Home Delivery (Rs. 500)'}
+                    {formData.deliveryType === 'STORE_PICKUP' ? '🏪 Store Pickup (Free)' : 
+                     formData.deliveryType === 'GAMPAHA' ? '🚚 Gampaha (Rs. 500)' : '🚛 Out of Gampaha (Rs. 750)'}
                   </span>
 
                   <span style={{ color: '#6b7280' }}>{formData.deliveryType === 'STORE_PICKUP' ? 'Pickup at:' : 'Deliver to:'}</span>
@@ -562,7 +665,7 @@ export default function Checkout() {
                   
                   <span style={{ color: '#6b7280' }}>Payment Mode:</span>
                   <span style={{ fontWeight: '600', color: '#111827', textTransform: 'capitalize' }}>
-                    {formData.paymentMethod.replace(/_/g, ' ').toLowerCase()}
+                    {formData.paymentMethod === 'BANK_TRANSFER' ? 'Bank Transfer' : 'Cash at Store'}
                   </span>
                 </div>
               </div>
@@ -574,13 +677,27 @@ export default function Checkout() {
                     <span style={{ fontSize: '20px', fontWeight: '800', color: '#22c55e' }}>Rs. {total.toLocaleString()}</span>
                   </div>
 
-                  <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#475569', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Bank Account Details</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
-                      <p style={{ color: '#64748b' }}>Bank: <span style={{ color: '#1e293b', fontWeight: '600' }}>{bankDetails.bankName}</span></p>
-                      <p style={{ color: '#64748b' }}>Branch: <span style={{ color: '#1e293b', fontWeight: '600' }}>{bankDetails.branch}</span></p>
-                      <p style={{ color: '#64748b' }}>Acc Name: <span style={{ color: '#1e293b', fontWeight: '600' }}>{bankDetails.accountName}</span></p>
-                      <p style={{ color: '#64748b' }}>Acc No: <span style={{ color: '#1e293b', fontWeight: '600' }}>{bankDetails.accountNumber}</span></p>
+                  <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', marginBottom: '20px', border: '1.5px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                    <h4 style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      🏦 Bank Account Details
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '14px' }}>
+                      <div>
+                        <p style={{ color: '#94a3b8', margin: '0 0 2px 0', fontSize: '12px' }}>Bank Name</p>
+                        <p style={{ color: '#1e293b', fontWeight: '600', margin: 0 }}>{bankDetails.bankName}</p>
+                      </div>
+                      <div>
+                        <p style={{ color: '#94a3b8', margin: '0 0 2px 0', fontSize: '12px' }}>Branch</p>
+                        <p style={{ color: '#1e293b', fontWeight: '600', margin: 0 }}>{bankDetails.branch}</p>
+                      </div>
+                      <div>
+                        <p style={{ color: '#94a3b8', margin: '0 0 2px 0', fontSize: '12px' }}>Account Name</p>
+                        <p style={{ color: '#1e293b', fontWeight: '600', margin: 0 }}>{bankDetails.accountName}</p>
+                      </div>
+                      <div>
+                        <p style={{ color: '#94a3b8', margin: '0 0 2px 0', fontSize: '12px' }}>Account Number</p>
+                        <p style={{ color: '#1e293b', fontWeight: '700', margin: 0, letterSpacing: '0.5px', color: '#001a66' }}>{bankDetails.accountNumber}</p>
+                      </div>
                     </div>
                   </div>
                   
@@ -595,32 +712,61 @@ export default function Checkout() {
                       </button>
                       <div style={{ fontSize: '32px', marginBottom: '10px', color: '#9ca3af' }}>📄</div>
                       <p style={{ fontSize: '14px', fontWeight: '600', color: '#001a66', marginBottom: '4px' }}>{slipFile.name}</p>
-                      <p style={{ fontSize: '12px', color: '#9ca3af' }}>({(slipFile.size / 1024).toFixed(1)} KB)</p>
+                      <p style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '15px' }}>({(slipFile.size / 1024).toFixed(1)} KB)</p>
+                      
+                      <button 
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSubmit(e); }}
+                        disabled={submitting}
+                        style={{ 
+                          width: '100%',
+                          background: submitting ? '#86efac' : '#22c55e', 
+                          color: 'white', 
+                          border: 'none', 
+                          padding: '12px', 
+                          borderRadius: '8px', 
+                          fontSize: '14px', 
+                          cursor: submitting ? 'not-allowed' : 'pointer', 
+                          fontWeight: '700',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
+                      >
+                        {submitting ? 'Placing Order...' : '🚀 Final Step: Confirm & Place Order'}
+                      </button>
                     </div>
                   ) : (
-                    <div 
-                      onClick={() => fileInputRef.current?.click()}
+                    <label 
+                      htmlFor="slip-file-input"
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#2563eb'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
                       style={{ 
+                        display: 'block',
                         border: '2px dashed #e5e7eb', 
-                        borderRadius: '10px', 
-                        padding: '30px', 
+                        borderRadius: '12px', 
+                        padding: '40px 20px', 
                         textAlign: 'center',
                         background: '#f9fafb',
                         cursor: 'pointer',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                       }}
                     >
-                      <div style={{ fontSize: '32px', marginBottom: '10px' }}>📤</div>
-                      <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '4px' }}>
-                        Click or drag to upload payment slip
+                      <div style={{ fontSize: '40px', marginBottom: '16px' }}>📑</div>
+                      <p style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '6px' }}>
+                        Click to upload payment slip
                       </p>
-                      <p style={{ fontSize: '12px', color: '#9ca3af' }}>Support: JPG, PNG, PDF (Max 5MB)</p>
-                    </div>
+                      <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '280px', margin: '0 auto' }}>
+                        Please upload a clear photo or PDF of your deposit slip for verification.
+                      </p>
+                      <div style={{ marginTop: '16px', display: 'inline-block', padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#475569' }}>
+                        Select File
+                      </div>
+                    </label>
                   )}
                   <input 
+                    id="slip-file-input"
                     ref={fileInputRef}
                     type="file" 
-                    style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: '0' }} 
+                    style={{ display: 'none' }} 
                     accept="image/*,.pdf" 
                     onChange={(e) => setSlipFile(e.target.files[0])} 
                   />
@@ -643,7 +789,7 @@ export default function Checkout() {
                 CONTINUE TO PAYMENT
               </button>
             )}
-            {step === 2 && (
+            {step === 2 && formData.paymentMethod !== 'BANK_TRANSFER' && (
               <button type="button" 
                 onClick={(e) => { e.stopPropagation(); handleSubmit(e); }} 
                 disabled={submitting}
@@ -675,8 +821,10 @@ export default function Checkout() {
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>Rs. {subtotal.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '13px', color: '#6b7280' }}>{formData.deliveryType === 'STORE_PICKUP' ? 'Pickup' : 'Shipping'}</span>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: shipping === 0 ? '#16a34a' : '#1f2937' }}>
+                <span style={{ fontSize: '13px', color: '#6b7280' }}>
+                  {formData.deliveryType === 'STORE_PICKUP' ? 'Collection' : 'Delivery'}
+                </span>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: shipping === 0 ? '#16a34a' : '#1f2937' }}>
                   {shipping === 0 ? 'FREE' : `Rs. ${shipping.toLocaleString()}`}
                 </span>
               </div>

@@ -4,12 +4,15 @@ import { apiCall } from "../../utils/auth";
 export default function Payments() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploadOrder, setUploadOrder] = useState(null); // Order ID to upload slip for
+  const [uploadOrder, setUploadOrder] = useState(null);
   const [slipFile, setSlipFile] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [dismissedIds, setDismissedIds] = useState([]);
 
   useEffect(() => {
     fetchPayments();
+    fetchNotifications();
   }, []);
 
   const fetchPayments = async () => {
@@ -24,6 +27,21 @@ export default function Payments() {
       console.error('Error fetching payments:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await apiCall('http://localhost:5000/api/customer/notifications');
+      if (res.ok) {
+        const data = await res.json();
+        const paymentNotifs = (data.notifications || [])
+          .filter(n => n.confirmation_type === 'payment_confirmation')
+          .slice(0, 5);
+        setNotifications(paymentNotifs);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
     }
   };
 
@@ -79,9 +97,47 @@ export default function Payments() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div>
           <h1 style={{ fontSize: '32px', marginBottom: '5px', color: '#001a66', fontWeight: '700' }}>Payments & Settlements</h1>
-          <p style={{ color: '#666', fontSize: '15px', marginBottom: '30px' }}>Verify your pending orders by uploading bank deposit slips.</p>
+          <p style={{ color: '#666', fontSize: '15px', marginBottom: '20px' }}>Verify your pending orders by uploading bank deposit slips.</p>
         </div>
       </div>
+
+      {/* Payment Verification Notifications */}
+      {notifications.filter(n => !dismissedIds.includes(n.confirmation_id)).map(notif => {
+        const isRejected = notif.message_content?.startsWith('[REJECTED]');
+        const message = notif.message_content?.replace('[REJECTED] ', '') || '';
+        return (
+          <div key={notif.confirmation_id} style={{
+            display: 'flex', alignItems: 'flex-start', gap: '12px',
+            padding: '14px 18px', borderRadius: '10px', marginBottom: '12px',
+            background: isRejected ? '#fef2f2' : '#f0fdf4',
+            border: `1px solid ${isRejected ? '#fca5a5' : '#86efac'}`,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+          }}>
+            <span style={{ fontSize: '24px', flexShrink: 0 }}>{isRejected ? '❌' : '✅'}</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontWeight: '700', fontSize: '15px', color: isRejected ? '#991b1b' : '#166534' }}>
+                {isRejected ? 'Payment Rejected' : 'Payment Verified!'} — Order #{notif.order_id}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '13px', color: isRejected ? '#b91c1c' : '#166534' }}>
+                {message}
+              </p>
+              {isRejected && (
+                <p style={{ margin: '8px 0 0', fontSize: '13px', color: '#7f1d1d', fontWeight: '600' }}>
+                  Please upload a new bank slip to continue.
+                </p>
+              )}
+              <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#6b7280' }}>
+                {new Date(notif.sent_at).toLocaleString()}
+              </p>
+            </div>
+            <button
+              onClick={() => setDismissedIds(prev => [...prev, notif.confirmation_id])}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#9ca3af', flexShrink: 0 }}
+              title="Dismiss"
+            >×</button>
+          </div>
+        );
+      })}
 
       {/* Pending Payments Section */}
       <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#dc3545', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>

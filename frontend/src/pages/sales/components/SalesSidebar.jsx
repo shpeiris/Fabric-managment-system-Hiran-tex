@@ -5,11 +5,28 @@ import { getUser, removeUser, apiCall } from '../../../utils/auth.js';
 const SalesSidebar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const userData = getUser();
     setUser(userData);
+    fetchPendingCount();
+
+    const interval = setInterval(fetchPendingCount, 10000); // Poll every 10s for faster updates
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchPendingCount = async () => {
+    try {
+      const res = await apiCall('http://localhost:5000/api/sales/pending-payments');
+      const data = await res.json();
+      if (res.ok) {
+        setPendingCount(data.count || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching pending count:', err);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -78,6 +95,20 @@ const SalesSidebar = () => {
             })}
           >
             {item.name}
+            {item.name === 'Payment Queue' && pendingCount > 0 && (
+              <span style={{
+                marginLeft: 'auto',
+                background: '#ff4d4d',
+                color: 'white',
+                fontSize: '11px',
+                fontWeight: '700',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }}>
+                {pendingCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

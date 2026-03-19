@@ -118,8 +118,13 @@ const createOrder = async (orderData) => {
             });
         }
 
-        // Add delivery fee conditionally
-        if (delivery_type === 'HOME_DELIVERY' || delivery_type === 'STANDARD') {
+        // Add delivery fee based on type
+        if (delivery_type === 'GAMPAHA') {
+            totalAmount += 500;
+        } else if (delivery_type === 'OUT_OF_GAMPAHA') {
+            totalAmount += 750;
+        } else if (delivery_type === 'HOME_DELIVERY' || delivery_type === 'STANDARD') {
+            // Fallback for legacy types if any
             totalAmount += 500;
         }
 

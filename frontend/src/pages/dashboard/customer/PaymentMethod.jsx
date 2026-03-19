@@ -145,18 +145,19 @@ const PaymentMethod = ({
               </div>
             </label>
 
+
             <label className={`payment-option ${orderData.deliveryMethod !== 'STORE_PICKUP' ? 'disabled' : ''}`}>
               <input
                 type="radio"
                 name="paymentMethod"
-                value="CASH_ON_COUNTER"
-                checked={orderData.paymentMethod === 'CASH_ON_COUNTER'}
+                value="CASH_AT_CASHIER"
+                checked={orderData.paymentMethod === 'CASH_AT_CASHIER'}
                 onChange={(e) => handlePaymentMethodChange(e.target.value)}
                 disabled={orderData.deliveryMethod !== 'STORE_PICKUP'}
               />
               <span className="radio-button"></span>
               <div className="option-content">
-                <strong>Cash at Counter</strong>
+                <strong>Cash at Cashier</strong>
                 <p>Pay when you pick up your order at the store counter</p>
                 {orderData.deliveryMethod !== 'STORE_PICKUP' && (
                   <span className="method-note">Available for Store Pickup only</span>
@@ -195,14 +196,7 @@ const PaymentMethod = ({
               <label htmlFor="bankSlipUpload" className="upload-label">
                 Upload Payment Slip *
               </label>
-              <div className="upload-area">
-                <input
-                  type="file"
-                  id="bankSlipUpload"
-                  accept="image/*,.pdf"
-                  onChange={handleFileUpload}
-                  className="file-input"
-                />
+              <label htmlFor="bankSlipUpload" className="upload-area">
                 <div className="upload-content">
                   {orderData.bankSlipFile ? (
                     <div className="file-selected-details">
@@ -215,6 +209,7 @@ const PaymentMethod = ({
                         type="button" 
                         className="btn-remove-file"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           updateOrderData({ bankSlipFile: null });
                         }}
@@ -225,12 +220,19 @@ const PaymentMethod = ({
                   ) : (
                     <div className="upload-prompt">
                       <span className="upload-icon">📤</span>
-                      <span>Click or drag to upload payment slip</span>
+                      <span>Click to upload payment slip</span>
                       <p className="upload-hint">Support: JPG, PNG, PDF (Max 5MB)</p>
                     </div>
                   )}
                 </div>
-              </div>
+              </label>
+              <input
+                type="file"
+                id="bankSlipUpload"
+                accept="image/*,.pdf"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
               {formErrors.bankSlip && (
                 <span className="error-text">{formErrors.bankSlip}</span>
               )}
@@ -238,9 +240,9 @@ const PaymentMethod = ({
           </div>
         )}
 
-        {orderData.paymentMethod === 'CASH_ON_COUNTER' && orderData.deliveryMethod !== 'STORE_PICKUP' && (
+        {orderData.paymentMethod === 'CASH_AT_CASHIER' && orderData.deliveryMethod !== 'STORE_PICKUP' && (
           <div className="payment-warning">
-            <p>⚠️ Cash at Counter is not available for delivery. Please select Bank Transfer or change delivery method to Store Pickup.</p>
+            <p>⚠️ Cash at Cashier is not available for delivery. Please select Bank Transfer or change delivery method to Store Pickup.</p>
           </div>
         )}
 

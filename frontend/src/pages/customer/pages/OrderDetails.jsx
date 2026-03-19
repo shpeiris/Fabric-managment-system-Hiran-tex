@@ -14,6 +14,8 @@ export default function OrderDetails() {
   const [uploadLoading, setUploadLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
 
+  const [uploadSuccess, setUploadSuccess] = useState(false)
+  
   useEffect(() => {
     if (id) {
       fetchOrderDetails()
@@ -90,7 +92,7 @@ export default function OrderDetails() {
       formData.append('slip', selectedFile)
 
       await paymentService.uploadPaymentProof(formData)
-      alert("Bank slip uploaded successfully!")
+      setUploadSuccess(true)
       setSelectedFile(null)
       fetchOrderDetails() // Refresh data
     } catch (err) {
@@ -107,8 +109,15 @@ export default function OrderDetails() {
 
   const { order, items } = orderData
   const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseFloat(item.quantity)), 0)
-  const shipping = 500 // Assuming flat rate or fetched from elsewhere if available
-  const tax = subtotal * 0.08
+  const getShippingFee = (type) => {
+    if (type === 'GAMPAHA') return 500;
+    if (type === 'OUT_OF_GAMPAHA') return 750;
+    if (type === 'STORE_PICKUP') return 0;
+    return 500; // Default
+  }
+
+  const shipping = getShippingFee(order.delivery_type)
+  const tax = 0 // Using 0 as tax is usually included in total or not applicable here yet
 
   return (
     <div>
@@ -185,7 +194,12 @@ export default function OrderDetails() {
             <div style={{ display: 'grid', gap: '12px' }}>
               <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Delivery Type</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.delivery_type?.replace('_', ' ')}</p>
+                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>
+                  {order.delivery_type === 'STORE_PICKUP' ? '🏪 Store Pickup' : 
+                   order.delivery_type === 'GAMPAHA' ? '🚚 Gampaha Suburbs Delivery' : 
+                   order.delivery_type === 'OUT_OF_GAMPAHA' ? '🚛 Out of Gampaha Delivery' : 
+                   order.delivery_type?.replace('_', ' ')}
+                </p>
               </div>
               <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Address</p>
@@ -238,41 +252,59 @@ export default function OrderDetails() {
                 <div style={{ 
                   marginTop: '15px', 
                   padding: '15px', 
-                  background: '#fef2f2', 
-                  border: '1px dashed #ef4444', 
+                  background: uploadSuccess ? '#f0fdf4' : '#fef2f2', 
+                  border: `1px dashed ${uploadSuccess ? '#22c55e' : '#ef4444'}`, 
                   borderRadius: '8px' 
                 }}>
-                  <p style={{ fontSize: '14px', color: '#b91c1c', fontWeight: '600', marginBottom: '10px' }}>
-                    Action Required: Upload Payment Slip
+                  <p style={{ fontSize: '14px', color: uploadSuccess ? '#166534' : '#b91c1c', fontWeight: '600', marginBottom: '10px' }}>
+                    {uploadSuccess ? '✅ Slip Uploaded Successfully!' : 'Action Required: Upload Payment Slip'}
                   </p>
-                  <p style={{ fontSize: '12px', color: '#7f1d1d', marginBottom: '15px' }}>
-                    Your order is pending bank transfer verification. Please upload your bank slip to proceed.
+                  <p style={{ fontSize: '12px', color: uploadSuccess ? '#166534' : '#7f1d1d', marginBottom: '15px' }}>
+                    {uploadSuccess ? 'Your payment verification is now in progress. Our team will review the slip shortly.' : 'Your order is pending bank transfer verification. Please upload your bank slip to proceed.'}
                   </p>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input 
-                      type="file" 
-                      onChange={handleFileChange} 
-                      accept="image/*,.pdf"
-                      style={{ fontSize: '13px' }}
-                    />
+                  {uploadSuccess ? (
                     <button 
-                      onClick={handleUploadSlip}
-                      disabled={uploadLoading || !selectedFile}
+                      onClick={() => navigate('/customer/orders')}
                       style={{
-                        background: '#ef4444',
+                        background: '#22c55e',
                         color: 'white',
                         border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
+                        padding: '10px 20px',
+                        borderRadius: '6px',
                         fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: (uploadLoading || !selectedFile) ? 'not-allowed' : 'pointer',
-                        opacity: (uploadLoading || !selectedFile) ? 0.7 : 1
+                        fontWeight: '700',
+                        cursor: 'pointer'
                       }}
                     >
-                      {uploadLoading ? 'Uploading...' : 'Upload Slip'}
+                      ← Back to My Orders
                     </button>
-                  </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input 
+                        type="file" 
+                        onChange={handleFileChange} 
+                        accept="image/*,.pdf"
+                        style={{ fontSize: '13px' }}
+                      />
+                      <button 
+                        onClick={handleUploadSlip}
+                        disabled={uploadLoading || !selectedFile}
+                        style={{
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '4px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: (uploadLoading || !selectedFile) ? 'not-allowed' : 'pointer',
+                          opacity: (uploadLoading || !selectedFile) ? 0.7 : 1
+                        }}
+                      >
+                        {uploadLoading ? 'Uploading...' : 'Upload Slip'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

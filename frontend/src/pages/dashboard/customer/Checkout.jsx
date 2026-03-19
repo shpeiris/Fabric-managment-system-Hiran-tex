@@ -18,7 +18,7 @@ const Checkout = () => {
     phoneNumber: "",
     deliveryAddress: "",
     specialInstructions: "",
-    deliveryMethod: "HOME_DELIVERY",
+    deliveryMethod: "STORE_PICKUP",
     paymentMethod: "",
     bankSlipFile: null,
   });
@@ -74,7 +74,6 @@ const Checkout = () => {
     
     switch (orderData.deliveryMethod) {
       case 'GAMPAHA':
-      case 'GAMPAHA_SUBURBS':
         deliveryFee = 500;
         break;
       case 'OUT_OF_GAMPAHA':

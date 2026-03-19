@@ -54,7 +54,6 @@ const CompleteOrder = ({
   const getDeliveryFee = () => {
     switch (orderData.deliveryMethod) {
       case 'GAMPAHA':
-      case 'GAMPAHA_SUBURBS':
         return 500;
       case 'OUT_OF_GAMPAHA':
         return 750;
@@ -168,22 +167,6 @@ const CompleteOrder = ({
                 </div>
               </label>
 
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="deliveryMethod"
-                  value="GAMPAHA_SUBURBS"
-                  checked={orderData.deliveryMethod === 'GAMPAHA_SUBURBS'}
-                  onChange={(e) => handleInputChange('deliveryMethod', e.target.value)}
-                />
-                <span className="radio-button"></span>
-                <div className="option-content">
-                  <strong>Gampaha Suburbs</strong>
-                  <p>Delivered within 2-5 business days</p>
-                  <p className="shipping-note">and every Additional kilo or part thereof is LKR 100</p>
-                  <span className="shipping-price">Rs 500.00</span>
-                </div>
-              </label>
 
               <label className="radio-option">
                 <input

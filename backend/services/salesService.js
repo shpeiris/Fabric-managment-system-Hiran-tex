@@ -80,7 +80,7 @@ const getSalesDashboardStats = async () => {
 const getCustomerStats = async () => {
     try {
         const query = `
-            SELECT c.customer_id, c.full_name, c.email, c.registration_date,
+            SELECT c.customer_id, c.full_name, c.email, c.created_at as registration_date,
                    cc_phone.contact_value as phone,
                    COUNT(DISTINCT o.order_id) as total_orders,
                    COALESCE(SUM(o.total_amount), 0) as total_spent
@@ -89,7 +89,7 @@ const getCustomerStats = async () => {
                 AND cc_phone.contact_type = 'PHONE' AND cc_phone.is_primary = TRUE
             LEFT JOIN orders o ON c.customer_id = o.customer_id
             WHERE c.status = 'ACTIVE'
-            GROUP BY c.customer_id, c.full_name, c.email, c.registration_date, cc_phone.contact_value
+            GROUP BY c.customer_id, c.full_name, c.email, c.created_at, cc_phone.contact_value
             ORDER BY total_spent DESC
         `;
         const result = await pool.query(query);
@@ -288,6 +288,9 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
         }
 
         // Create confirmation record
+        // Note: DB constraint only allows 'order_confirmation', 'payment_confirmation', 'delivery_update'
+        // Map 'payment_rejection' => 'payment_confirmation' with a [REJECTED] prefix in the message
+        const dbType = type === 'payment_rejection' ? 'payment_confirmation' : type;
         const confirmationQuery = `
             INSERT INTO confirmation_logs (order_id, confirmation_type, sent_by, recipient_email, recipient_phone, message_content)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -295,14 +298,17 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
         `;
 
         const confirmationMessage = generateConfirmationMessage(orderId, type, customerInfo);
+        const storedMessage = type === 'payment_rejection'
+            ? '[REJECTED] ' + confirmationMessage
+            : confirmationMessage;
 
         await pool.query(confirmationQuery, [
             orderId,
-            type,
+            dbType,
             senderId,
             customerInfo.email,
             customerInfo.phone,
-            confirmationMessage
+            storedMessage
         ]);
 
         // Log the activity
