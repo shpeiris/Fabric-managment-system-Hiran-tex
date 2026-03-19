@@ -1,0 +1,240 @@
+import { useState, useEffect } from 'react';
+import { apiCall } from "../../../utils/auth.js";
+import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, Search, RefreshCw } from 'lucide-react';
+import "./PaymentQueue.css";
+
+const HARDCODED_PAYMENTS = [
+    {
+        order_id: 10254,
+        payment_id: 501,
+        customer_name: "Sample Customer (Demo)",
+        phone_number: "+94 77 123 4567",
+        delivery_address: "123, Galle Road, Colombo 03, Sri Lanka",
+        order_date: new Date().toISOString(),
+        total_amount: 16250.00,
+        delivery_fee: 500.00,
+        payment_method: "BANK_TRANSFER",
+        bank_slip_url: null, // We'll show a placeholder for demo
+        items: [
+            { fabric_name: "Premium Silk Satin (Midnight Blue)", quantity: 5, total_price: 7500.00 },
+            { fabric_name: "Soft Cotton Voile (Pure White)", quantity: 10, total_price: 8250.00 }
+        ]
+    }
+];
+
+const PaymentQueue = () => {
+    const [pendingPayments, setPendingPayments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterMethod, setFilterMethod] = useState('ALL');
+
+    useEffect(() => {
+        fetchPendingPayments();
+
+        // Implement Live Update (Polling every 30 seconds)
+        const interval = setInterval(() => {
+            fetchPendingPayments();
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchPendingPayments = async () => {
+        try {
+            setLoading(true);
+            const response = await apiCall('http://localhost:5000/api/sales/pending-payments');
+            const data = await response.json();
+            if (response.ok) {
+                setPendingPayments(data.orders || []);
+            }
+        } catch (err) {
+            console.error('Error fetching pending payments:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleConfirmPayment = async (paymentId, methodOrStatus) => {
+        try {
+            setActionLoading(true);
+            const response = await apiCall('http://localhost:5000/api/payments/confirm', {
+                method: 'POST',
+                body: JSON.stringify({
+                    payment_id: paymentId,
+                    status: methodOrStatus === 'FAILED' ? 'FAILED' : 'COMPLETED',
+                    confirmedBy: 'Salesperson',
+                    method: methodOrStatus === 'FAILED' ? 'N/A' : methodOrStatus
+                })
+            });
+
+            if (response.ok) {
+                fetchPendingPayments();
+            } else {
+                const error = await response.json();
+                alert(`Error: ${error.error || 'Failed to process payment'}`);
+            }
+        } catch (err) {
+            console.error('Error confirming payment:', err);
+            alert(`Error: ${err.message}`);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const displayPayments = pendingPayments.length > 0 ? pendingPayments : HARDCODED_PAYMENTS;
+
+    const filteredPayments = displayPayments.filter(order => {
+        const matchesSearch = 
+            order.order_id.toString().includes(searchTerm) || 
+            order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesMethod = filterMethod === 'ALL' || order.payment_method === filterMethod;
+        
+        return matchesSearch && matchesMethod;
+    });
+
+    return (
+        <div className="payment-queue-page">
+            <div className="queue-header">
+                <div className="header-title">
+                    <CreditCard size={28} color="#001a66" />
+                    <h1>Payment Processing Queue</h1>
+                </div>
+                <div className="header-actions">
+                    <button onClick={fetchPendingPayments} className="refresh-btn" disabled={loading}>
+                        <RefreshCw size={18} className={loading ? 'spinning' : ''} />
+                        Sync Data
+                    </button>
+                </div>
+            </div>
+
+            <div className="filters-bar">
+                <div className="search-box">
+                    <Search size={18} />
+                    <input 
+                        type="text" 
+                        placeholder="Search by Order ID or Customer..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="filter-group">
+                    <Filter size={18} />
+                    <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)}>
+                        <option value="ALL">All Methods</option>
+                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                        <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
+                    </select>
+                </div>
+                <div className="queue-count">
+                    Found {filteredPayments.length} pending payments
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="loading-state">
+                    <RefreshCw size={40} className="spinning" />
+                    <p>Loading pending transactions...</p>
+                </div>
+            ) : filteredPayments.length > 0 ? (
+                <div className="payments-grid">
+                    {filteredPayments.map(order => (
+                        <div key={order.order_id} className="payment-card">
+                            <div className="card-header">
+                                <div className="order-id">Order #{order.order_id}</div>
+                                <div className={`method-badge ${order.payment_method}`}>
+                                    {order.payment_method.replace(/_/g, ' ')}
+                                </div>
+                            </div>
+
+                            <div className="card-body">
+                                <div className="customer-info">
+                                    <h3>{order.customer_name}</h3>
+                                    <div className="contact-details" style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                            <Mail size={14} /> {order.phone_number || 'N/A'}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                                            <Package size={14} style={{ marginTop: '3px', flexShrink: 0 }} /> 
+                                            <span style={{ lineHeight: '1.4' }}>{order.delivery_address || 'No address provided'}</span>
+                                        </div>
+                                    </div>
+                                    <p className="order-date" style={{ marginTop: '12px', fontStyle: 'italic' }}>{new Date(order.order_date).toLocaleDateString()}</p>
+                                </div>
+
+                                <div className="amount-section">
+                                    <span className="label">Amount to Collect:</span>
+                                    <span className="value">Rs. {Number(order.total_amount).toLocaleString()}</span>
+                                </div>
+
+                                <div className="items-preview">
+                                    <h4>Order Contents:</h4>
+                                    <ul>
+                                        {(order.items || []).map((item, idx) => (
+                                            <li key={idx}>
+                                                <span>{item.fabric_name} (x{item.quantity}m)</span>
+                                                <span>Rs. {Number(item.total_price).toLocaleString()}</span>
+                                            </li>
+                                        ))}
+                                        {order.delivery_fee > 0 && (
+                                            <li className="delivery-row" style={{ fontWeight: '600', color: '#001a66', borderTop: '1px solid #eee', marginTop: '5px', paddingTop: '5px' }}>
+                                                <span>Delivery Fee:</span>
+                                                <span>Rs. {Number(order.delivery_fee).toLocaleString()}</span>
+                                            </li>
+                                        )}
+                                    </ul>
+                                </div>
+
+                                <div className="slip-section">
+                                    <h4>Bank Slip Proof:</h4>
+                                    <div className="slip-thumbnail" onClick={() => order.bank_slip_url && window.open(`http://localhost:5000/${order.bank_slip_url}`, '_blank')}>
+                                        {order.bank_slip_url ? (
+                                            <img src={`http://localhost:5000/${order.bank_slip_url}`} alt="Slip" />
+                                        ) : (
+                                            <div className="placeholder-slip" style={{ height: '100%', background: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                                                <Package size={32} />
+                                                <span style={{ fontSize: '11px', marginTop: '8px' }}>No slip uploaded yet</span>
+                                            </div>
+                                        )}
+                                        {order.bank_slip_url && (
+                                            <div className="overlay">
+                                                <Search size={20} />
+                                                <span>Click to View Full</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="card-footer">
+                                <button 
+                                    className="btn confirm"
+                                    onClick={() => handleConfirmPayment(order.payment_id, order.payment_method)}
+                                    disabled={actionLoading}
+                                >
+                                    <CheckCircle size={18} /> Confirm Payment
+                                </button>
+                                <button 
+                                    className="btn reject"
+                                    onClick={() => handleConfirmPayment(order.payment_id, 'FAILED')}
+                                    disabled={actionLoading}
+                                >
+                                    <XCircle size={18} /> Reject Payment
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="empty-state">
+                    <div className="empty-icon">📂</div>
+                    <h3>No Pending Payments</h3>
+                    <p>Great job! All payment transactions have been processed.</p>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default PaymentQueue;

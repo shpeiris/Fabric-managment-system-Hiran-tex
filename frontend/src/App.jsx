@@ -28,6 +28,7 @@ import SalesDashboard from "./pages/sales/pages/Dashboard"; // Left behind
 import SalesCustomers from "./pages/sales/pages/Customers"; // Left behind
 import SalesOrders from "./pages/sales/Orders";
 import CreateOrder from "./pages/sales/CreateOrder";
+import PaymentQueue from "./pages/sales/pages/PaymentQueue";
 import SalesReports from "./pages/sales/pages/Reports"; // Left behind
 
 // Customer Imports
@@ -91,6 +92,7 @@ function App() {
           </ProtectedRoute>
         }>
           <Route path="dashboard" element={<SalesDashboard />} />
+          <Route path="payments" element={<PaymentQueue />} />
           <Route path="customers" element={<SalesCustomers />} />
           <Route path="orders" element={<SalesOrders />} />
           <Route path="new-order" element={<CreateOrder />} />

@@ -14,7 +14,7 @@ const getSalesDashboardStats = async () => {
             AND EXTRACT(MONTH FROM order_date) = EXTRACT(MONTH FROM CURRENT_DATE) 
             AND EXTRACT(YEAR FROM order_date) = EXTRACT(YEAR FROM CURRENT_DATE)
         `,
-        totalCustomers: "SELECT COUNT(*) as total FROM customers WHERE status = 'ACTIVE'",
+        totalCustomers: "SELECT COUNT(*) as total FROM customers",
         pendingOrders: `
             SELECT COUNT(*) as total 
             FROM orders 
@@ -28,10 +28,27 @@ const getSalesDashboardStats = async () => {
                    p.payment_status,
                    p.payment_id,
                    p.payment_method,
-                   p.bank_slip_url
+                   p.bank_slip_url,
+                   (
+                       SELECT JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'fabric_name', f.name,
+                               'quantity', oi.quantity,
+                               'unit_price', oi.unit_price,
+                               'total_price', oi.total_price
+                           )
+                       )
+                       FROM order_items oi
+                       LEFT JOIN fabrics f ON oi.fabric_id = f.fabric_id
+                       WHERE oi.order_id = o.order_id
+                   ) as items
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.customer_id 
-            LEFT JOIN payments p ON o.order_id = p.order_id
+            LEFT JOIN (
+                SELECT DISTINCT ON (order_id) *
+                FROM payments
+                ORDER BY order_id, payment_date DESC
+            ) p ON o.order_id = p.order_id
             ORDER BY o.order_date DESC LIMIT 5
         `
     };
@@ -89,9 +106,25 @@ const getPendingVerifications = async () => {
             SELECT DISTINCT ON (o.order_id)
                    o.*, 
                    c.full_name as customer_name,
+                   c.email as customer_email,
                    p.bank_slip_url,
                    p.payment_status,
-                   p.payment_method
+                   p.payment_method,
+                   (
+                       SELECT JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'order_item_id', oi.order_item_id,
+                               'fabric_id', oi.fabric_id,
+                               'quantity', oi.quantity,
+                               'unit_price', oi.unit_price,
+                               'total_price', oi.total_price,
+                               'fabric_name', f.name
+                           )
+                       )
+                       FROM order_items oi
+                       LEFT JOIN fabrics f ON oi.fabric_id = f.fabric_id
+                       WHERE oi.order_id = o.order_id
+                   ) as items
             FROM orders o
             JOIN customers c ON o.customer_id = c.customer_id
             LEFT JOIN payments p ON o.order_id = p.order_id
@@ -118,10 +151,26 @@ const getPendingPayments = async () => {
             SELECT DISTINCT ON (o.order_id)
                    o.*, 
                    c.full_name as customer_name,
+                   c.email as customer_email,
                    p.payment_id,
                    p.payment_status,
                    p.payment_method,
-                   p.bank_slip_url
+                   p.bank_slip_url,
+                   (
+                       SELECT JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'order_item_id', oi.order_item_id,
+                               'fabric_id', oi.fabric_id,
+                               'quantity', oi.quantity,
+                               'unit_price', oi.unit_price,
+                               'total_price', oi.total_price,
+                               'fabric_name', f.name
+                           )
+                       )
+                       FROM order_items oi
+                       LEFT JOIN fabrics f ON oi.fabric_id = f.fabric_id
+                       WHERE oi.order_id = o.order_id
+                   ) as items
             FROM orders o
             JOIN customers c ON o.customer_id = c.customer_id
             LEFT JOIN payments p ON o.order_id = p.order_id
@@ -287,6 +336,7 @@ const generateConfirmationMessage = (orderId, type, customerInfo) => {
     const messages = {
         'order_confirmation': `Hello ${customerInfo.customerName}, your order #${orderId} has been confirmed and is being processed. Total amount: Rs. ${customerInfo.totalAmount}. Thank you for shopping with us!`,
         'payment_confirmation': `Dear ${customerInfo.customerName}, we have received your payment for order #${orderId}. Your order will be processed shortly.`,
+        'payment_rejection': `Hi ${customerInfo.customerName}, your payment proof for order #${orderId} was not accepted. Please re-upload your bank slip in the 'Order Details' section or contact support.`,
         'delivery_update': `Hi ${customerInfo.customerName}, your order #${orderId} status has been updated to: ${customerInfo.orderStatus}. We'll keep you informed of any further updates.`
     };
 

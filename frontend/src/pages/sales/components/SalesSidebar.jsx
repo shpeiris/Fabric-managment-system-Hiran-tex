@@ -27,6 +27,7 @@ const SalesSidebar = () => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/sales/dashboard' },
+    { name: 'Payment Queue', path: '/sales/payments' },
     { name: 'Customers', path: '/sales/customers' },
     { name: 'Orders', path: '/sales/orders' },
     { name: 'Reports', path: '/sales/reports' }

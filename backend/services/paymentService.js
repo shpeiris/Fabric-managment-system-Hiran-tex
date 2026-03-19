@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import * as salesService from './salesService.js';
 
 const getPayments = async () => {
     try {
@@ -56,6 +57,13 @@ const uploadBankSlip = async (userId, orderId, slipUrl) => {
             await pool.query(insertQuery, [orderId, order.total_amount, slipUrl]);
         }
 
+        // Log the activity for the salesperson to see
+        const logQuery = `
+            INSERT INTO activity_logs (customer_id, action_type, actor_type, action)
+            VALUES ($1, 'PAYMENT_UPLOAD', 'CUSTOMER', $2)
+        `;
+        await pool.query(logQuery, [userId, `Bank slip uploaded for order #${orderId}`]);
+
         return { message: "Bank slip uploaded successfully" };
     } catch (error) {
         console.error('Error uploading bank slip:', error);
@@ -97,12 +105,14 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
             // Update order status to PROCESSING when payment is confirmed
             const updateOrderQuery = `
                 UPDATE orders 
-                SET order_status = 'PROCESSING'
-                WHERE order_id = $1 AND order_status != 'PROCESSING'
+                SET order_status = 'PROCESSING',
+                    verified_at = NOW(),
+                    verified_by = $2
+                WHERE order_id = $1
                 RETURNING *
             `;
             
-            const orderResult = await client.query(updateOrderQuery, [payment.order_id]);
+            const orderResult = await client.query(updateOrderQuery, [payment.order_id, verifierId]);
             
             if (orderResult.rows.length > 0) {
                 // Log activity
@@ -115,6 +125,21 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
                     verifierId, 
                     `Payment confirmed and order #${payment.order_id} moved to PROCESSING`
                 ]);
+            }
+
+            // Send notification to customer
+            try {
+                await salesService.sendConfirmation(payment.order_id, 'payment_confirmation', 'Salesperson', verifierId);
+            } catch (notifyErr) {
+                console.error("Failed to send payment confirmation notification:", notifyErr);
+                // Don't fail the whole transaction if notification fails
+            }
+        } else if (status === 'FAILED') {
+            // Send rejection notification
+            try {
+                await salesService.sendConfirmation(payment.order_id, 'payment_rejection', 'Salesperson', verifierId);
+            } catch (notifyErr) {
+                console.error("Failed to send payment rejection notification:", notifyErr);
             }
         }
 

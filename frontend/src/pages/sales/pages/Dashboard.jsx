@@ -71,22 +71,27 @@ export default function SalesDashboard() {
     monthlySales: 0,
     totalCustomers: 0,
     pendingOrders: 0,
-    pendingPayments: 0,
-    verificationRequired: 0
+    pendingPayments: 0
   });
   const [recentOrders, setRecentOrders] = useState([]);
-  const [pendingVerifications, setPendingVerifications] = useState([]);
   const [pendingPayments, setPendingPayments] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showInvoiceView, setShowInvoiceView] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     SalesLogger.dashboard.pageLoad({ timestamp: new Date().toISOString() });
     fetchDashboardData();
+
+    // Implement Live Update (Polling every 30 seconds)
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
@@ -95,33 +100,27 @@ export default function SalesDashboard() {
       SalesLogger.dashboard.dataFetch({ action: 'fetch_dashboard_data' });
       
       // Fetch comprehensive dashboard data
-      const [dashboardRes, verificationsRes, paymentsRes] = await Promise.all([
+      const [dashboardRes, paymentsRes] = await Promise.all([
         apiCall('http://localhost:5000/api/sales/dashboard'),
-        apiCall('http://localhost:5000/api/sales/pending-verifications'),
         apiCall('http://localhost:5000/api/sales/pending-payments')
       ]);
 
       const dashboardData = await dashboardRes.json();
-      const verificationsData = await verificationsRes.json();
       const paymentsData = await paymentsRes.json();
 
       if (dashboardRes.ok) {
         setStats({
           ...dashboardData.stats,
-          verificationRequired: verificationsData.count || 0,
           pendingPayments: paymentsData.count || 0
         });
         setRecentOrders(dashboardData.recentOrders || []);
-        setPendingVerifications(verificationsData.orders || []);
         setPendingPayments(paymentsData.orders || []);
         
-        SalesLogger.dashboard.dataFetch({ 
-          success: true, 
-          ordersCount: dashboardData.recentOrders?.length || 0,
-          totalSales: dashboardData.stats?.totalSales || 0,
-          verificationsCount: verificationsData.count || 0,
-          paymentsCount: paymentsData.count || 0
-        });
+        return {
+          stats: dashboardData.stats,
+          recentOrders: dashboardData.recentOrders || [],
+          pendingPayments: paymentsData.orders || []
+        };
       }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -131,37 +130,6 @@ export default function SalesDashboard() {
     }
   };
 
-  const handleVerifyOrder = async (orderId, action) => {
-    try {
-      setActionLoading(true);
-      SalesLogger.dashboard.orderAction({ action: `verify_${action}`, orderId });
-      
-      const response = await apiCall(`http://localhost:5000/api/sales/verify-order/${orderId}`, {
-        method: 'POST',
-        body: JSON.stringify({ 
-          action, 
-          verifiedBy: 'Salesperson' // In a real app, this would be the logged-in user's name
-        })
-      });
-
-      if (response.ok) {
-        SalesLogger.dashboard.orderAction({ success: true, orderId, action });
-        await fetchDashboardData();
-        setShowVerificationModal(false);
-        // Automatically open notification modal for the verified order
-        setShowConfirmationModal(true);
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || `Failed to ${action} order`);
-      }
-    } catch (err) {
-      console.error(`Error ${action}ing order:`, err);
-      SalesLogger.dashboard.orderActionError(err);
-      alert(`Error: ${err.message}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleConfirmPayment = async (paymentId, methodOrStatus) => {
     try {
@@ -180,10 +148,18 @@ export default function SalesDashboard() {
 
       if (response.ok) {
         SalesLogger.dashboard.paymentAction({ success: true, paymentId });
-        await fetchDashboardData();
-        setShowPaymentModal(false);
-        // Automatically open notification modal for the settled order
-        setShowConfirmationModal(true);
+        const data = await fetchDashboardData();
+        
+        // Re-find the order in the updated lists to get the items
+        if (data) {
+          // Since it's a payment, it might have moved to recentOrders or still be in pendingPayments
+          const updatedOrder = data.recentOrders.find(o => o.payment_id === Number(paymentId)) ||
+                               data.pendingPayments.find(o => o.payment_id === Number(paymentId));
+          if (updatedOrder) setSelectedOrder(updatedOrder);
+        }
+
+        // Instead of closing, show invoice view
+        setShowInvoiceView(true);
       } else {
         const error = await response.json();
         throw new Error(error.error || 'Failed to process payment');
@@ -216,6 +192,7 @@ export default function SalesDashboard() {
         alert(`${type.replace('_', ' ')} sent successfully!`);
         setShowConfirmationModal(false);
         setSelectedOrder(null);
+        setShowInvoiceView(false); // Close invoice view if it was open
       } else {
         const error = await response.json();
         throw new Error(error.error || 'Failed to send confirmation');
@@ -227,6 +204,87 @@ export default function SalesDashboard() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const renderInvoice = (order) => {
+    if (!order) return null;
+    
+    const items = order.items || [];
+    const subtotal = items.reduce((sum, item) => sum + Number(item.total_price), 0);
+    
+    return (
+      <div className="invoice-container" id="printable-invoice" style={{ padding: '20px', background: 'white', color: '#1a1a1a' }}>
+        <div className="invoice-header" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #001a66', paddingBottom: '15px', marginBottom: '20px' }}>
+          <div>
+            <h2 style={{ color: '#001a66', margin: 0 }}>Hiran Fabric Textile</h2>
+            <p style={{ fontSize: '12px', margin: '4px 0', color: '#666' }}>Official Order Invoice</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontWeight: 'bold', margin: 0 }}>Order #{order.order_id}</p>
+            <p style={{ fontSize: '12px', margin: '4px 0', color: '#666' }}>Date: {new Date(order.order_date).toLocaleDateString()}</p>
+          </div>
+        </div>
+
+        <div className="invoice-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
+          <div className="customer-details">
+            <h5 style={{ margin: '0 0 8px 0', color: '#333', textTransform: 'uppercase', fontSize: '11px' }}>Bill To:</h5>
+            <p style={{ fontWeight: '600', margin: '0 0 4px 0' }}>{order.customer_name}</p>
+            <p style={{ fontSize: '13px', margin: '2px 0' }}>{order.customer_email || 'No email provided'}</p>
+          </div>
+          <div className="order-status-info" style={{ textAlign: 'right' }}>
+            <h5 style={{ margin: '0 0 8px 0', color: '#333', textTransform: 'uppercase', fontSize: '11px' }}>Status:</h5>
+            <span style={{ 
+              padding: '4px 12px', 
+              borderRadius: '20px', 
+              fontSize: '11px', 
+              fontWeight: 'bold',
+              background: '#001a66',
+              color: 'white'
+            }}>
+              {order.order_status}
+            </span>
+          </div>
+        </div>
+
+        <table className="invoice-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+          <thead>
+            <tr style={{ background: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
+              <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px' }}>Fabric Name</th>
+              <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px' }}>Quantity</th>
+              <th style={{ padding: '12px', textAlign: 'right', fontSize: '13px' }}>Unit Price</th>
+              <th style={{ padding: '12px', textAlign: 'right', fontSize: '13px' }}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, idx) => (
+              <tr key={idx} style={{ borderBottom: '1px solid #f1f1f1' }}>
+                <td style={{ padding: '12px', fontSize: '13px' }}>{item.fabric_name}</td>
+                <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px' }}>{item.quantity} m</td>
+                <td style={{ padding: '12px', textAlign: 'right', fontSize: '13px' }}>Rs. {Number(item.unit_price).toLocaleString()}</td>
+                <td style={{ padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '500' }}>Rs. {Number(item.total_price).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="invoice-total" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ width: '250px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '2px solid #001a66' }}>
+              <span style={{ fontWeight: 'bold', fontSize: '16px' }}>Total Amount</span>
+              <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#001a66' }}>Rs. {Number(order.total_amount).toLocaleString()}</span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#888', textAlign: 'right', marginTop: '4px' }}>
+              Inc. all applicable taxes
+            </div>
+          </div>
+        </div>
+
+        <div className="invoice-footer" style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '15px', textAlign: 'center', fontSize: '11px', color: '#999' }}>
+          <p>Thank you for choosing Hiran Fabric Textile.</p>
+          <p>This is a computer-generated invoice and doesn't require a signature.</p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -287,16 +345,6 @@ export default function SalesDashboard() {
           </div>
         </div>
 
-        <div className="stat-card verification" onClick={() => setShowVerificationModal(true)}>
-          <div className="stat-icon-container">
-            <CheckCircle size={32} color="#856404" />
-          </div>
-          <div className="stat-info">
-            <h4>Security Checks</h4>
-            <h2>{stats.verificationRequired}</h2>
-            <p className="stat-subtitle">Verify pending orders</p>
-          </div>
-        </div>
 
         <div className="stat-card payment" onClick={() => setShowPaymentModal(true)}>
           <div className="stat-icon-container">
@@ -343,13 +391,6 @@ export default function SalesDashboard() {
             <span>Notify Customers</span>
           </button>
           
-          <button 
-            className="action-btn orders-btn"
-            onClick={() => navigate('/sales/orders')}
-          >
-            <Clipboard size={18} />
-            <span>Order Database</span>
-          </button>
         </div>
       </div>
 
@@ -397,18 +438,6 @@ export default function SalesDashboard() {
                     <td>{order.delivery_type || 'Standard'}</td>
                     <td>
                       <div className="action-buttons-mini">
-                        {order.order_status === 'PENDING' && (
-                          <button 
-                            className="mini-btn verify" 
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setShowVerificationModal(true);
-                            }}
-                            title="Verify Order Security"
-                          >
-                            <CheckCircle size={14} />
-                          </button>
-                        )}
                         {order.payment_status === 'PENDING' && (
                           <button 
                             className="mini-btn payment" 
@@ -458,129 +487,58 @@ export default function SalesDashboard() {
         </div>
       </div>
 
-      {/* Order Verification Modal */}
-      {showVerificationModal && (
-        <div className="modal-overlay" onClick={() => setShowVerificationModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <Clipboard size={20} color="#001a66" />
-              <h3>Security Verification</h3>
-              <button className="close-btn" onClick={() => setShowVerificationModal(false)}>×</button>
-            </div>
-            <div className="modal-content">
-              {selectedOrder ? (
-                <div className="order-verification">
-                  <div className="order-summary">
-                    <h4>Order #{selectedOrder.order_id}</h4>
-                    <p><strong>Customer:</strong> {selectedOrder.customer_name}</p>
-                    <p><strong>Amount:</strong> Rs. {Number(selectedOrder.total_amount).toLocaleString()}</p>
-                    <p><strong>Date:</strong> {new Date(selectedOrder.order_date).toLocaleDateString()}</p>
-                  </div>
-                  
-                  <div className="verification-checklist">
-                    <h5>Verification Checklist:</h5>
-                    <ul>
-                      <li>✓ Customer details verified</li>
-                      <li>✓ Fabric availability confirmed</li>
-                      <li>✓ Delivery address validated</li>
-                      <li>✓ Order amount correct</li>
-                    </ul>
-                  </div>
-
-                  {selectedOrder.bank_slip_url && (
-                    <div className="slip-preview">
-                      <h5>Bank Slip Proof:</h5>
-                      <div className="slip-image-container">
-                        <img 
-                          src={`http://localhost:5000/${selectedOrder.bank_slip_url}`} 
-                          alt="Bank Slip" 
-                          className="bank-slip-img"
-                          onClick={() => window.open(`http://localhost:5000/${selectedOrder.bank_slip_url}`, '_blank')}
-                        />
-                      </div>
-                      <p className="slip-hint">Click image to enlarge</p>
-                      <button 
-                        className="btn" 
-                        onClick={() => window.print()}
-                        style={{ marginTop: '10px', background: '#f3f4f6', color: '#1f2937', border: '1px solid #d1d5db', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                      >
-                        <Clipboard size={16} /> Print Order / Invoice
-                      </button>
-                    </div>
-                  )}
-                  
-                  <div className="verification-actions">
-                    <button 
-                      className="btn verify-approve"
-                      onClick={() => handleVerifyOrder(selectedOrder.order_id, 'approve')}
-                      disabled={actionLoading}
-                    >
-                      <CheckCircle size={16} />
-                      Approve Order
-                    </button>
-                    <button 
-                      className="btn verify-reject"
-                      onClick={() => handleVerifyOrder(selectedOrder.order_id, 'reject')}
-                      disabled={actionLoading}
-                    >
-                      <XCircle size={16} />
-                      Reject Order
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="pending-verifications">
-                  <h4>Orders Requiring Verification ({pendingVerifications.length})</h4>
-                  {pendingVerifications.map(order => (
-                    <div 
-                      key={order.order_id} 
-                      className="verification-item clickable"
-                      onClick={() => setSelectedOrder(order)}
-                      style={{ cursor: 'pointer', transition: 'background 0.2s' }}
-                    >
-                      <div className="order-info">
-                        <strong>Order #{order.order_id}</strong>
-                        <span>{order.customer_name} - Rs. {Number(order.total_amount).toLocaleString()}</span>
-                        {order.bank_slip_url && <small style={{ color: '#001a66' }}>📎 Has Payment Proof</small>}
-                      </div>
-                      <div className="verification-buttons">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedOrder(order);
-                            handleVerifyOrder(order.order_id, 'approve');
-                          }}
-                          disabled={actionLoading}
-                        >
-                          <CheckCircle size={14} /> Approve
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Payment Processing Modal */}
       {showPaymentModal && (
-        <div className="modal-overlay" onClick={() => { setShowPaymentModal(false); setSelectedOrder(null); }}>
+        <div className="modal-overlay" onClick={() => { setShowPaymentModal(false); setSelectedOrder(null); setShowInvoiceView(false); }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <CreditCard size={20} color="#001a66" />
-              <h3>Payment Settlement</h3>
-              <button className="close-btn" onClick={() => { setShowPaymentModal(false); setSelectedOrder(null); }}>×</button>
+              <h3>{showInvoiceView ? 'Official Invoice' : 'Payment Settlement'}</h3>
+              <button className="close-btn" onClick={() => { setShowPaymentModal(false); setSelectedOrder(null); setShowInvoiceView(false); }}>×</button>
             </div>
             <div className="modal-content">
-              {selectedOrder ? (
+              {showInvoiceView ? (
+                <div className="invoice-preview-mode">
+                  {renderInvoice(selectedOrder)}
+                  <div className="invoice-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' }}>
+                    <button className="btn print-btn" onClick={() => window.print()} style={{ background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                      <Clipboard size={16} /> Print Official Invoice
+                    </button>
+                    <button className="btn notify-btn" onClick={() => { setShowPaymentModal(false); setShowConfirmationModal(true); setShowInvoiceView(false); }} style={{ background: '#22c55e', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                      Next: Send Confirmation <Mail size={16} />
+                    </button>
+                  </div>
+                </div>
+              ) : selectedOrder ? (
                 <div className="payment-processing">
                   <div className="order-summary">
                     <h4>Order #{selectedOrder.order_id}</h4>
                     <p><strong>Customer:</strong> {selectedOrder.customer_name}</p>
+                    <p><strong>Phone:</strong> {selectedOrder.phone_number || 'N/A'}</p>
+                    <p><strong>Address:</strong> {selectedOrder.delivery_address || 'N/A'}</p>
                     <p><strong>Amount:</strong> Rs. {Number(selectedOrder.total_amount).toLocaleString()}</p>
                     <p><strong>Method:</strong> {selectedOrder.payment_method || 'Not specified'}</p>
+                  </div>
+
+                  <div className="order-items-preview" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px', marginBottom: '20px' }}>
+                    <h5 style={{ marginBottom: '10px' }}>Order Items:</h5>
+                    <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+                      <tbody>
+                        {(selectedOrder.items || []).map((item, idx) => (
+                          <tr key={idx}>
+                            <td style={{ padding: '4px 0' }}>{item.fabric_name}</td>
+                            <td style={{ padding: '4px 0', textAlign: 'center' }}>{item.quantity}m</td>
+                            <td style={{ padding: '4px 0', textAlign: 'right' }}>Rs. {Number(item.total_price).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                        {selectedOrder.delivery_fee > 0 && (
+                          <tr style={{ borderTop: '1px solid #eee' }}>
+                            <td colSpan="2" style={{ padding: '8px 0', fontWeight: '600', color: '#001a66' }}>Delivery Fee</td>
+                            <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: '600', color: '#001a66' }}>Rs. {Number(selectedOrder.delivery_fee).toLocaleString()}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
 
                   {selectedOrder.bank_slip_url && (

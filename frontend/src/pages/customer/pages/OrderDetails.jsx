@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import orderService from '../../../services/orderService'
 import cartService from '../../../services/cartService'
+import paymentService from '../../../services/paymentService'
 import { apiCall } from '../../../utils/auth.js'
 
 export default function OrderDetails() {
@@ -10,6 +11,8 @@ export default function OrderDetails() {
   const [orderData, setOrderData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [uploadLoading, setUploadLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
 
   useEffect(() => {
     if (id) {
@@ -58,6 +61,43 @@ export default function OrderDetails() {
       alert("Failed to reorder items. Some items might be out of stock.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Basic validation
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload a valid image (JPG, PNG) or PDF file')
+        return
+      }
+      setSelectedFile(file)
+    }
+  }
+
+  const handleUploadSlip = async () => {
+    if (!selectedFile) {
+      alert("Please select a file first")
+      return
+    }
+
+    try {
+      setUploadLoading(true)
+      const formData = new FormData()
+      formData.append('order_id', id)
+      formData.append('slip', selectedFile)
+
+      await paymentService.uploadPaymentProof(formData)
+      alert("Bank slip uploaded successfully!")
+      setSelectedFile(null)
+      fetchOrderDetails() // Refresh data
+    } catch (err) {
+      console.error("Upload error:", err)
+      alert("Failed to upload bank slip. Please try again.")
+    } finally {
+      setUploadLoading(false)
     }
   }
 
@@ -190,6 +230,49 @@ export default function OrderDetails() {
                     />
                   </div>
                   <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Click image to view full size</p>
+                </div>
+              )}
+
+              {/* Upload section for PENDING BANK_TRANSFER orders without slip */}
+              {order.order_status === 'PENDING' && !order.bank_slip_url && order.payment_method === 'BANK_TRANSFER' && (
+                <div style={{ 
+                  marginTop: '15px', 
+                  padding: '15px', 
+                  background: '#fef2f2', 
+                  border: '1px dashed #ef4444', 
+                  borderRadius: '8px' 
+                }}>
+                  <p style={{ fontSize: '14px', color: '#b91c1c', fontWeight: '600', marginBottom: '10px' }}>
+                    Action Required: Upload Payment Slip
+                  </p>
+                  <p style={{ fontSize: '12px', color: '#7f1d1d', marginBottom: '15px' }}>
+                    Your order is pending bank transfer verification. Please upload your bank slip to proceed.
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input 
+                      type="file" 
+                      onChange={handleFileChange} 
+                      accept="image/*,.pdf"
+                      style={{ fontSize: '13px' }}
+                    />
+                    <button 
+                      onClick={handleUploadSlip}
+                      disabled={uploadLoading || !selectedFile}
+                      style={{
+                        background: '#ef4444',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: (uploadLoading || !selectedFile) ? 'not-allowed' : 'pointer',
+                        opacity: (uploadLoading || !selectedFile) ? 0.7 : 1
+                      }}
+                    >
+                      {uploadLoading ? 'Uploading...' : 'Upload Slip'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

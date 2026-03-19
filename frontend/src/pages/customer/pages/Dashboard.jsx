@@ -23,6 +23,13 @@ export default function Dashboard() {
     const userData = getUser();
     setUser(userData);
     fetchDashboardData();
+
+    // Implement Live Update (Polling every 30 seconds)
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {

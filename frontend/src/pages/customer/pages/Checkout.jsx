@@ -16,6 +16,13 @@ export default function Checkout() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef(null);
   const user = getUser();
+  
+  const bankDetails = {
+    bankName: "People's Bank",
+    accountName: "Hiran Fabric Textile",
+    accountNumber: "2022154879536",
+    branch: "Nittambuwa"
+  };
 
   const [formData, setFormData] = useState({
     fullName: user?.full_name || '',
@@ -24,8 +31,9 @@ export default function Checkout() {
     address: user?.address || '',
     city: '',
     postalCode: '',
-    paymentMethod: 'bank-transfer',
-    specialInstructions: ''
+    paymentMethod: 'BANK_TRANSFER',
+    specialInstructions: '',
+    deliveryType: 'HOME_DELIVERY' // Default to Home Delivery
   });
 
   useEffect(() => {
@@ -37,7 +45,37 @@ export default function Checkout() {
         if (res.ok) {
           const items = data.cart || [];
           if (items.length === 0) {
-            navigate('/customer/cart');
+            // Hardcoded sample data for testing purposes if cart is empty
+            const sampleItems = [
+              {
+                cart_id: 'test-1',
+                fabric_id: 1,
+                fabric_name: "Premium Silk Satin",
+                color: "Midnight Blue",
+                price_per_meter: 1500,
+                quantity: 2,
+                total_price: 3000
+              },
+              {
+                cart_id: 'test-2',
+                fabric_id: 2,
+                fabric_name: "Soft Cotton Voile",
+                color: "Cloud White",
+                price_per_meter: 850,
+                quantity: 5,
+                total_price: 4250
+              }
+            ];
+            setCartItems(sampleItems);
+            
+            // Also fill some sample form data
+            setFormData(prev => ({
+              ...prev,
+              city: 'Colombo',
+              postalCode: '00100',
+              address: '456 Sample Lane'
+            }));
+            
             return;
           }
           setCartItems(items);
@@ -58,8 +96,12 @@ export default function Checkout() {
 
   const validateStep = () => {
     if (step === 1) {
-      if (!formData.fullName || !formData.email || !formData.phone || !formData.address || !formData.city) {
-        setError('Please fill in all required shipping fields.');
+      if (!formData.fullName || !formData.email || !formData.phone) {
+        setError('Please fill in Name, Email and Phone Number.');
+        return false;
+      }
+      if (formData.deliveryType === 'HOME_DELIVERY' && (!formData.address || !formData.city)) {
+        setError('Please fill in Address and City for Home Delivery.');
         return false;
       }
     }
@@ -71,7 +113,7 @@ export default function Checkout() {
     if (!validateStep()) return;
     
     // Validate slip for bank transfer
-    if (formData.paymentMethod === 'bank-transfer' && !slipFile) {
+    if (formData.paymentMethod === 'BANK_TRANSFER' && !slipFile) {
       setError('Please upload your bank deposit slip to place this order.');
       // Scroll to error or help user find it
       return;
@@ -88,8 +130,8 @@ export default function Checkout() {
         quantity: parseFloat(item.quantity),
         unit_price: parseFloat(item.price_per_meter)
       })),
-      delivery_address: deliveryAddress,
-      delivery_type: 'STANDARD',
+      delivery_address: formData.deliveryType === 'STORE_PICKUP' ? 'Store Pickup (Hiran Fabric Textile)' : deliveryAddress,
+      delivery_type: formData.deliveryType,
       payment_method: formData.paymentMethod,
       customer_name: formData.fullName,
       phone_number: formData.phone,
@@ -97,11 +139,14 @@ export default function Checkout() {
     };
 
     try {
+      console.log('Placing order with payload:', orderPayload);
+      
       // 1. Create Order
       const res = await apiCall(`${API}/api/orders`, {
         method: 'POST',
         body: JSON.stringify(orderPayload)
       });
+      
       const data = await res.json();
       
       if (!res.ok) {
@@ -109,41 +154,84 @@ export default function Checkout() {
       }
 
       const orderId = data.order_id;
+      console.log('Order created successfully:', orderId);
       setOrderSuccess(orderId);
 
       // 2. Handle Slip Upload if needed
-      if (formData.paymentMethod === 'bank-transfer' && slipFile) {
-        const formDataUpload = new FormData();
-        formDataUpload.append('order_id', orderId);
-        formDataUpload.append('slip', slipFile);
+      if (formData.paymentMethod === 'BANK_TRANSFER' && slipFile) {
+        try {
+          const formDataUpload = new FormData();
+          formDataUpload.append('order_id', orderId);
+          formDataUpload.append('slip', slipFile);
 
-        const uploadRes = await apiCall(`${API}/api/payments/upload-slip`, {
-          method: 'POST',
-          body: formDataUpload
-        });
+          console.log('Uploading bank slip for order:', orderId);
+          const uploadRes = await apiCall(`${API}/api/payments/upload-slip`, {
+            method: 'POST',
+            body: formDataUpload
+          });
 
-        if (!uploadRes.ok) {
-          const uploadError = await uploadRes.json();
-          // We still placed the order, but the slip failed. 
-          // We'll proceed but notify user it needs careful review.
-          console.warn('Slip upload failed after order creation:', uploadError);
+          if (!uploadRes.ok) {
+            const uploadError = await uploadRes.json().catch(() => ({ error: 'Upload failed' }));
+            console.warn('Slip upload failed but order was placed:', uploadError);
+            setUploadSuccess(false);
+          } else {
+            console.log('Slip uploaded successfully');
+            setUploadSuccess(true);
+          }
+        } catch (uploadErr) {
+          console.error('Non-blocking error during slip upload:', uploadErr);
           setUploadSuccess(false);
-        } else {
-          setUploadSuccess(true);
         }
       }
 
-      // 3. Complete Checkout
+      // 3. Complete Checkout (State transition to Success screen)
       setStep(3);
     } catch (err) {
+      console.error('Checkout error:', err);
       setError(err.message || 'Could not connect to server. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleRetryUpload = async () => {
+    if (!slipFile) {
+      setError('Please select a file first.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('order_id', orderSuccess);
+      formDataUpload.append('slip', slipFile);
+
+      const uploadRes = await apiCall(`${API}/api/payments/upload-slip`, {
+        method: 'POST',
+        body: formDataUpload
+      });
+
+      if (!uploadRes.ok) {
+        const uploadError = await uploadRes.json();
+        throw new Error(uploadError.error || 'Failed to upload bank slip.');
+      }
+
+      setUploadSuccess(true);
+      // Optional: Add an activity log or notification here if requested
+    } catch (err) {
+      setError(err.message || 'Failed to upload bank slip. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const handlePrint = () => {
+    window.print();
+  };
+
   const subtotal = cartItems.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0);
-  const shipping = 500;
+  const shipping = formData.deliveryType === 'HOME_DELIVERY' ? 500 : 0;
   const total = subtotal + shipping;
 
   if (loadingCart) return (
@@ -154,51 +242,172 @@ export default function Checkout() {
 
   if (step === 3 && orderSuccess) {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 20px', maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎉</div>
-        <h2 style={{ fontSize: '26px', fontWeight: '700', color: '#1f2937', marginBottom: '12px' }}>Order Placed Successfully!</h2>
-        <p style={{ fontSize: '16px', color: '#6b7280', marginBottom: '8px' }}>
-          Your order <strong style={{ color: '#2563eb' }}>#{String(orderSuccess).padStart(4, '0')}</strong> has been received.
-        </p>
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div style={{ fontSize: '64px', marginBottom: '15px' }}>✅</div>
+          <h2 style={{ fontSize: '28px', fontWeight: '800', color: '#111827', marginBottom: '8px' }}>Order Placed Successfully!</h2>
+          <p style={{ fontSize: '16px', color: '#6b7280' }}>
+            Thank you for your purchase. Your order number is <strong style={{ color: '#001a66' }}>#{String(orderSuccess).padStart(4, '0')}</strong>
+          </p>
+        </div>
 
-        {formData.paymentMethod === 'bank-transfer' ? (
-          <div style={{ marginTop: '30px', padding: '20px', background: uploadSuccess ? '#f0fdf4' : '#fff7ed', borderRadius: '12px', border: `1px solid ${uploadSuccess ? '#22c55e' : '#f97316'}` }}>
-            {uploadSuccess ? (
-              <>
-                <p style={{ color: '#15803d', fontWeight: '600' }}>✅ Payment proof received!</p>
-                <p style={{ fontSize: '13px', color: '#166534', marginTop: '4px' }}>Our team will verify your payment and update your order shortly.</p>
-              </>
-            ) : (
-              <>
-                <p style={{ color: '#c2410c', fontWeight: '600' }}>⚠️ Order placed, but slip upload failed.</p>
-                <p style={{ fontSize: '13px', color: '#9a3412', marginTop: '4px' }}>Please go to "My Orders" and upload your bank slip manually to avoid delays.</p>
-              </>
-            )}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '40px' }}>
+          {/* Order Details Summary */}
+          <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              📦 Order Summary
+            </h3>
+            <div style={{ borderBottom: '1px solid #f3f4f6', paddingBottom: '15px', marginBottom: '15px' }}>
+              {cartItems.map(item => (
+                <div key={item.cart_id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '14px', color: '#4b5563' }}>{item.fabric_name} (x{parseFloat(item.quantity)}m)</span>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Rs. {parseFloat(item.total_price).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '14px', color: '#6b7280' }}>Subtotal</span>
+              <span style={{ fontSize: '14px', color: '#111827' }}>Rs. {subtotal.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <span style={{ fontSize: '14px', color: '#6b7280' }}>Shipping ({formData.deliveryType === 'STORE_PICKUP' ? 'Store Pickup' : 'Home Delivery'})</span>
+              <span style={{ fontSize: '14px', color: '#111827' }}>{shipping === 0 ? 'FREE' : `Rs. ${shipping.toLocaleString()}`}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '15px', borderTop: '2px solid #f3f4f6' }}>
+              <span style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>Total Amount</span>
+              <span style={{ fontSize: '20px', fontWeight: '800', color: '#001a66' }}>Rs. {total.toLocaleString()}</span>
+            </div>
           </div>
-        ) : (
-          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '30px' }}>We'll contact you at {formData.phone} to confirm your order.</p>
-        )}
 
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '40px', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => navigate('/customer/payments')}
-            style={{ background: '#001a66', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}
-          >
-            Go to Payments
-          </button>
+          {/* Delivery & Payment Info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '15px' }}>📦 Order Summary</h3>
+              <div style={{ marginBottom: '15px', borderBottom: '1px solid #f3f4f6', paddingBottom: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
+                  <span style={{ color: '#6b7280' }}>Delivery:</span>
+                  <span style={{ fontWeight: '600', color: '#111827' }}>{formData.deliveryType === 'STORE_PICKUP' ? '🏪 Store Pickup' : '🏠 Home Delivery'}</span>
+                  
+                  <span style={{ color: '#6b7280' }}>Payment:</span>
+                  <span style={{ fontWeight: '600', color: '#111827' }}>{formData.paymentMethod === 'BANK_TRANSFER' ? '🏦 Bank Transfer' : '💵 Cash on Delivery'}</span>
+                </div>
+              </div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '15px' }}>📍 {formData.deliveryType === 'STORE_PICKUP' ? 'Pickup Location' : 'Delivery Details'}</h3>
+              <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '4px', fontWeight: '600' }}>{formData.fullName}</p>
+              {formData.deliveryType === 'STORE_PICKUP' ? (
+                <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+                  Hiran Fabric Textile Store<br />
+                  Nittambuwa
+                </p>
+              ) : (
+                <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+                  {formData.address}, {formData.city}<br />
+                  {formData.postalCode}
+                </p>
+              )}
+              <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '10px' }}>📞 {formData.phone}</p>
+            </div>
+
+            <div style={{ background: 'white', padding: '25px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', marginBottom: '15px' }}>💳 Payment Info</h3>
+              <p style={{ fontSize: '14px', color: '#4b5563', fontWeight: '600', textTransform: 'capitalize' }}>
+                {formData.paymentMethod.replace(/_/g, ' ')}
+              </p>
+              
+              {formData.paymentMethod === 'BANK_TRANSFER' && (
+                <div style={{ marginTop: '15px' }}>
+                  {uploadSuccess ? (
+                    <div style={{ padding: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', color: '#166534', fontSize: '13px' }}>
+                      <span style={{ fontWeight: '700' }}>✅ Proof Uploaded</span><br />
+                      We are currently verifying your payment.
+                    </div>
+                  ) : (
+                    <div style={{ padding: '12px', background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '8px', color: '#9a3412', fontSize: '13px' }}>
+                      <span style={{ fontWeight: '700' }}>⚠️ Slip Missing or Failed</span><br />
+                      Please upload proof to avoid delays.
+                      
+                      <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                        <input 
+                          type="file" 
+                          onChange={(e) => setSlipFile(e.target.files[0])} 
+                          accept="image/*,.pdf"
+                          style={{ fontSize: '11px', width: '130px' }}
+                        />
+                        <button 
+                          onClick={handleRetryUpload}
+                          disabled={submitting}
+                          style={{ background: '#f97316', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                        >
+                          {submitting ? '...' : 'Upload'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="no-print" style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '30px' }}>
           <button
             onClick={() => navigate('/customer/orders')}
-            style={{ background: '#e5e7eb', color: '#1f2937', border: 'none', padding: '12px 28px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}
+            style={{ padding: '12px 30px', background: '#001a66', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            View My Orders
+            📦 Track My Order
+          </button>
+          <button
+            onClick={handlePrint}
+            style={{ padding: '12px 30px', background: 'white', color: '#374151', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            🖨️ Print Receipt
           </button>
           <button
             onClick={() => navigate('/customer/browse')}
-            style={{ background: 'transparent', color: '#001a66', border: '1px solid #001a66', padding: '12px 28px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}
+            style={{ padding: '12px 30px', background: 'white', color: '#001a66', border: '2px solid #001a66', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer' }}
           >
             Continue Shopping
           </button>
         </div>
+
+        {/* Next Steps Section */}
+        <div className="no-print" style={{ background: '#f8fafc', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>What happens next?</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>1</div>
+              <p style={{ fontSize: '14px', color: '#475569', margin: 0 }}>
+                {formData.paymentMethod === 'BANK_TRANSFER' 
+                  ? 'Our team will verify your payment slip once it’s reviewed by a salesperson.'
+                  : 'Your order has been sent to our sales team for processing.'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>2</div>
+              <p style={{ fontSize: '14px', color: '#475569', margin: 0 }}>
+                You will receive a notification in your dashboard when your order status changes.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>3</div>
+              <p style={{ fontSize: '14px', color: '#475569', margin: 0 }}>
+                {formData.deliveryType === 'STORE_PICKUP'
+                  ? 'Visit our Nittambuwa store with your Order ID to collect your items.'
+                  : 'Your fabrics will be packed and delivered to your doorstep within 3-5 business days.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <style>
+          {`
+            @media print {
+              .no-print { display: none !important; }
+              body { background: white !important; }
+              div { border: none !important; box-shadow: none !important; }
+            }
+          `}
+        </style>
       </div>
     );
   }
@@ -234,7 +443,29 @@ export default function Checkout() {
 
           {step === 1 && (
             <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '25px', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Shipping Information</h2>
+              <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Delivery Method</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.deliveryType === 'HOME_DELIVERY' ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', gap: '10px', background: formData.deliveryType === 'HOME_DELIVERY' ? '#eff6ff' : 'white' }}>
+                  <input type="radio" name="deliveryType" value="HOME_DELIVERY" checked={formData.deliveryType === 'HOME_DELIVERY'} onChange={handleChange} />
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '600', margin: 0 }}>🏠 Home Delivery</p>
+                    <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Rs. 500.00 Fee</p>
+                  </div>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.deliveryType === 'STORE_PICKUP' ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', gap: '10px', background: formData.deliveryType === 'STORE_PICKUP' ? '#eff6ff' : 'white' }}>
+                  <input type="radio" name="deliveryType" value="STORE_PICKUP" checked={formData.deliveryType === 'STORE_PICKUP'} onChange={handleChange} />
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '600', margin: 0 }}>🏪 Store Pickup</p>
+                    <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Free of Charge</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {step === 1 && (
+            <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '25px', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Contact Details</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Full Name *</label>
@@ -251,21 +482,27 @@ export default function Checkout() {
                   <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+94 77 123 4567"
                     style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-                <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Street Address *</label>
-                  <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="123 Main Street"
-                    style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>City *</label>
-                  <input type="text" name="city" value={formData.city} onChange={handleChange} placeholder="Colombo"
-                    style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Postal Code</label>
-                  <input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} placeholder="00100"
-                    style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
-                </div>
+                
+                {formData.deliveryType === 'HOME_DELIVERY' && (
+                  <>
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Street Address *</label>
+                      <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="123 Main Street"
+                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>City *</label>
+                      <input type="text" name="city" value={formData.city} onChange={handleChange} placeholder="Colombo"
+                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Postal Code</label>
+                      <input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} placeholder="00100"
+                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                  </>
+                )}
+                
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Special Instructions</label>
                   <textarea name="specialInstructions" value={formData.specialInstructions} onChange={handleChange} rows="2"
@@ -279,7 +516,7 @@ export default function Checkout() {
           {step === 1 && (
             <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '25px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Payment Method</h2>
-              {[['bank-transfer', '🏦', 'Bank Transfer', 'Upload slip after order confirmation'], ['cash', '💵', 'Cash on Delivery', 'Pay when you receive']].map(([val, icon, label, desc]) => (
+              {[['BANK_TRANSFER', '🏦', 'Bank Transfer', 'Upload slip after order confirmation'], ['CASH_ON_DELIVERY', '💵', 'Cash on Delivery', 'Pay when you receive']].map(([val, icon, label, desc]) => (
                 <label key={val} style={{ display: 'flex', alignItems: 'center', padding: '15px', border: `2px solid ${formData.paymentMethod === val ? '#2563eb' : '#e5e7eb'}`, borderRadius: '8px', cursor: 'pointer', marginBottom: '10px', gap: '12px', background: formData.paymentMethod === val ? '#eff6ff' : 'white' }}>
                   <input type="radio" name="paymentMethod" value={val} checked={formData.paymentMethod === val} onChange={handleChange} />
                   <span style={{ fontSize: '20px' }}>{icon}</span>
@@ -305,23 +542,51 @@ export default function Checkout() {
                 </div>
               ))}
               
-              <div style={{ marginTop: '16px', padding: '14px', background: '#f9fafb', borderRadius: '6px' }}>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>📍 Delivering to</p>
-                <p style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>{formData.address}, {formData.city}</p>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px', marginBottom: '2px' }}>💳 Payment Method</p>
-                <p style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937', textTransform: 'capitalize' }}>{formData.paymentMethod.replace('-', ' ')}</p>
+              <div style={{ marginTop: '16px', padding: '14px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px', fontSize: '13px' }}>
+                  <span style={{ color: '#6b7280' }}>Method:</span>
+                  <span style={{ fontWeight: '700', color: '#111827' }}>
+                    {formData.deliveryType === 'STORE_PICKUP' ? '🏪 Store Pickup (Free)' : '🏠 Home Delivery (Rs. 500)'}
+                  </span>
+
+                  <span style={{ color: '#6b7280' }}>{formData.deliveryType === 'STORE_PICKUP' ? 'Pickup at:' : 'Deliver to:'}</span>
+                  <span style={{ fontWeight: '600', color: '#111827' }}>
+                    {formData.deliveryType === 'STORE_PICKUP' ? 'Hiran Fabric Textile, Nittambuwa' : `${formData.address}, ${formData.city}`}
+                  </span>
+
+                  <span style={{ color: '#6b7280' }}>Contact Name:</span>
+                  <span style={{ fontWeight: '600', color: '#111827' }}>{formData.fullName}</span>
+
+                  <span style={{ color: '#6b7280' }}>Phone:</span>
+                  <span style={{ fontWeight: '600', color: '#111827' }}>{formData.phone}</span>
+                  
+                  <span style={{ color: '#6b7280' }}>Payment Mode:</span>
+                  <span style={{ fontWeight: '600', color: '#111827', textTransform: 'capitalize' }}>
+                    {formData.paymentMethod.replace(/_/g, ' ').toLowerCase()}
+                  </span>
+                </div>
               </div>
 
-              {formData.paymentMethod === 'bank-transfer' && (
+              {formData.paymentMethod === 'BANK_TRANSFER' && (
                 <div style={{ marginTop: '25px', padding: '20px', border: '1px solid #e5e7eb', borderRadius: '12px', background: '#fff' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                     <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#001a66', margin: 0 }}>Amount to Transfer:</h3>
                     <span style={{ fontSize: '20px', fontWeight: '800', color: '#22c55e' }}>Rs. {total.toLocaleString()}</span>
                   </div>
+
+                  <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#475569', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Bank Account Details</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
+                      <p style={{ color: '#64748b' }}>Bank: <span style={{ color: '#1e293b', fontWeight: '600' }}>{bankDetails.bankName}</span></p>
+                      <p style={{ color: '#64748b' }}>Branch: <span style={{ color: '#1e293b', fontWeight: '600' }}>{bankDetails.branch}</span></p>
+                      <p style={{ color: '#64748b' }}>Acc Name: <span style={{ color: '#1e293b', fontWeight: '600' }}>{bankDetails.accountName}</span></p>
+                      <p style={{ color: '#64748b' }}>Acc No: <span style={{ color: '#1e293b', fontWeight: '600' }}>{bankDetails.accountNumber}</span></p>
+                    </div>
+                  </div>
                   
                   <label style={{ display: 'block', fontSize: '14px', color: '#374151', marginBottom: '10px', fontWeight: '600' }}>Upload Payment Slip *</label>
                   {slipFile ? (
-                    <div style={{ position: 'relative', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px', background: '#f8fafc', textAlign: 'center' }}>
+                    <div style={{ position: 'relative', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px', background: '#f0f9ff', textAlign: 'center' }}>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSlipFile(null); }}
                         style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#fee2e2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
@@ -356,7 +621,7 @@ export default function Checkout() {
                     ref={fileInputRef}
                     type="file" 
                     style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: '0' }} 
-                    accept="image/*" 
+                    accept="image/*,.pdf" 
                     onChange={(e) => setSlipFile(e.target.files[0])} 
                   />
                 </div>
@@ -410,8 +675,16 @@ export default function Checkout() {
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>Rs. {subtotal.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '13px', color: '#6b7280' }}>Shipping</span>
-                <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>Rs. {shipping.toLocaleString()}</span>
+                <span style={{ fontSize: '13px', color: '#6b7280' }}>{formData.deliveryType === 'STORE_PICKUP' ? 'Pickup' : 'Shipping'}</span>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: shipping === 0 ? '#16a34a' : '#1f2937' }}>
+                  {shipping === 0 ? 'FREE' : `Rs. ${shipping.toLocaleString()}`}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                <span style={{ fontSize: '13px', color: '#6b7280' }}>Payment</span>
+                <span style={{ fontSize: '13px', fontWeight: '500', color: '#1f2937' }}>
+                  {formData.paymentMethod === 'BANK_TRANSFER' ? 'Bank' : 'Cash'}
+                </span>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>

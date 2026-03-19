@@ -21,11 +21,25 @@ const getUserOrders = async (userId) => {
 };
 
 const getOrderById = async (orderId, userId = null) => {
-    let query = "SELECT * FROM orders WHERE order_id = $1";
+    let query = `
+        SELECT o.*, 
+               p.payment_status, 
+               p.payment_method, 
+               p.bank_slip_url, 
+               p.payment_id,
+               p.amount as paid_amount
+        FROM orders o
+        LEFT JOIN (
+            SELECT DISTINCT ON (order_id) *
+            FROM payments
+            ORDER BY order_id, payment_date DESC
+        ) p ON o.order_id = p.order_id
+        WHERE o.order_id = $1
+    `;
     let params = [orderId];
 
     if (userId) {
-        query += " AND customer_id = $2";
+        query += " AND o.customer_id = $2";
         params.push(userId);
     }
 
@@ -104,13 +118,15 @@ const createOrder = async (orderData) => {
             });
         }
 
-        // Add delivery fee
-        if (delivery_type === 'HOME_DELIVERY') totalAmount += 500;
+        // Add delivery fee conditionally
+        if (delivery_type === 'HOME_DELIVERY' || delivery_type === 'STANDARD') {
+            totalAmount += 500;
+        }
 
-        // Insert order
+        // Insert order with all fields
         const orderResult = await pool.query(
-            "INSERT INTO orders (customer_id, customer_name, total_amount, delivery_address, delivery_type, order_status) VALUES ($1, $2, $3, $4, $5, 'PENDING') RETURNING order_id",
-            [customer_id, customer_name || '', totalAmount, delivery_address, delivery_type]
+            "INSERT INTO orders (customer_id, customer_name, phone_number, total_amount, delivery_address, delivery_type, special_instructions, order_status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING') RETURNING order_id",
+            [customer_id, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '']
         );
 
         const orderId = orderResult.rows[0].order_id;
@@ -122,7 +138,7 @@ const createOrder = async (orderData) => {
                 [orderId, item.fabric_id, item.quantity, item.unit_price, item.total_price]
             );
 
-            // Deduct stock
+            // Deduct stock (ensure stock is available)
             await pool.query(
                 "UPDATE fabrics SET stock_quantity = stock_quantity - $1 WHERE fabric_id = $2",
                 [item.quantity, item.fabric_id]
