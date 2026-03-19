@@ -499,6 +499,13 @@ export default function SalesDashboard() {
                         />
                       </div>
                       <p className="slip-hint">Click image to enlarge</p>
+                      <button 
+                        className="btn" 
+                        onClick={() => window.print()}
+                        style={{ marginTop: '10px', background: '#f3f4f6', color: '#1f2937', border: '1px solid #d1d5db', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                      >
+                        <Clipboard size={16} /> Print Order / Invoice
+                      </button>
                     </div>
                   )}
                   

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import orderService from '../../../services/orderService'
 import cartService from '../../../services/cartService'
+import { apiCall } from '../../../utils/auth.js'
 
 export default function OrderDetails() {
   const { id } = useParams()
@@ -20,6 +21,14 @@ export default function OrderDetails() {
     try {
       setLoading(true)
       const data = await orderService.getOrderById(id)
+      
+      // Fetch notifications for this specific order
+      const notifResponse = await apiCall(`http://localhost:5000/api/customer/notifications`)
+      if (notifResponse.ok) {
+        const notifData = await notifResponse.json()
+        data.notifications = notifData.notifications.filter(n => n.order_id === parseInt(id))
+      }
+      
       setOrderData(data)
       setLoading(false)
     } catch (err) {
@@ -164,6 +173,60 @@ export default function OrderDetails() {
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Amount Paid</p>
                 <p style={{ fontSize: '16px', fontWeight: '700', color: '#22c55e' }}>Rs. {parseFloat(order.total_amount).toLocaleString()}</p>
               </div>
+              {order.bank_slip_url && (
+                <div style={{ marginTop: '15px' }}>
+                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Bank Slip Proof</p>
+                  <div style={{ 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px', 
+                    overflow: 'hidden',
+                    maxWidth: '300px'
+                  }}>
+                    <img 
+                      src={`http://localhost:5000/${order.bank_slip_url}`} 
+                      alt="Bank Slip" 
+                      style={{ width: '100%', cursor: 'pointer' }}
+                      onClick={() => window.open(`http://localhost:5000/${order.bank_slip_url}`, '_blank')}
+                    />
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Click image to view full size</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* New: Status Updates / Notifications */}
+          <div style={{
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            padding: '25px',
+            marginTop: '20px'
+          }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Status Updates</h2>
+            <div style={{ display: 'grid', gap: '15px' }}>
+              {orderData.notifications && orderData.notifications.length > 0 ? (
+                orderData.notifications.map((notif, idx) => (
+                  <div key={idx} style={{ 
+                    padding: '12px', 
+                    background: '#f9fafb', 
+                    borderRadius: '6px',
+                    borderLeft: '4px solid #2563eb'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151' }}>
+                        {notif.confirmation_type.replace('_', ' ').toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#6b7280' }}>
+                        {new Date(notif.sent_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#4b5563', margin: 0 }}>{notif.message_content}</p>
+                  </div>
+                ))
+              ) : (
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>No status updates yet.</p>
+              )}
             </div>
           </div>
         </div>
@@ -206,19 +269,22 @@ export default function OrderDetails() {
             padding: '25px'
           }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '15px' }}>Actions</h2>
-            <button style={{
-              background: 'transparent',
-              color: '#2563eb',
-              border: '1px solid #2563eb',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              width: '100%',
-              marginBottom: '10px'
-            }}>
-              Download Invoice
+            <button 
+              onClick={() => window.print()}
+              style={{
+                background: 'transparent',
+                color: '#2563eb',
+                border: '1px solid #2563eb',
+                padding: '12px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                width: '100%',
+                marginBottom: '10px'
+              }}
+            >
+              Print Invoice
             </button>
             <button style={{
               background: '#22c55e',

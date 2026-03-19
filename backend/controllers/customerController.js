@@ -39,3 +39,13 @@ export const submitFeedback = async (req, res) => {
         res.status(500).json({ error: 'Failed to submit feedback' });
     }
 };
+
+export const getNotifications = async (req, res) => {
+    try {
+        const notifications = await customerService.getCustomerNotifications(req.user.id);
+        res.json({ notifications });
+    } catch (error) {
+        console.error('Error fetching customer notifications:', error);
+        res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+};

@@ -37,3 +37,20 @@ export const getCustomerDashboardStats = async (customerId) => {
         totalSpent: parseFloat(totalSpent.rows[0]?.total || 0)
     };
 };
+
+/**
+ * Get notifications for the customer
+ * @param {number} customerId - The ID of the customer
+ * @returns {Promise<Array>} - List of notifications
+ */
+export const getCustomerNotifications = async (customerId) => {
+    const query = `
+        SELECT cl.*, o.order_id, o.order_status
+        FROM confirmation_logs cl
+        JOIN orders o ON cl.order_id = o.order_id
+        WHERE o.customer_id = $1
+        ORDER BY cl.sent_at DESC
+    `;
+    const result = await pool.query(query, [customerId]);
+    return result.rows;
+};

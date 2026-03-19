@@ -107,13 +107,12 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
             if (orderResult.rows.length > 0) {
                 // Log activity
                 const activityQuery = `
-                    INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
-                    VALUES ($1, 'EMPLOYEE', $2, $3)
+                    INSERT INTO activity_logs (employee_id, actor_type, action)
+                    VALUES ($1, 'EMPLOYEE', $2)
                 `;
                 
                 await client.query(activityQuery, [
                     verifierId, 
-                    'PAYMENT_CONFIRMATION',
                     `Payment confirmed and order #${payment.order_id} moved to PROCESSING`
                 ]);
             }

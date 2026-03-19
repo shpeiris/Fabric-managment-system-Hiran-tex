@@ -28,16 +28,18 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [fabricsRes, statsRes, ordersRes] = await Promise.all([
+      const [fabricsRes, statsRes, ordersRes, notificationsRes] = await Promise.all([
         apiCall('http://localhost:5000/api/inventory/fabrics'),
         apiCall('http://localhost:5000/api/customer/dashboard-stats'),
-        apiCall('http://localhost:5000/api/orders')
+        apiCall('http://localhost:5000/api/orders'),
+        apiCall('http://localhost:5000/api/customer/notifications')
       ]);
 
-      const [fabricsData, statsData, ordersData] = await Promise.all([
+      const [fabricsData, statsData, ordersData, notificationsData] = await Promise.all([
         fabricsRes.json(),
         statsRes.json(),
-        ordersRes.json()
+        ordersRes.json(),
+        notificationsRes.json()
       ]);
 
       if (fabricsRes.ok) {
@@ -55,7 +57,10 @@ export default function Dashboard() {
       }
 
       if (statsRes.ok) {
-        setStats(statsData);
+        setStats({
+          ...statsData,
+          notifications: notificationsData.notifications || []
+        });
       }
 
       if (ordersRes.ok) {
@@ -176,13 +181,51 @@ export default function Dashboard() {
         </div>
 
         <div className="main-right">
-
-
-
+          <section className="dashboard-card">
+            <div className="card-header">
+              <h3>Notifications</h3>
+              <button 
+                className="refresh-btn" 
+                onClick={fetchDashboardData}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
+                title="Refresh notifications"
+              >
+                🔄
+              </button>
+            </div>
+            <div className="notifications-list" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              {stats.notifications && stats.notifications.length > 0 ? (
+                stats.notifications.map((notif) => (
+                  <div key={notif.confirmation_id} className="notification-item" style={{ 
+                    padding: '12px', 
+                    borderBottom: '1px solid #f3f4f6',
+                    cursor: 'pointer'
+                  }} onClick={() => navigate(`/customer/orders/${notif.order_id}`)}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontWeight: '600', fontSize: '13px', color: '#1f2937' }}>
+                        {notif.confirmation_type.replace('_', ' ').toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#6b7280' }}>
+                        {new Date(notif.sent_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#4b5563', margin: 0, lineHeight: '1.4' }}>
+                      {notif.message_content}
+                    </p>
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#2563eb' }}>
+                      Order #{notif.order_id} • Status: {notif.order_status}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                  No new notifications.
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       </div>
     </div>
   );
 }
-
-
