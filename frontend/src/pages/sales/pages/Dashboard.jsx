@@ -316,15 +316,6 @@ export default function SalesDashboard() {
     <div className="sales-dashboard">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <h1>Sales Dashboard</h1>
-        <button 
-          onClick={fetchDashboardData} 
-          disabled={loading}
-          className="action-btn orders-btn" 
-          style={{ padding: '8px 16px', fontSize: '12px', border: 'none', background: '#001a66', color: 'white', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }}
-        >
-          <Zap size={14} color="white" />
-          {loading ? 'Syncing...' : 'Sync Dashboard'}
-        </button>
       </div>
       <p className="subtitle">Track your sales performance and manage orders</p>
 
@@ -440,15 +431,6 @@ export default function SalesDashboard() {
           </button>
           
           <button 
-            className="action-btn verify-btn"
-            onClick={() => setShowVerificationModal(true)}
-            disabled={stats.verificationRequired === 0}
-          >
-            <CheckCircle size={18} />
-            <span>Review Verifications ({stats.verificationRequired})</span>
-          </button>
-          
-          <button 
             className="action-btn payment-btn"
             onClick={() => setShowPaymentModal(true)}
             disabled={stats.pendingPayments === 0}
@@ -457,109 +439,10 @@ export default function SalesDashboard() {
             <span>Release Payments ({stats.pendingPayments})</span>
           </button>
           
-          <button 
-            className="action-btn confirm-btn"
-            onClick={() => setShowConfirmationModal(true)}
-          >
-            <Mail size={18} />
-            <span>Notify Customers</span>
-          </button>
           
         </div>
       </div>
 
-      {/* Recent Orders */}
-      <div className="section">
-        <div className="section-header">
-          <Clipboard size={24} color="#001a66" />
-          <h3>Transaction History</h3>
-        </div>
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Payment</th>
-                <th>Delivery</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.length > 0 ? (
-                recentOrders.map(order => (
-                  <tr key={order.order_id}>
-                    <td>#{order.order_id}</td>
-                    <td>{order.customer_name}</td>
-                    <td>{new Date(order.order_date).toLocaleDateString()}</td>
-                    <td>Rs. {Number(order.total_amount).toLocaleString()}</td>
-                    <td>
-                      <span className={`status-badge ${order.order_status.toLowerCase()}`}>
-                        {order.order_status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="payment-info">
-                        <span className={`payment-status ${order.payment_status?.toLowerCase()}`}>
-                          {order.payment_status || 'Pending'}
-                        </span>
-                        <small>{order.payment_method || 'Not set'}</small>
-                      </div>
-                    </td>
-                    <td>{order.delivery_type || 'Standard'}</td>
-                    <td>
-                      <div className="action-buttons-mini">
-                        {order.payment_status === 'PENDING' && (
-                          <button 
-                            className="mini-btn payment" 
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setShowPaymentModal(true);
-                            }}
-                            title="Process Payment Transaction"
-                          >
-                            <CreditCard size={14} />
-                          </button>
-                        )}
-                        {order.bank_slip_url && (
-                          <a 
-                            href={`http://localhost:5000/${order.bank_slip_url}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mini-btn slip"
-                            title="View Bank Slip Proof"
-                          >
-                            <Package size={14} />
-                          </a>
-                        )}
-                        <button 
-                          className="mini-btn confirm" 
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setShowConfirmationModal(true);
-                          }}
-                          title="Contact Customer"
-                        >
-                          <Mail size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>
-                    No recent orders
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       {/* Payment Processing Modal */}
       {showPaymentModal && (

@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
 import SalesSidebar from "../components/SalesSidebar";
-import LogViewer from "../components/LogViewer";
 import "./SalesLayout.css";
 
 const SalesLayout = () => {
@@ -10,7 +9,6 @@ const SalesLayout = () => {
       <div className="sales-main-content">
         <Outlet />
       </div>
-      <LogViewer />
     </div>
   );
 };

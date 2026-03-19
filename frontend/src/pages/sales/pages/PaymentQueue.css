@@ -356,3 +356,116 @@
         align-items: stretch;
     }
 }
+
+/* Order Management Sample Section */
+.order-management-sample-section {
+    margin-top: 4rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.order-management-sample-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.order-management-sample-section .title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.order-management-sample-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.view-all-btn {
+    padding: 0.625rem 1.25rem;
+    background: #f1f5f9;
+    color: #001a66;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-all-btn:hover {
+    background: #e2e8f0;
+    transform: translateX(4px);
+}
+
+.sample-table-container {
+    overflow-x: auto;
+}
+
+.sample-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sample-table th {
+    text-align: left;
+    padding: 1rem;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.sample-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9375rem;
+    color: #1e293b;
+}
+
+.amount-cell {
+    font-weight: 700;
+    color: #001a66;
+}
+
+.status-pill, .payment-pill {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-pill.delivered { background: #f0fdf4; color: #16a34a; }
+.status-pill.processing { background: #fff7ed; color: #ea580c; }
+.status-pill.pending { background: #fefce8; color: #854d0e; }
+
+.payment-pill.completed { background: #ecfdf5; color: #059669; }
+.payment-pill.pending { background: #fff1f2; color: #e11d48; }
+
+.manage-btn {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.manage-btn:hover {
+    background: #001a66;
+    color: white;
+    border-color: #001a66;
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiCall } from "../../../utils/auth.js";
 import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, Search, RefreshCw, Truck } from 'lucide-react';
 import "./PaymentQueue.css";
@@ -22,7 +23,38 @@ const HARDCODED_PAYMENTS = [
     }
 ];
 
+const HISTORICAL_ORDERS_SAMPLE = [
+    {
+        order_id: 10250,
+        customer_name: "Anura Perera",
+        order_date: "2026-03-15",
+        total_amount: 12450.00,
+        order_status: "DELIVERED",
+        payment_status: "COMPLETED",
+        delivery_type: "Gampaha"
+    },
+    {
+        order_id: 10251,
+        customer_name: "Samanthi Silva",
+        order_date: "2026-03-16",
+        total_amount: 8900.00,
+        order_status: "PROCESSING",
+        payment_status: "COMPLETED",
+        delivery_type: "Store Pickup"
+    },
+    {
+        order_id: 10252,
+        customer_name: "Ruwan Kumara",
+        order_date: "2026-03-17",
+        total_amount: 15600.00,
+        order_status: "PENDING",
+        payment_status: "PENDING",
+        delivery_type: "Out of Gampaha"
+    }
+];
+
 const PaymentQueue = () => {
+    const navigate = useNavigate();
     const [pendingPayments, setPendingPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
@@ -316,13 +348,67 @@ const PaymentQueue = () => {
                                     disabled={actionLoading}
                                     style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white' }}
                                 >
-                                    <Truck size={18} color="#f59e0b" /> <span>Shipping Update</span>
+                                    <Truck size={18} color="#f59e0b" /> <span>Delivery Update</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* Order Management Sample Section */}
+            <div className="order-management-sample-section">
+                <div className="section-header">
+                    <div className="title-group">
+                        <Clipboard size={22} color="#001a66" />
+                        <h2>Order Management (Sample View)</h2>
+                    </div>
+                    <button className="view-all-btn" onClick={() => navigate('/sales/orders')}>
+                        View Full Order Management →
+                    </button>
+                </div>
+                
+                <div className="sample-table-container">
+                    <table className="sample-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {HISTORICAL_ORDERS_SAMPLE.map(order => (
+                                <tr key={order.order_id}>
+                                    <td>#{order.order_id}</td>
+                                    <td>{order.customer_name}</td>
+                                    <td>{order.order_date}</td>
+                                    <td className="amount-cell">Rs. {order.total_amount.toLocaleString()}</td>
+                                    <td>
+                                        <span className={`status-pill ${order.order_status.toLowerCase()}`}>
+                                            {order.order_status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span className={`payment-pill ${order.payment_status.toLowerCase()}`}>
+                                            {order.payment_status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button className="manage-btn" onClick={() => navigate('/sales/orders')}>
+                                            Manage
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 };

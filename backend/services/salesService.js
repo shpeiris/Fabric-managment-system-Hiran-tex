@@ -20,6 +20,17 @@ const getSalesDashboardStats = async () => {
             FROM orders 
             WHERE order_status IN ('PENDING', 'PROCESSING')
         `,
+        monthlyTrend: `
+            SELECT 
+                TO_CHAR(order_date, 'Mon YYYY') as month,
+                SUM(total_amount) as total,
+                COUNT(*) as order_count
+            FROM orders
+            WHERE order_status = 'DELIVERED'
+            AND order_date >= CURRENT_DATE - INTERVAL '6 months'
+            GROUP BY TO_CHAR(order_date, 'Mon YYYY'), EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date)
+            ORDER BY EXTRACT(YEAR FROM order_date) DESC, EXTRACT(MONTH FROM order_date) DESC
+        `,
         recentOrders: `
             SELECT o.order_id, o.customer_id, o.total_amount, o.order_date,
                    o.order_status,
@@ -59,13 +70,14 @@ const getSalesDashboardStats = async () => {
     };
 
     try {
-        const [totalSales, monthlySales, customers, pending, recentOrders, verificationRequired] = await Promise.all([
+        const [totalSales, monthlySales, customers, pending, recentOrders, verificationRequired, monthlyTrend] = await Promise.all([
             pool.query(queries.totalSales),
             pool.query(queries.monthlySales),
             pool.query(queries.totalCustomers),
             pool.query(queries.pendingOrders),
             pool.query(queries.recentOrders),
-            pool.query(queries.verificationRequired)
+            pool.query(queries.verificationRequired),
+            pool.query(queries.monthlyTrend)
         ]);
 
         return {
@@ -76,7 +88,8 @@ const getSalesDashboardStats = async () => {
                 pendingOrders: parseInt(pending.rows[0]?.total || 0),
                 verificationRequired: parseInt(verificationRequired.rows[0]?.total || 0)
             },
-            recentOrders: recentOrders.rows || []
+            recentOrders: recentOrders.rows || [],
+            monthlyTrend: monthlyTrend.rows || []
         };
     } catch (error) {
         console.error('Error fetching sales dashboard stats:', error);
