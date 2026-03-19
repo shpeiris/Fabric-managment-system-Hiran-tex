@@ -62,7 +62,63 @@ const getInventoryReport = async () => {
     };
 };
 
+const getSupplierReport = async () => {
+    const queryStr = `
+        SELECT 
+            s.supplier_id,
+            s.name, 
+            s.contact_person,
+            COUNT(sa.arrival_id) as fulfillment_count, 
+            COALESCE(SUM(sa.quantity), 0) as total_quantity, 
+            COALESCE(SUM(sa.total_value), 0) as total_value, 
+            MAX(sa.arrival_date) as last_arrival
+        FROM suppliers s
+        LEFT JOIN stock_arrivals sa ON s.supplier_id = sa.supplier_id
+        GROUP BY s.supplier_id, s.name, s.contact_person
+        ORDER BY total_value DESC
+    `;
+
+    const statsQuery = `
+        SELECT 
+            COUNT(*) as total_suppliers,
+            SUM(total_value) as all_time_supply_value,
+            (SELECT COUNT(*) FROM stock_arrivals WHERE arrival_date >= CURRENT_DATE - INTERVAL '30 days') as recent_arrivals_count
+        FROM (
+            SELECT s.supplier_id, COALESCE(SUM(sa.total_value), 0) as total_value
+            FROM suppliers s
+            LEFT JOIN stock_arrivals sa ON s.supplier_id = sa.supplier_id
+            GROUP BY s.supplier_id
+        ) sub
+    `;
+
+    const recentArrivalsQuery = `
+        SELECT sa.*, f.name as fabric_name, s.name as supplier_name
+        FROM stock_arrivals sa
+        JOIN fabrics f ON sa.fabric_id = f.fabric_id
+        JOIN suppliers s ON sa.supplier_id = s.supplier_id
+        ORDER BY sa.arrival_date DESC
+        LIMIT 10
+    `;
+
+    const [suppliers, stats, recentArrivals] = await Promise.all([
+        new Promise((resolve, reject) => pool.query(queryStr, (err, res) => err ? reject(err) : resolve(res))),
+        new Promise((resolve, reject) => pool.query(statsQuery, (err, res) => err ? reject(err) : resolve(res[0]))),
+        new Promise((resolve, reject) => pool.query(recentArrivalsQuery, (err, res) => err ? reject(err) : resolve(res)))
+    ]);
+
+    return {
+        suppliers,
+        stats: {
+            totalSuppliers: stats.total_suppliers || 0,
+            allTimeSupplyValue: stats.all_time_supply_value || 0,
+            recentArrivalsCount: stats.recent_arrivals_count || 0
+        },
+        recentArrivals
+    };
+};
+
 export {
     getSalesReport,
-    getInventoryReport
+    getInventoryReport,
+    getSupplierReport
 };

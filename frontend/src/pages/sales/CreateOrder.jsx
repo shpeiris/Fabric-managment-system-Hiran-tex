@@ -10,8 +10,7 @@ import {
   PackageSearch,
   Plus,
   Trash2,
-  CheckCircle2,
-  Sparkles
+  CheckCircle2
 } from "lucide-react";
 import "./CreateOrder.css";
 
@@ -131,8 +130,7 @@ export default function NewOrder() {
 
     const totalAmount = cart.reduce((acc, item) => acc + item.total, 0);
 
-    // Compute latest unique fabrics for "Explore New Fabrics" block
-    const latestUniqueFabrics = [...new Map(fabrics.map(f => [f.name, f])).values()].slice(0, 4);
+
 
     return (
         <div className="new-order-page">
@@ -286,37 +284,7 @@ export default function NewOrder() {
                         </div>
                     </div>
 
-                    {/* Explore New Fabrics */}
-                    <div className="order-section-card">
-                        <h3><Sparkles size={20} color="#f59e0b" /> Explore New Fabrics</h3>
-                        <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '-12px 0 16px', lineHeight: '1.4' }}>
-                            Check out properties of our latest arrivals. Click any fabric to select its material instantly.
-                        </p>
-                        <div className="new-fabrics-grid">
-                            {latestUniqueFabrics.map((f, idx) => (
-                                <div 
-                                    key={idx} 
-                                    className="new-fabric-card"
-                                    onClick={() => {
-                                        setSelectedFabricName(f.name);
-                                        setSelectedFabric("");
-                                    }}
-                                    title={`Click to select ${f.name}`}
-                                >
-                                    <div className="new-fabric-img-placeholder">
-                                        {f.image_url ? 
-                                            <img src={`http://localhost:5000${f.image_url}`} alt={f.name} /> 
-                                            : <PackageSearch size={24} color="#94a3b8" />
-                                        }
-                                    </div>
-                                    <div className="new-fabric-info">
-                                        <h4>{f.name}</h4>
-                                        <p>{f.material_type}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+
 
                 </div>
 

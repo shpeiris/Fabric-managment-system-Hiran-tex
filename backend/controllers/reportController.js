@@ -21,7 +21,18 @@ const getInventoryReport = async (req, res) => {
     }
 };
 
+const getSupplierReport = async (req, res) => {
+    try {
+        const report = await reportService.getSupplierReport();
+        res.json(report);
+    } catch (err) {
+        console.error("Error fetching supplier report:", err);
+        res.status(500).json({ error: "Failed to fetch report" });
+    }
+};
+
 export {
     getSalesReport,
-    getInventoryReport
+    getInventoryReport,
+    getSupplierReport
 };
