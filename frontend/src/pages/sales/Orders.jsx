@@ -9,8 +9,6 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
-  const [showCourierModal, setShowCourierModal] = useState(false);
-  const [courierData, setCourierData] = useState({ orderId: null, name: 'PickMe Courier', riderNumber: '' });
 
   useEffect(() => {
     SalesLogger.orders.pageLoad({ timestamp: new Date().toISOString() });
@@ -45,12 +43,6 @@ export default function Orders() {
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
-    if (newStatus === 'DELIVERED') {
-      setCourierData({ orderId, name: 'PickMe Courier', riderNumber: '' });
-      setShowCourierModal(true);
-      return;
-    }
-
     try {
       SalesLogger.orders.statusUpdate(orderId, newStatus);
       const response = await apiCall(`http://localhost:5000/api/sales/orders/${orderId}/status`, {
@@ -67,33 +59,6 @@ export default function Orders() {
       console.error('Error updating order:', err);
       SalesLogger.orders.statusUpdateError(orderId, err);
       alert('Failed to update order status');
-    }
-  };
-
-  const handleCourierSubmit = async () => {
-    if (!courierData.name || !courierData.riderNumber) {
-      alert("Please fill in both fields");
-      return;
-    }
-
-    try {
-      const response = await apiCall(`http://localhost:5000/api/sales/orders/${courierData.orderId}/status`, {
-        method: 'PUT',
-        body: JSON.stringify({ 
-          status: 'DELIVERED', 
-          courierName: courierData.name, 
-          riderNumber: courierData.riderNumber 
-        })
-      });
-
-      if (response.ok) {
-        alert('Order delivered and customer notified!');
-        setShowCourierModal(false);
-        fetchOrders();
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error updating delivery status");
     }
   };
 
@@ -261,66 +226,6 @@ export default function Orders() {
           </tbody>
         </table>
       </div>
-
-      {/* Courier Details Modal */}
-      {showCourierModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '25px',
-            borderRadius: '12px',
-            width: '400px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-          }}>
-            <h3 style={{ margin: '0 0 20px', color: '#001a66' }}>Courier Details</h3>
-            
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Courier Service Name</label>
-              <input 
-                type="text" 
-                value={courierData.name}
-                onChange={(e) => setCourierData({...courierData, name: e.target.value})}
-                placeholder="e.g. PickMe Courier, Koombiyo"
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '25px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: '600' }}>Delivery Person Number</label>
-              <input 
-                type="text" 
-                value={courierData.riderNumber}
-                onChange={(e) => setCourierData({...courierData, riderNumber: e.target.value})}
-                placeholder="Enter phone number"
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button 
-                onClick={() => setShowCourierModal(false)}
-                style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #ddd', background: 'white', cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleCourierSubmit}
-                style={{ padding: '10px 20px', borderRadius: '6px', border: 'none', background: '#001a66', color: 'white', fontWeight: '600', cursor: 'pointer' }}
-              >
-                Confirm Delivery
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

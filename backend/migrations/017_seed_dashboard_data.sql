@@ -1,8 +1,8 @@
 -- Migration 017: Seed realistic dashboard data for testing (Simplified)
 -- This ensures the customer dashboard has visible stats
 
--- 1. Add some items to the cart for Test Customer (customer_id = 1)
-INSERT INTO cart (customer_id, fabric_id, quantity, total_price) VALUES
+-- 1. Add some items to the cart for Test Customer (user_id = 1)
+INSERT INTO cart (user_id, fabric_id, quantity, total_price) VALUES
 (1, 1, 5.5, 2475.00),
 (1, 6, 10.0, 3200.00),
 (1, 9, 2.5, 875.00)

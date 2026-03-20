@@ -294,15 +294,7 @@ export default function SalesDashboard() {
 
         <div className="invoice-total" style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ width: '250px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: '1px solid #eee' }}>
-              <span style={{ fontSize: '13px', color: '#666' }}>Subtotal</span>
-              <span style={{ fontSize: '13px', fontWeight: '500' }}>Rs. {subtotal.toLocaleString()}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-              <span style={{ fontSize: '13px', color: '#666' }}>Delivery Fee</span>
-              <span style={{ fontSize: '13px', fontWeight: '500' }}>Rs. {(Number(order.total_amount) - subtotal).toLocaleString()}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 8px', borderTop: '2px solid #001a66', marginTop: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '2px solid #001a66' }}>
               <span style={{ fontWeight: 'bold', fontSize: '16px' }}>Total Amount</span>
               <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#001a66' }}>Rs. {Number(order.total_amount).toLocaleString()}</span>
             </div>
