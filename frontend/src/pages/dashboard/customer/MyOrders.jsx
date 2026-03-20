@@ -212,6 +212,24 @@ const MyOrders = () => {
                   <button className="btn-view" onClick={() => handleViewDetails(order.order_id)}>
                     View Details
                   </button>
+                  {order.order_status === 'DELIVERED' && (
+                    <button 
+                      className="btn-rate" 
+                      style={{ 
+                        background: '#fbbf24', 
+                        color: '#92400e', 
+                        border: 'none', 
+                        padding: '8px 16px', 
+                        borderRadius: '6px', 
+                        fontSize: '13px', 
+                        fontWeight: '600', 
+                        cursor: 'pointer' 
+                      }}
+                      onClick={() => navigate(`/customer/order-details/${order.order_id}`)}
+                    >
+                      Rate Order
+                    </button>
+                  )}
                   <button 
                     className="btn-reorder-small" 
                     onClick={() => handleReorderFromList(order.order_id)}

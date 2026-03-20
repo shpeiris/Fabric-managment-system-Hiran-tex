@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import orderService from '../../../services/orderService'
 import cartService from '../../../services/cartService'
 import paymentService from '../../../services/paymentService'
+import customerService from '../../../services/customerService'
 import { apiCall } from '../../../utils/auth.js'
 
 export default function OrderDetails() {
@@ -15,6 +16,15 @@ export default function OrderDetails() {
   const [selectedFile, setSelectedFile] = useState(null)
 
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [feedback, setFeedback] = useState(null)
+  const [submittingFeedback, setSubmittingFeedback] = useState(false)
+  const [newFeedback, setNewFeedback] = useState({
+    overall_rating: 0,
+    fabric_quality: 0,
+    delivery: 0,
+    customer_service: 0,
+    comments: ''
+  })
   
   useEffect(() => {
     if (id) {
@@ -35,6 +45,19 @@ export default function OrderDetails() {
       }
       
       setOrderData(data)
+      
+      // If delivered, check for existing feedback
+      if (data.order.order_status === 'DELIVERED') {
+        try {
+          const fbData = await customerService.getOrderFeedback(id)
+          if (fbData.feedback) {
+            setFeedback(fbData.feedback)
+          }
+        } catch (fbErr) {
+          console.error("Error fetching feedback:", fbErr)
+        }
+      }
+      
       setLoading(false)
     } catch (err) {
       console.error("Error fetching order details:", err)
@@ -100,6 +123,37 @@ export default function OrderDetails() {
       alert("Failed to upload bank slip. Please try again.")
     } finally {
       setUploadLoading(false)
+    }
+  }
+
+  const handleSubmitFeedback = async (e) => {
+    e.preventDefault()
+    if (newFeedback.fabric_quality === 0 || newFeedback.delivery === 0) {
+      alert("Please provide ratings for both Fabric Quality and Delivery Service")
+      return
+    }
+
+    try {
+      setSubmittingFeedback(true)
+      // Calculate overall_rating as average of quality and delivery for legacy DB field
+      const overall = Math.round((newFeedback.fabric_quality + newFeedback.delivery) / 2)
+      
+      await customerService.submitFeedback({
+        order_id: id,
+        ...newFeedback,
+        overall_rating: overall
+      })
+      alert("Thank you for your feedback!")
+      // Refresh to show the submitted feedback
+      const fbData = await customerService.getOrderFeedback(id)
+      if (fbData.feedback) {
+        setFeedback(fbData.feedback)
+      }
+    } catch (err) {
+      console.error("Feedback submission error:", err)
+      alert(err.error || "Failed to submit feedback")
+    } finally {
+      setSubmittingFeedback(false)
     }
   }
 
@@ -448,6 +502,116 @@ export default function OrderDetails() {
               Contact Support
             </button>
           </div>
+
+          {/* Feedback Section */}
+          {order.order_status === 'DELIVERED' && (
+            <div style={{
+              background: 'white',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '25px',
+              marginTop: '20px'
+            }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>
+                {feedback ? 'Your Review' : 'Rate Your Order'}
+              </h2>
+
+              {feedback ? (
+                <div>
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <div style={{ fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>
+                      Fabric Quality:
+                    </div>
+                    <div style={{ fontSize: '20px', color: '#fbbf24', marginBottom: '10px' }}>
+                      {'★'.repeat(feedback.fabric_quality || 0)}{'☆'.repeat(5 - (feedback.fabric_quality || 0))}
+                    </div>
+                    
+                    <div style={{ fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>
+                      Delivery Service:
+                    </div>
+                    <div style={{ fontSize: '20px', color: '#fbbf24', marginBottom: '15px' }}>
+                      {'★'.repeat(feedback.delivery || 0)}{'☆'.repeat(5 - (feedback.delivery || 0))}
+                    </div>
+                  </div>
+                  
+                  <p style={{ fontSize: '14px', color: '#4b5563', fontStyle: feedback.comments ? 'normal' : 'italic', borderTop: '1px solid #f3f4f6', paddingTop: '15px' }}>
+                    {feedback.comments || 'No comments provided.'}
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitFeedback}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#1f2937', marginBottom: '8px', fontWeight: '500' }}>Fabric Quality:</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setNewFeedback({ ...newFeedback, fabric_quality: star })}
+                          style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: star <= newFeedback.fabric_quality ? '#fbbf24' : '#e5e7eb', padding: 0 }}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#1f2937', marginBottom: '8px', fontWeight: '500' }}>Delivery Service:</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setNewFeedback({ ...newFeedback, delivery: star })}
+                          style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: star <= newFeedback.delivery ? '#fbbf24' : '#e5e7eb', padding: 0 }}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '15px' }}>
+                    <textarea
+                      placeholder="Share your experience..."
+                      value={newFeedback.comments}
+                      onChange={(e) => setNewFeedback({ ...newFeedback, comments: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        minHeight: '80px',
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingFeedback}
+                    style={{
+                      background: '#2563eb',
+                      color: 'white',
+                      border: 'none',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      width: '100%',
+                      cursor: submittingFeedback ? 'not-allowed' : 'pointer',
+                      opacity: submittingFeedback ? 0.7 : 1
+                    }}
+                  >
+                    {submittingFeedback ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

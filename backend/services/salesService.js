@@ -40,6 +40,8 @@ const getSalesDashboardStats = async () => {
                    p.payment_id,
                    p.payment_method,
                    p.bank_slip_url,
+                   fb.overall_rating as feedback_rating,
+                   fb.comments as feedback_comments,
                    (
                        SELECT JSON_AGG(
                            JSON_BUILD_OBJECT(
@@ -60,6 +62,7 @@ const getSalesDashboardStats = async () => {
                 FROM payments
                 ORDER BY order_id, payment_date DESC
             ) p ON o.order_id = p.order_id
+            LEFT JOIN feedback fb ON o.order_id = fb.order_id
             ORDER BY o.order_date DESC LIMIT 5
         `,
         verificationRequired: `

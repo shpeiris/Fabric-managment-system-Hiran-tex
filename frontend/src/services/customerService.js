@@ -30,6 +30,15 @@ const customerService = {
     } catch (error) {
       throw error.response?.data || { error: "Failed to submit feedback" };
     }
+  },
+
+  getOrderFeedback: async (orderId) => {
+    try {
+      const response = await apiClient.get(`/api/customer/feedback/${orderId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: "Failed to fetch order feedback" };
+    }
   }
 };
 

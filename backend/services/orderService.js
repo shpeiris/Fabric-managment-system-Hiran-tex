@@ -27,13 +27,21 @@ const getOrderById = async (orderId, userId = null) => {
                p.payment_method, 
                p.bank_slip_url, 
                p.payment_id,
-               p.amount as paid_amount
+               p.amount as paid_amount,
+               f.feedback_id,
+               f.overall_rating,
+               f.fabric_quality,
+               f.delivery,
+               f.customer_service,
+               f.comments as feedback_comments,
+               f.created_at as feedback_date
         FROM orders o
         LEFT JOIN (
             SELECT DISTINCT ON (order_id) *
             FROM payments
             ORDER BY order_id, payment_date DESC
         ) p ON o.order_id = p.order_id
+        LEFT JOIN feedback f ON o.order_id = f.order_id
         WHERE o.order_id = $1
     `;
     let params = [orderId];
@@ -65,9 +73,12 @@ const getOrders = async (filters) => {
              WHEN o.customer_id IS NOT NULL THEN (SELECT full_name FROM customers WHERE customer_id = o.customer_id)
              ELSE o.customer_name 
            END as customer_name,
-           p.payment_id, p.payment_status, p.payment_method, p.bank_slip_url
+           p.payment_id, p.payment_status, p.payment_method, p.bank_slip_url,
+           fb.overall_rating as feedback_rating,
+           fb.comments as feedback_comments
     FROM orders o
     LEFT JOIN payments p ON o.order_id = p.order_id
+    LEFT JOIN feedback fb ON o.order_id = fb.order_id
     WHERE 1=1
   `;
     const params = [];

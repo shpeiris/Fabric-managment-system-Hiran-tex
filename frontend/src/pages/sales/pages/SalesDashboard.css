@@ -29,11 +29,11 @@
 }
 
 .stat-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    background: white;
     padding: 25px;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
-    border: 2px solid rgba(124, 255, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
     display: flex;
     align-items: center;
     gap: 20px;
@@ -59,8 +59,8 @@
 }
 
 .stat-card.highlight {
-    background: linear-gradient(135deg, #7cff00 0%, #6ee000 100%);
-    border-color: #7cff00;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: #001a66;
 }
 
 .stat-card.highlight .stat-info h4,
@@ -118,10 +118,10 @@
 /* Table */
 .table-container {
     background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    border: 2px solid rgba(124, 255, 0, 0.1);
+    border: 1px solid #eee;
 }
 
 .data-table {
@@ -152,8 +152,6 @@
 }
 
 .status-badge {
-    padding: 6px 14px;
-    border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
@@ -161,23 +159,19 @@
 }
 
 .status-badge.pending {
-    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-    color: white;
+    color: #f59e0b;
 }
 
 .status-badge.processing {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    color: white;
+    color: #0ea5e9;
 }
 
 .status-badge.delivered {
-    background: linear-gradient(135deg, #7cff00 0%, #6ee000 100%);
-    color: #001a66;
+    color: #10b981;
 }
 
 .status-badge.cancelled {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    color: white;
+    color: #ef4444;
 }
 
 /* Enhanced stat cards for verification and payment */
@@ -217,9 +211,9 @@
     margin: 30px 0;
     background: white;
     padding: 25px;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
-    border: 2px solid rgba(124, 255, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
 }
 
 .quick-actions h3 {

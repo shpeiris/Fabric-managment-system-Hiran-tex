@@ -6,6 +6,6 @@ import { isAuthenticated } from '../middleware/authMiddleware.js';
 router.get('/api/customer/dashboard-stats', isAuthenticated, customerController.getDashboardStats);
 router.get('/api/customer/notifications', isAuthenticated, customerController.getNotifications);
 router.post('/api/customer/feedback', isAuthenticated, customerController.submitFeedback);
-
+router.get('/api/customer/feedback/:orderId', isAuthenticated, customerController.getOrderFeedback);
 
 export default router;

@@ -294,7 +294,15 @@ export default function SalesDashboard() {
 
         <div className="invoice-total" style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ width: '250px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '2px solid #001a66' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: '1px solid #eee' }}>
+              <span style={{ fontSize: '13px', color: '#666' }}>Subtotal</span>
+              <span style={{ fontSize: '13px', fontWeight: '500' }}>Rs. {subtotal.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+              <span style={{ fontSize: '13px', color: '#666' }}>Delivery Fee</span>
+              <span style={{ fontSize: '13px', fontWeight: '500' }}>Rs. {(Number(order.total_amount) - subtotal).toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 8px', borderTop: '2px solid #001a66', marginTop: '4px' }}>
               <span style={{ fontWeight: 'bold', fontSize: '16px' }}>Total Amount</span>
               <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#001a66' }}>Rs. {Number(order.total_amount).toLocaleString()}</span>
             </div>
@@ -438,8 +446,59 @@ export default function SalesDashboard() {
             <CreditCard size={18} />
             <span>Release Payments ({stats.pendingPayments})</span>
           </button>
-          
-          
+        </div>
+      </div>
+
+      {/* Recent Feedback Section */}
+      <div className="recent-feedback-section" style={{ marginTop: '30px', background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #f3f4f6', paddingBottom: '15px' }}>
+          <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '8px' }}>
+            <TrendingUp size={20} color="#d97706" />
+          </div>
+          <h3 style={{ margin: 0, color: '#1f2937', fontSize: '18px' }}>Recent Customer Feedback</h3>
+        </div>
+
+        <div className="feedback-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+          {recentOrders.filter(o => o.feedback_rating).length > 0 ? (
+            recentOrders.filter(o => o.feedback_rating).map(order => (
+              <div key={order.order_id} style={{ 
+                border: '1px solid #e5e7eb', 
+                borderRadius: '10px', 
+                padding: '16px',
+                transition: 'all 0.2s',
+                cursor: 'pointer',
+                backgroundColor: '#fff'
+              }} 
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+              onClick={() => { setSelectedOrder(order); setShowPaymentModal(true); setShowInvoiceView(true); }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>Order #{order.order_id}</span>
+                    <h5 style={{ margin: '2px 0 0', color: '#111827', fontSize: '14px' }}>{order.customer_name}</h5>
+                  </div>
+                  <div style={{ color: '#fbbf24', fontSize: '14px' }}>
+                    {'★'.repeat(order.feedback_rating)}{'☆'.repeat(5 - order.feedback_rating)}
+                  </div>
+                </div>
+                {order.feedback_comments && (
+                  <p style={{ margin: 0, fontSize: '13px', color: '#4b5563', lineHeight: '1.5', fontStyle: 'italic' }}>
+                    "{order.feedback_comments.length > 80 ? order.feedback_comments.substring(0, 80) + '...' : order.feedback_comments}"
+                  </p>
+                )}
+                <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f9fafb', paddingTop: '8px' }}>
+                  <span style={{ fontSize: '10px', color: '#9ca3af' }}>
+                    {new Date(order.order_date).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
+              <Package size={40} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
+              <p>No recent feedback received yet for these orders.</p>
+            </div>
+          )}
         </div>
       </div>
 

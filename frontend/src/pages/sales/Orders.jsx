@@ -44,10 +44,16 @@ export default function Orders() {
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
+      let riderNumber = null;
+      if (newStatus === 'DELIVERED') {
+        riderNumber = window.prompt("Enter delivery person number (PickMe Courier):");
+        if (riderNumber === null) return; // User cancelled
+      }
+
       SalesLogger.orders.statusUpdate(orderId, newStatus);
       const response = await apiCall(`http://localhost:5000/api/sales/orders/${orderId}/status`, {
         method: 'PUT',
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status: newStatus, riderNumber })
       });
 
       if (response.ok) {
@@ -136,6 +142,7 @@ export default function Orders() {
               <th>Status</th>
               <th>Payment</th>
               <th>Delivery</th>
+              <th>Feedback</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -165,6 +172,22 @@ export default function Orders() {
                   </div>
                 </td>
                 <td>{order.delivery_type || 'Standard'}</td>
+                <td>
+                  {order.feedback_rating ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ color: '#fbbf24', fontSize: '14px', fontWeight: 'bold' }}>
+                        {'★'.repeat(order.feedback_rating)}{'☆'.repeat(5 - order.feedback_rating)}
+                      </span>
+                      {order.feedback_comments && (
+                        <span style={{ fontSize: '11px', color: '#6b7280', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={order.feedback_comments}>
+                          "{order.feedback_comments}"
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: '#9ca3af', fontSize: '12px' }}>No feedback</span>
+                  )}
+                </td>
                 <td>
                   <div style={{ display: 'flex', gap: '5px' }}>
                     <select

@@ -12,7 +12,7 @@ export const getDashboardStats = async (req, res) => {
 };
 
 export const submitFeedback = async (req, res) => {
-    const { overall_rating, order_experience, fabric_quality, delivery, customer_service, comments } = req.body;
+    const { order_id, overall_rating, order_experience, fabric_quality, delivery, customer_service, comments } = req.body;
     const customerId = req.user.id;
 
     if (!overall_rating || overall_rating < 1 || overall_rating > 5) {
@@ -20,23 +20,37 @@ export const submitFeedback = async (req, res) => {
     }
 
     try {
-        // Try to insert into feedback table if it exists, otherwise log gracefully
-        try {
-            await pool.query(
-                `INSERT INTO feedback (customer_id, overall_rating, order_experience, fabric_quality, delivery, customer_service, comments)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [customerId, overall_rating, order_experience || null, fabric_quality || null,
-                 delivery || null, customer_service || null, comments || null]
-            );
-        } catch (dbErr) {
-            // Table may not exist; log feedback to console for now
-            console.log(`[FEEDBACK] Customer ${customerId}: overall=${overall_rating}, comment="${comments}"`);
-        }
+        await customerService.submitOrderFeedback({
+            customerId,
+            orderId: order_id,
+            overall_rating,
+            order_experience,
+            fabric_quality,
+            delivery,
+            customer_service,
+            comments
+        });
 
         res.json({ message: 'Thank you for your feedback!' });
     } catch (error) {
+        if (error.code === '23505') { // Unique violation
+            return res.status(409).json({ error: 'You have already submitted feedback for this order' });
+        }
         console.error('Error submitting feedback:', error);
         res.status(500).json({ error: 'Failed to submit feedback' });
+    }
+};
+
+export const getOrderFeedback = async (req, res) => {
+    const { orderId } = req.params;
+    const customerId = req.user.id;
+
+    try {
+        const feedback = await customerService.getOrderFeedback(customerId, orderId);
+        res.json({ feedback });
+    } catch (error) {
+        console.error('Error fetching order feedback:', error);
+        res.status(500).json({ error: 'Failed to fetch feedback' });
     }
 };
 
