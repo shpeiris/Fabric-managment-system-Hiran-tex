@@ -250,7 +250,7 @@ const verifyOrder = async (orderId, action, verifiedBy, verifierId) => {
     }
 };
 
-const sendConfirmation = async (orderId, type, sentBy, senderId) => {
+const sendConfirmation = async (orderId, type, sentBy, senderId, customMessage = null) => {
     try {
         // If orderId is 'all', handle bulk confirmations
         if (orderId === 'all') {
@@ -270,14 +270,14 @@ const sendConfirmation = async (orderId, type, sentBy, senderId) => {
                     customerName: order.full_name,
                     email: order.email,
                     phone: order.tel
-                });
+                }, customMessage);
             });
 
             const results = await Promise.all(confirmationPromises);
             return { type, count: results.length, results };
         } else {
             // Single order confirmation
-            return await sendSingleConfirmation(orderId, type, sentBy, senderId);
+            return await sendSingleConfirmation(orderId, type, sentBy, senderId, null, customMessage);
         }
     } catch (error) {
         console.error('Error sending confirmation:', error);
@@ -285,7 +285,7 @@ const sendConfirmation = async (orderId, type, sentBy, senderId) => {
     }
 };
 
-const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerInfo = null) => {
+const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerInfo = null, customMessage = null) => {
     try {
         // Get customer info if not provided
         if (!customerInfo) {
@@ -325,8 +325,8 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
             RETURNING *
         `;
 
-        const confirmationMessage = generateConfirmationMessage(orderId, type, customerInfo);
-        const storedMessage = type === 'payment_rejection'
+        const confirmationMessage = customMessage || generateConfirmationMessage(orderId, type, customerInfo);
+        const storedMessage = (type === 'payment_rejection' && !customMessage)
             ? '[REJECTED] ' + confirmationMessage
             : confirmationMessage;
 

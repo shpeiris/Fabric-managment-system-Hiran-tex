@@ -88,14 +88,12 @@ const Register = () => {
 
   return (
     <div className="register-page">
-      <header className="compact-header">
+      {/* Header - Matching other pages */}
+      <header className="top-bar">
         <div className="sidebar-header">
           <span className="sidebar-logo-icon">🏠</span>
           <span className="sidebar-title">Hiran Fabrics</span>
         </div>
-        <Link to="/" className="back-link">
-          ← Home
-        </Link>
       </header>
 
       <div className="register-container">

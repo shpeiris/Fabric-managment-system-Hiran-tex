@@ -62,6 +62,7 @@ const PaymentQueue = () => {
     const [filterMethod, setFilterMethod] = useState('ALL');
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [specialMessage, setSpecialMessage] = useState('');
 
     useEffect(() => {
         fetchPendingPayments();
@@ -117,7 +118,7 @@ const PaymentQueue = () => {
         }
     };
 
-    const handleSendConfirmation = async (orderId, type) => {
+    const handleSendConfirmation = async (orderId, type, customMessage = null) => {
         try {
             setActionLoading(true);
             const response = await apiCall('http://localhost:5000/api/sales/send-confirmation', {
@@ -125,14 +126,16 @@ const PaymentQueue = () => {
                 body: JSON.stringify({
                     orderId,
                     type,
-                    sentBy: 'Salesperson'
+                    sentBy: 'Salesperson',
+                    customMessage
                 })
             });
 
             if (response.ok) {
-                alert(`${type.replace('_', ' ')} sent successfully!`);
+                alert(`${customMessage ? 'Special message' : type.replace('_', ' ')} sent successfully!`);
                 setShowConfirmationModal(false);
                 setSelectedOrder(null);
+                setSpecialMessage('');
             } else {
                 const error = await response.json();
                 throw new Error(error.error || 'Failed to send confirmation');
@@ -316,7 +319,10 @@ const PaymentQueue = () => {
                                 <Mail size={24} color="#001a66" />
                                 <h3 style={{ margin: 0 }}>Client Communication</h3>
                             </div>
-                            <button onClick={() => setShowConfirmationModal(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button>
+                            <button onClick={() => {
+                                setShowConfirmationModal(false);
+                                setSpecialMessage('');
+                            }} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button>
                         </div>
                         <div className="modal-content">
                             <div className="order-summary" style={{ background: '#f8fafc', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
@@ -325,31 +331,43 @@ const PaymentQueue = () => {
                             </div>
                             
                             <div className="confirmation-types" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <h5 style={{ margin: '0 0 5px 0' }}>Select Message Type:</h5>
-                                <button 
-                                    className="btn confirmation-type"
-                                    onClick={() => handleSendConfirmation(selectedOrder.order_id, 'payment_confirmation')}
-                                    disabled={actionLoading}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white' }}
-                                >
-                                    <CreditCard size={18} color="#10b981" /> <span>Payment Receipt</span>
-                                </button>
-                                <button 
-                                    className="btn confirmation-type"
-                                    onClick={() => handleSendConfirmation(selectedOrder.order_id, 'order_confirmation')}
-                                    disabled={actionLoading}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white' }}
-                                >
-                                    <Clipboard size={18} color="#3b82f6" /> <span>Order Verification</span>
-                                </button>
+                                <h5 style={{ margin: '0 0 5px 0' }}>Select Quick Message:</h5>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <button 
+                                        className="btn confirmation-type"
+                                        onClick={() => handleSendConfirmation(selectedOrder.order_id, 'payment_confirmation')}
+                                        disabled={actionLoading}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white', fontSize: '13px', color: 'black' }}
+                                    >
+                                        <span>Verified Receipt</span>
+                                    </button>
+                                </div>
                                 <button 
                                     className="btn confirmation-type"
                                     onClick={() => handleSendConfirmation(selectedOrder.order_id, 'delivery_update')}
                                     disabled={actionLoading}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white' }}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white', fontSize: '13px', color: 'black' }}
                                 >
-                                    <Truck size={18} color="#f59e0b" /> <span>Delivery Update</span>
+                                    <span>Delivery Update</span>
                                 </button>
+
+                                <div className="special-message-section" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                                    <h5 style={{ margin: '0 0 10px 0' }}>Send Special Message:</h5>
+                                    <textarea 
+                                        placeholder="Type your custom message here..."
+                                        value={specialMessage}
+                                        onChange={(e) => setSpecialMessage(e.target.value)}
+                                        style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontFamily: 'inherit', fontSize: '14px', marginBottom: '10px', resize: 'vertical' }}
+                                    />
+                                    <button 
+                                        className="btn send-special"
+                                        onClick={() => handleSendConfirmation(selectedOrder.order_id, 'order_confirmation', specialMessage)}
+                                        disabled={actionLoading || !specialMessage.trim()}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#001a66', color: 'white', border: 'none', fontWeight: '600', cursor: 'pointer', opacity: (actionLoading || !specialMessage.trim()) ? 0.6 : 1 }}
+                                    >
+                                        Send Special Message
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -66,9 +66,9 @@ const verifyOrder = async (req, res) => {
 
 const sendConfirmation = async (req, res) => {
     try {
-        const { orderId, type, sentBy } = req.body;
+        const { orderId, type, sentBy, customMessage } = req.body;
         
-        const result = await salesService.sendConfirmation(orderId, type, sentBy, req.user.id);
+        const result = await salesService.sendConfirmation(orderId, type, sentBy, req.user.id, customMessage);
         res.json({ message: "Confirmation sent successfully", result });
     } catch (err) {
         console.error("Error sending confirmation:", err);
