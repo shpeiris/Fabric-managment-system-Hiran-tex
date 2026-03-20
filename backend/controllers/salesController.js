@@ -79,17 +79,19 @@ const sendConfirmation = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, riderNumber } = req.body;
+        const { status, courierName, riderNumber } = req.body;
         
-        const result = await orderService.updateOrderStatus(id, status);
+        const result = await orderService.updateOrderStatus(id, status, courierName, riderNumber);
 
-        // If status is DELIVERED and riderNumber is provided, send PickMe Courier notification
-        if (status === 'DELIVERED' && riderNumber) {
+        // If status is DELIVERED and courier details are provided, send notification
+        if (status === 'DELIVERED' && (courierName || riderNumber)) {
             try {
-                const message = `Your order #${id} is delivered via PickMe Courier. delivery person number: ${riderNumber}. for more details.`;
+                const cName = courierName || 'PickMe Courier';
+                const rNum = riderNumber || 'Not specified';
+                const message = `Your order #${id} is delivered via ${cName}. delivery person number: ${rNum}. for more details.`;
                 await salesService.sendConfirmation(id, 'delivery_update', 'Sales Person', req.user.id, message);
             } catch (notifyErr) {
-                console.error("Failed to send PickMe Courier notification:", notifyErr);
+                console.error("Failed to send Courier notification:", notifyErr);
             }
         }
 

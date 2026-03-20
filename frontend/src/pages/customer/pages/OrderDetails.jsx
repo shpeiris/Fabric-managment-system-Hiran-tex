@@ -198,6 +198,25 @@ export default function OrderDetails() {
         <div>
           <h1 style={{ fontSize: '24px', marginBottom: '5px', color: '#1f2937', fontWeight: '600' }}>Order Details</h1>
           <p style={{ color: '#6b7280', fontSize: '14px' }}>Order #{order.order_id} • Placed on {new Date(order.order_date).toLocaleString()}</p>
+          {order.courier_name && (
+            <div style={{ 
+              marginTop: '10px', 
+              padding: '8px 12px', 
+              background: '#eff6ff', 
+              border: '1px solid #bfdbfe', 
+              borderRadius: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '13px',
+              color: '#1e40af'
+            }}>
+              <span style={{ fontWeight: '700' }}>🚚 Courier:</span>
+              <span>{order.courier_name}</span>
+              <span style={{ borderLeft: '1px solid #bfdbfe', paddingLeft: '8px', fontWeight: '700' }}>📞 Rider:</span>
+              <span>{order.courier_rider_number}</span>
+            </div>
+          )}
         </div>
         <span style={{
           background: '#d1fae5',

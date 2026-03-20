@@ -180,8 +180,11 @@ const createOrder = async (orderData) => {
     }
 };
 
-const updateOrderStatus = async (orderId, status) => {
-    const result = await pool.query("UPDATE orders SET order_status = $1 WHERE order_id = $2 RETURNING order_id", [status, orderId]);
+const updateOrderStatus = async (orderId, status, courierName = null, courierRiderNumber = null) => {
+    const result = await pool.query(
+        "UPDATE orders SET order_status = $1, courier_name = $2, courier_rider_number = $3, updated_at = NOW() WHERE order_id = $4 RETURNING order_id", 
+        [status, courierName, courierRiderNumber, orderId]
+    );
     if (result.rows.length === 0) return null;
     return { order_id: orderId, status };
 };
