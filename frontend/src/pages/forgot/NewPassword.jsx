@@ -48,8 +48,8 @@ export default function NewPassword() {
   };
 
   const { state } = useLocation();
-  const email = state?.email;
-  const otp = state?.otp;
+  const email = state?.email || localStorage.getItem('resetEmail');
+  const otp = state?.otp || localStorage.getItem('resetOtp');
 
   useEffect(() => {
     if (!email || !otp) {
@@ -84,6 +84,10 @@ export default function NewPassword() {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to reset password');
       }
+
+      // Success! Clear the persistence data
+      localStorage.removeItem('resetEmail');
+      localStorage.removeItem('resetOtp');
 
       navigate('/password-reset-success');
     } catch (error) {

@@ -48,7 +48,7 @@ export default function PasswordResetSuccess() {
           </div>
 
           <div className="action-buttons">
-            <Link to="/" className="primary-btn">
+            <Link to="/login" className="primary-btn">
               Go to Login Now
             </Link>
           </div>

@@ -1,6 +1,7 @@
 import * as authService from "../services/authService.js";
 import logActivity from "../middleware/activityLogger.js";
 import { generateToken } from "../utils/jwtHelper.js";
+import { sendOTPEmail } from "../utils/emailHelper.js";
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -180,14 +181,36 @@ const forgotPassword = async (req, res) => {
 
     await authService.createOTP(email, otp);
 
-    // PRINT TO TERMINAL as requested
-    console.log("\n-------------------------------------------");
-    console.log(`🔑 PASSWORD RESET OTP FOR: ${email}`);
-    console.log(`🔢 OTP CODE: ${otp}`);
-    console.log("⏱️ EXPIRES IN: 15 minutes");
-    console.log("-------------------------------------------\n");
+    // Send Real Email (or Ethereal fallback)
+    const emailResult = await sendOTPEmail(email, otp);
 
-    res.json({ message: "OTP sent to your email (check terminal in dev)" });
+    if (emailResult.success) {
+        if (emailResult.previewUrl) {
+            console.log("\n" + "=".repeat(50));
+            console.log("📧 [SMTP_TEST] OTP Email generated via Ethereal");
+            console.log(`🔗 PREVIEW LINK: ${emailResult.previewUrl}`);
+            console.log("=".repeat(50) + "\n");
+            
+            return res.json({ 
+                message: "Verification code sent! (Dev Mode: Check the terminal for the email preview link)",
+                previewUrl: emailResult.previewUrl
+            });
+        }
+        return res.json({ message: "Verification code sent to your email address!" });
+    }
+
+    // --- CRITICAL FALLBACK (Terminal Only) ---
+    // If we reach here, BOTH real SMTP and Ethereal failed
+    console.log("\n" + "!".repeat(50));
+    console.log("🛠️  [DEVELOPER FALLBACK] ALL SMTP DELIVERY FAILED");
+    console.log(`📧 TARGET: ${email}`);
+    console.log(`🔢 CODE  : ${otp}`);
+    console.log("!".repeat(50) + "\n");
+
+    res.json({ 
+        message: "OTP generated! (Emergency Fallback: Check the backend terminal for the code)",
+        devFallback: true 
+    });
   } catch (error) {
     console.error("Forgot password error:", error);
     res.status(500).json({ error: "Server error during password reset request" });

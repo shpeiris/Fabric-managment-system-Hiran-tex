@@ -21,6 +21,7 @@ export default function ForgotPassword() {
       return;
     }
 
+    const trimmedEmail = email.trim();
     setIsLoading(true);
     setError('');
 
@@ -28,7 +29,7 @@ export default function ForgotPassword() {
       const response = await fetch('http://localhost:5000/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email: trimmedEmail })
       });
 
       const data = await response.json();
@@ -37,8 +38,11 @@ export default function ForgotPassword() {
         throw new Error(data.error || 'Failed to send OTP');
       }
 
+      // Persist email for the next steps (in case of refresh)
+      localStorage.setItem('resetEmail', trimmedEmail);
+
       // Navigate to reset sent page and pass the email
-      navigate('/reset-sent', { state: { email } });
+      navigate('/reset-sent', { state: { email: trimmedEmail } });
     } catch (error) {
       console.error('Password reset request failed:', error);
       setError(error.message || 'Failed to send OTP. Please try again.');
