@@ -19,7 +19,7 @@ const BrowseFabrics = () => {
     const fetchFabrics = async () => {
         try {
             setLoading(true);
-            const response = await apiCall('http://localhost:5000/api/fabrics');
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics`);
             const data = await response.json();
 
             if (response.ok) {
@@ -39,7 +39,7 @@ const BrowseFabrics = () => {
     const handleAddToCart = async (fabricId) => {
         try {
             setAddingToCartId(fabricId);
-            const response = await apiCall('http://localhost:5000/api/cart', {
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/cart`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fabric_id: fabricId, quantity: 1 })
@@ -132,7 +132,7 @@ const BrowseFabrics = () => {
                                 src={!fabric.image_url
                                     ? '/src/assets/Fabrics/fabric-collage.jpg'
                                     : (fabric.image_url.startsWith('uploads/')
-                                        ? `http://localhost:5000/${fabric.image_url}`
+                                        ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${fabric.image_url}`
                                         : (fabric.image_url.startsWith('http')
                                             ? fabric.image_url
                                             : `/src/assets/Fabrics/${fabric.image_url}`))

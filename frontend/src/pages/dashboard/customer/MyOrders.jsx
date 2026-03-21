@@ -37,7 +37,7 @@ const MyOrders = () => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await apiCall('http://localhost:5000/api/customer/notifications')
+      const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`)
       if (res.ok) {
         const data = await res.json()
         // Only show payment-related notifications (newest first, max 5)

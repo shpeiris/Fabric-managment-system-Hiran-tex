@@ -25,7 +25,7 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await apiCall("http://localhost:5000/admin/users");
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/admin/users`);
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || []);
@@ -68,7 +68,7 @@ export default function UserManagement() {
         ? { ...newUser, password: "" } // Send empty password to trigger default generation
         : newUser;
 
-      const response = await apiCall("http://localhost:5000/admin/users", {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/admin/users`, {
         method: "POST",
         body: JSON.stringify(userData),
       });
@@ -111,7 +111,7 @@ export default function UserManagement() {
   const handleStatusUpdate = async (userId, newStatus) => {
     try {
       const response = await apiCall(
-        `http://localhost:5000/admin/users/${userId}/status`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/admin/users/${userId}/status`,
         {
           method: "PATCH",
           body: JSON.stringify({ status: newStatus }),

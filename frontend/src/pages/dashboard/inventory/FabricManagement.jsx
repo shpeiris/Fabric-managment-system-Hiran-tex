@@ -66,7 +66,7 @@ const InventoryFabricManagement = () => {
   const fetchFabrics = async () => {
     try {
       setLoading(true);
-      const response = await apiCall('http://localhost:5000/api/inventory/fabrics');
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
       const data = await response.json();
 
       if (response.ok) {
@@ -82,7 +82,7 @@ const InventoryFabricManagement = () => {
           color: fabric.color,
           design: fabric.design,
           image: fabric.image_url 
-            ? (fabric.image_url.startsWith('http') ? fabric.image_url : `http://localhost:5000/${fabric.image_url}`)
+            ? (fabric.image_url.startsWith('http') ? fabric.image_url : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${fabric.image_url}`)
             : 'https://via.placeholder.com/300x200?text=No+Image',
           reorder_level: fabric.reorder_level || 0,
           restock_date: fabric.restock_date,
@@ -165,8 +165,8 @@ const InventoryFabricManagement = () => {
         }
 
         const url = isEditing 
-          ? `http://localhost:5000/api/inventory/fabrics/${formData.fabric_id}`
-          : 'http://localhost:5000/api/inventory/fabrics';
+          ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics/${formData.fabric_id}`
+          : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`;
         
         const response = await apiCall(url, {
           method: isEditing ? 'PUT' : 'POST',
@@ -243,7 +243,7 @@ const InventoryFabricManagement = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this fabric?')) return;
     try {
-      const response = await apiCall(`http://localhost:5000/api/inventory/fabrics/${id}`, {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {

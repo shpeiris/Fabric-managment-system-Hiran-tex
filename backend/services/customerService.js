@@ -71,6 +71,12 @@ export const submitOrderFeedback = async (feedbackData) => {
         comments 
     } = feedbackData;
 
+    // Helper to ensure 1-5 rating or null
+    const normalizeRating = (val) => {
+        const num = parseInt(val);
+        return (isNaN(num) || num < 1 || num > 5) ? null : num;
+    };
+
     const query = `
         INSERT INTO feedback (
             customer_id, 
@@ -88,25 +94,30 @@ export const submitOrderFeedback = async (feedbackData) => {
 
     const result = await pool.query(query, [
         customerId, 
-        orderId || null, 
-        overall_rating, 
-        order_experience || null, 
-        fabric_quality || null,
-        delivery || null, 
-        customer_service || null, 
+        orderId ? parseInt(orderId) : null, 
+        parseInt(overall_rating), 
+        normalizeRating(order_experience), 
+        normalizeRating(fabric_quality),
+        normalizeRating(delivery), 
+        normalizeRating(customer_service), 
         comments || null
     ]);
 
     // Log activity for Sales visibility
     const activityQuery = `
-        INSERT INTO activity_logs (customer_id, actor_type, action)
-        VALUES ($1, 'CUSTOMER', $2)
+        INSERT INTO activity_logs (customer_id, actor_type, action_type, action)
+        VALUES ($1, 'CUSTOMER', $2, $3)
     `;
     const actionDesc = orderId 
         ? `Customer submitted feedback for Order #${orderId} (Rating: ${overall_rating}/5)`
         : `Customer submitted general feedback (Rating: ${overall_rating}/5)`;
     
-    await pool.query(activityQuery, [customerId, actionDesc]);
+    try {
+        await pool.query(activityQuery, [customerId, 'FEEDBACK_SUBMITTED', actionDesc]);
+    } catch (logError) {
+        console.error('Error logging feedback activity:', logError);
+        // Don't fail the whole request if logging fails
+    }
 
     return result.rows[0];
 };

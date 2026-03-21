@@ -13,7 +13,7 @@ const InventorySidebar = () => {
 
   const handleLogout = async () => {
     try {
-      await apiCall('http://localhost:5000/logout', {
+      await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/logout`, {
         method: 'POST'
       });
       removeUser();

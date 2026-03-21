@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { apiCall } from '../../../utils/auth.js';
 import customerService from '../../../services/customerService.js';
 
-const API = 'http://localhost:5000';
 
 export default function Feedback() {
   const [rating, setRating] = useState(0);

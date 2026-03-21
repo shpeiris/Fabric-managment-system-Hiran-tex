@@ -24,15 +24,15 @@ export default function InventoryDashboard() {
       setLoading(true);
 
       // Fetch dashboard stats
-      const statsRes = await apiCall('http://localhost:5000/api/inventory/dashboard');
+      const statsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/dashboard`);
       const statsData = await statsRes.json();
 
       // Fetch fabrics
-      const fabricsRes = await apiCall('http://localhost:5000/api/inventory/fabrics');
+      const fabricsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
       const fabricsData = await fabricsRes.json();
 
       // Fetch recent arrivals
-      const arrivalsRes = await apiCall('http://localhost:5000/api/inventory/stock-arrivals');
+      const arrivalsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`);
       const arrivalsData = await arrivalsRes.json();
 
       if (statsRes.ok && fabricsRes.ok && arrivalsRes.ok) {

@@ -20,7 +20,7 @@ const CustomerDashboard = () => {
       if (showLoading) setLoading(true);
       const [statsData, notifRes] = await Promise.all([
         customerService.getDashboardStats(),
-        apiCall('http://localhost:5000/api/customer/notifications')
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`)
       ]);
       setStats(statsData);
       if (notifRes.ok) {

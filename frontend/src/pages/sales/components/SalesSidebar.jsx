@@ -18,7 +18,7 @@ const SalesSidebar = () => {
 
   const fetchPendingCount = async () => {
     try {
-      const res = await apiCall('http://localhost:5000/api/sales/pending-payments');
+      const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/pending-payments`);
       const data = await res.json();
       if (res.ok) {
         setPendingCount(data.count || 0);
@@ -30,7 +30,7 @@ const SalesSidebar = () => {
 
   const handleLogout = async () => {
     try {
-      await apiCall('http://localhost:5000/logout', {
+      await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/logout`, {
         method: 'POST'
       });
       removeUser();

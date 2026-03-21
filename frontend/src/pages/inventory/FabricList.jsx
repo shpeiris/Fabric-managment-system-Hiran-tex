@@ -61,7 +61,7 @@ export default function FabricManagement() {
   const fetchFabrics = async () => {
     try {
       setLoading(true);
-      const response = await apiCall('http://localhost:5000/api/inventory/fabrics');
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
       const data = await response.json();
 
       if (response.ok) {
@@ -87,8 +87,8 @@ export default function FabricManagement() {
     try {
       setIsSubmitting(true);
       const url = editingFabric
-        ? `http://localhost:5000/api/inventory/fabrics/${editingFabric.fabric_id}`
-        : 'http://localhost:5000/api/inventory/fabrics';
+        ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics/${editingFabric.fabric_id}`
+        : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`;
 
       const method = editingFabric ? 'PUT' : 'POST';
 
@@ -175,7 +175,7 @@ export default function FabricManagement() {
     if (!confirm('Are you sure you want to delete this fabric?')) return;
 
     try {
-      const response = await apiCall(`http://localhost:5000/api/inventory/fabrics/${fabricId}`, {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics/${fabricId}`, {
         method: 'DELETE'
       });
 

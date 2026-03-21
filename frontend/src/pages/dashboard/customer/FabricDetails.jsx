@@ -22,7 +22,7 @@ const FabricDetails = () => {
     const fetchFabricDetails = async () => {
         try {
             setLoading(true);
-            const response = await apiCall(`http://localhost:5000/api/fabrics/${id}`);
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics/${id}`);
             const data = await response.json();
 
             if (response.ok) {
@@ -46,7 +46,7 @@ const FabricDetails = () => {
 
     const fetchVariants = async (name) => {
         try {
-            const response = await apiCall(`http://localhost:5000/api/fabrics?search=${encodeURIComponent(name)}`);
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics?search=${encodeURIComponent(name)}`);
             const data = await response.json();
             if (response.ok) {
                 // Filter to ensure exact name match and include current fabric
@@ -73,7 +73,7 @@ const FabricDetails = () => {
 
         try {
             setAddingToCart(true);
-            const response = await apiCall('http://localhost:5000/api/cart', {
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/cart`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -136,7 +136,7 @@ const FabricDetails = () => {
                             src={!fabric.image_url 
                                 ? '/src/assets/Fabrics/fabric-collage.jpg' 
                                 : (fabric.image_url.startsWith('uploads/') 
-                                    ? `http://localhost:5000/${fabric.image_url}` 
+                                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${fabric.image_url}` 
                                     : (fabric.image_url.startsWith('http') 
                                         ? fabric.image_url 
                                         : `/src/assets/Fabrics/${fabric.image_url}`))

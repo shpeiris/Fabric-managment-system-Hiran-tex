@@ -24,7 +24,7 @@ const Notifications = () => {
   const fetchNotifications = async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      const res = await apiCall('http://localhost:5000/api/customer/notifications');
+      const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`);
       const data = await res.json();
       
       if (res.ok) {

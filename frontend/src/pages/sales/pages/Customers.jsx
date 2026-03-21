@@ -33,7 +33,7 @@ export default function CustomerManagement() {
         try {
             setLoading(true);
             SalesLogger.customers.customersFetch({ action: 'fetch_customers' });
-            const response = await apiCall('http://localhost:5000/api/sales/customers');
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/customers`);
             const data = await response.json();
 
             if (response.ok) {

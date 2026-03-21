@@ -5,69 +5,50 @@ dotenv.config();
 
 let transporter;
 
-const IS_PLACEHOLDER = !process.env.SMTP_USER || process.env.SMTP_USER.includes('your_email@gmail.com');
-
 /**
  * Initialize the SMTP transporter
- * Supports real SMTP and an automatic Ethereal fallback for development
+ * Optimized for Gmail SMTP with real credentials
  */
 const getTransporter = async () => {
     if (transporter) return transporter;
 
-    if (!IS_PLACEHOLDER) {
-        // Use real SMTP from .env
-        transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || 'smtp.gmail.com',
-            port: process.env.SMTP_PORT || 587,
-            secure: process.env.SMTP_PORT == 465,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASSWORD,
-            },
-        });
-        return transporter;
-    }
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASSWORD ? process.env.SMTP_PASSWORD.replace(/\s/g, '') : '';
 
-    // --- SMART FALLBACK ---
-    // If credentials are placeholders, create a temporary Ethereal account
-    console.log("🛠️  [SMTP_INIT] Using Ethereal (Test Service) for development...");
-    try {
-        const testAccount = await nodemailer.createTestAccount();
-        transporter = nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
-            secure: false,
-            auth: {
-                user: testAccount.user,
-                pass: testAccount.pass,
-            },
-        });
-        console.log(`✅ [SMTP_INIT] Ethereal account created: ${testAccount.user}`);
-        return transporter;
-    } catch (error) {
-        console.error('❌ [SMTP_INIT] Failed to create Ethereal account:', error);
+    // Check if credentials are missing or still placeholders
+    if (!user || !pass || user.includes('your_email@gmail.com')) {
+        console.error('❌ [SMTP_INIT] Valid SMTP credentials not found in .env');
         return null;
     }
+
+    // Use Gmail service for automatic optimization
+    transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: user,
+            pass: pass,
+        },
+    });
+
+    console.log(`📡 [SMTP_INIT] Gmail transporter initialized for: ${user}`);
+    return transporter;
 };
 
 /**
  * Send a professional OTP email
  * @param {string} to - Recipient email address
  * @param {string} otp - 6-digit OTP code
- * @returns {Promise<boolean>} - Success status
+ * @returns {Promise<Object>} - Success status and error details
  */
 export const sendOTPEmail = async (to, otp) => {
     const transporter = await getTransporter();
 
     if (!transporter) {
-        console.error('❌ [SMTP] No transporter available');
-        return { success: false, error: 'SYSTEM_ERROR' };
+        return { success: false, error: 'CONFIG_MISSING' };
     }
 
-    const fromEmail = IS_PLACEHOLDER ? `"Hiran MS (Test)" <${transporter.options.auth.user}>` : `"Hiran Fabric Textile" <${process.env.SMTP_USER}>`;
-
     const mailOptions = {
-        from: fromEmail,
+        from: `"Hiran Fabric Textile" <${process.env.SMTP_USER}>`,
         to: to,
         subject: 'Your Password Reset Verification Code',
         html: `
@@ -87,16 +68,8 @@ export const sendOTPEmail = async (to, otp) => {
     };
 
     try {
-        const info = await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
         console.log(`✅ OTP Email sent successfully to: ${to}`);
-        
-        // If using Ethereal, provide the preview URL
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        if (previewUrl) {
-            console.log(`🔗 PREVIEW URL: ${previewUrl}`);
-            return { success: true, previewUrl };
-        }
-
         return { success: true };
     } catch (error) {
         console.error('❌ Failed to send OTP email:', error);

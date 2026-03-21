@@ -88,7 +88,7 @@ export class SalesLogger {
   static sendToBackend(logMessage) {
     // Optional: Send critical logs to backend
     if (window.fetch) {
-      fetch('http://localhost:5000/api/logs', {
+      fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

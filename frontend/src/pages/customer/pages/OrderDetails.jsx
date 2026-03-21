@@ -38,7 +38,7 @@ export default function OrderDetails() {
       const data = await orderService.getOrderById(id)
       
       // Fetch notifications for this specific order
-      const notifResponse = await apiCall(`http://localhost:5000/api/customer/notifications`)
+      const notifResponse = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`)
       if (notifResponse.ok) {
         const notifData = await notifResponse.json()
         data.notifications = notifData.notifications.filter(n => n.order_id === parseInt(id))
@@ -135,15 +135,24 @@ export default function OrderDetails() {
 
     try {
       setSubmittingFeedback(true)
+      
       // Calculate overall_rating as average of quality and delivery for legacy DB field
       const overall = Math.round((newFeedback.fabric_quality + newFeedback.delivery) / 2)
       
-      await customerService.submitFeedback({
+      // Prepare clean feedback data for the API
+      const feedbackPayload = {
         order_id: id,
-        ...newFeedback,
-        overall_rating: overall
-      })
+        overall_rating: overall,
+        fabric_quality: newFeedback.fabric_quality,
+        delivery: newFeedback.delivery,
+        customer_service: newFeedback.customer_service || null,
+        comments: newFeedback.comments || null
+      }
+
+      await customerService.submitFeedback(feedbackPayload)
+      
       alert("Thank you for your feedback!")
+      
       // Refresh to show the submitted feedback
       const fbData = await customerService.getOrderFeedback(id)
       if (fbData.feedback) {
@@ -151,7 +160,7 @@ export default function OrderDetails() {
       }
     } catch (err) {
       console.error("Feedback submission error:", err)
-      alert(err.error || "Failed to submit feedback")
+      alert(err.error || "Failed to submit feedback. Please try again.")
     } finally {
       setSubmittingFeedback(false)
     }
@@ -310,10 +319,10 @@ export default function OrderDetails() {
                     maxWidth: '300px'
                   }}>
                     <img 
-                      src={`http://localhost:5000/${order.bank_slip_url}`} 
+                      src={`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${order.bank_slip_url}`} 
                       alt="Bank Slip" 
                       style={{ width: '100%', cursor: 'pointer' }}
-                      onClick={() => window.open(`http://localhost:5000/${order.bank_slip_url}`, '_blank')}
+                      onClick={() => window.open(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${order.bank_slip_url}`, '_blank')}
                     />
                   </div>
                   <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Click image to view full size</p>

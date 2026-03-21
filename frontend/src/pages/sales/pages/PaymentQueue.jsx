@@ -78,7 +78,7 @@ const PaymentQueue = () => {
     const fetchPendingPayments = async () => {
         try {
             setLoading(true);
-            const response = await apiCall('http://localhost:5000/api/sales/pending-payments');
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/pending-payments`);
             const data = await response.json();
             if (response.ok) {
                 setPendingPayments(data.orders || []);
@@ -93,7 +93,7 @@ const PaymentQueue = () => {
     const handleConfirmPayment = async (paymentId, methodOrStatus) => {
         try {
             setActionLoading(true);
-            const response = await apiCall('http://localhost:5000/api/payments/confirm', {
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payments/confirm`, {
                 method: 'POST',
                 body: JSON.stringify({
                     payment_id: paymentId,
@@ -121,7 +121,7 @@ const PaymentQueue = () => {
     const handleSendConfirmation = async (orderId, type, customMessage = null) => {
         try {
             setActionLoading(true);
-            const response = await apiCall('http://localhost:5000/api/sales/send-confirmation', {
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/send-confirmation`, {
                 method: 'POST',
                 body: JSON.stringify({
                     orderId,
@@ -253,9 +253,9 @@ const PaymentQueue = () => {
 
                                 <div className="slip-section">
                                     <h4>Bank Slip Proof:</h4>
-                                    <div className="slip-thumbnail" onClick={() => order.bank_slip_url && window.open(`http://localhost:5000/${order.bank_slip_url}`, '_blank')}>
+                                    <div className="slip-thumbnail" onClick={() => order.bank_slip_url && window.open(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${order.bank_slip_url}`, '_blank')}>
                                         {order.bank_slip_url ? (
-                                            <img src={`http://localhost:5000/${order.bank_slip_url}`} alt="Slip" />
+                                            <img src={`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${order.bank_slip_url}`} alt="Slip" />
                                         ) : (
                                             <div className="placeholder-slip" style={{ height: '100%', background: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
                                                 <Package size={32} />
@@ -282,7 +282,13 @@ const PaymentQueue = () => {
                                 </button>
                                 <button 
                                     className="btn reject"
-                                    onClick={() => handleConfirmPayment(order.payment_id, 'FAILED')}
+                                    onClick={() => {
+                                        if (window.confirm("Mark this payment as REJECTED? You should notify the customer next.")) {
+                                            handleConfirmPayment(order.payment_id, 'FAILED');
+                                            setSelectedOrder(order);
+                                            setShowConfirmationModal(true);
+                                        }
+                                    }}
                                     disabled={actionLoading}
                                 >
                                     <XCircle size={18} /> Reject Payment
@@ -341,15 +347,23 @@ const PaymentQueue = () => {
                                     >
                                         <span>Verified Receipt</span>
                                     </button>
+                                    <button 
+                                        className="btn confirmation-type"
+                                        onClick={() => handleSendConfirmation(selectedOrder.order_id, 'payment_rejection')}
+                                        disabled={actionLoading}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #ef4444', cursor: 'pointer', background: '#fef2f2', fontSize: '13px', color: '#b91c1c' }}
+                                    >
+                                        <span>Reject & Ask for New Slip</span>
+                                    </button>
+                                    <button 
+                                        className="btn confirmation-type"
+                                        onClick={() => handleSendConfirmation(selectedOrder.order_id, 'delivery_update')}
+                                        disabled={actionLoading}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white', fontSize: '13px', color: 'black' }}
+                                    >
+                                        <span>Delivery Update</span>
+                                    </button>
                                 </div>
-                                <button 
-                                    className="btn confirmation-type"
-                                    onClick={() => handleSendConfirmation(selectedOrder.order_id, 'delivery_update')}
-                                    disabled={actionLoading}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white', fontSize: '13px', color: 'black' }}
-                                >
-                                    <span>Delivery Update</span>
-                                </button>
 
                                 <div className="special-message-section" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
                                     <h5 style={{ margin: '0 0 10px 0' }}>Send Special Message:</h5>

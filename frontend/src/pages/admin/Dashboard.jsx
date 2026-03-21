@@ -27,7 +27,7 @@ export default function Dashboard() {
       setStatsLoading(true);
       
       // Fetch fabrics data for total count
-      const fabricsResponse = await apiCall('http://localhost:5000/api/inventory/fabrics');
+      const fabricsResponse = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
       const fabricsData = await fabricsResponse.json();
       
       // You can add more API calls here for users, orders, etc.

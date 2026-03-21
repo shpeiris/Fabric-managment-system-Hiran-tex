@@ -47,9 +47,9 @@ export default function StockArrivals() {
     try {
       setLoading(true);
       const [arrivalsRes, fabricsRes, suppliersRes] = await Promise.all([
-        apiCall('http://localhost:5000/api/inventory/stock-arrivals'),
-        apiCall('http://localhost:5000/api/inventory/fabrics'),
-        apiCall('http://localhost:5000/api/inventory/suppliers')
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/suppliers`)
       ]);
 
       const [arrivalsData, fabricsData, suppliersData] = await Promise.all([
@@ -83,7 +83,7 @@ export default function StockArrivals() {
 
     try {
       setSubmitting(true);
-      const response = await apiCall('http://localhost:5000/api/inventory/stock-arrivals', {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`, {
         method: 'POST',
         body: JSON.stringify({
           ...formData,

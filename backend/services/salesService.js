@@ -228,12 +228,13 @@ const verifyOrder = async (orderId, action, verifiedBy, verifierId) => {
 
         // Log the verification activity
         const activityQuery = `
-            INSERT INTO activity_logs (employee_id, actor_type, action)
-            VALUES ($1, 'EMPLOYEE', $2)
+            INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
+            VALUES ($1, 'EMPLOYEE', $2, $3)
         `;
 
         await pool.query(activityQuery, [
             verifierId,
+            'ORDER_VERIFICATION',
             `Order #${orderId} ${action}d by ${verifiedBy}`
         ]);
 
@@ -344,12 +345,13 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
 
         // Log the activity
         const activityQuery = `
-            INSERT INTO activity_logs (employee_id, actor_type, action)
-            VALUES ($1, 'EMPLOYEE', $2)
+            INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
+            VALUES ($1, 'EMPLOYEE', $2, $3)
         `;
 
         await pool.query(activityQuery, [
             senderId,
+            'NOTIFICATION_SENT',
             `${type} sent for Order #${orderId} by ${sentBy}`
         ]);
 

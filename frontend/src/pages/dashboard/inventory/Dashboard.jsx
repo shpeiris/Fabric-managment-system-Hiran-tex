@@ -22,12 +22,12 @@ const InventoryDashboard = () => {
       setLoading(true);
       
       // Fetch General Stats
-      const statsRes = await apiCall('http://localhost:5000/api/inventory/dashboard');
+      const statsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/dashboard`);
       const statsData = await statsRes.json();
       if (statsRes.ok) setStats(statsData.stats);
 
       // Fetch Low Stock Fabrics
-      const fabricsRes = await apiCall('http://localhost:5000/api/inventory/fabrics');
+      const fabricsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
       const fabricsData = await fabricsRes.json();
       if (fabricsRes.ok) {
         const lowStock = (fabricsData.fabrics || []).filter(f => 
@@ -37,7 +37,7 @@ const InventoryDashboard = () => {
       }
 
       // Fetch Recent Stock Arrivals
-      const arrivalsRes = await apiCall('http://localhost:5000/api/inventory/stock-arrivals');
+      const arrivalsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`);
       const arrivalsData = await arrivalsRes.json();
       if (arrivalsRes.ok) {
         setRecentTransactions((arrivalsData.arrivals || []).slice(0, 5));
@@ -166,4 +166,4 @@ const InventoryDashboard = () => {
   );
 };
 
-export default InventoryDashboard;
+export default InventoryDashboard;

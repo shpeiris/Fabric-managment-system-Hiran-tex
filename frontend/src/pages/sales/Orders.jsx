@@ -27,7 +27,7 @@ export default function Orders() {
       setLoading(true);
       const params = filterStatus ? `?status=${filterStatus}` : '';
       SalesLogger.orders.ordersFetch({ filter: filterStatus || 'all' });
-      const response = await apiCall(`http://localhost:5000/api/sales/orders${params}`);
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders${params}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -45,7 +45,7 @@ export default function Orders() {
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       SalesLogger.orders.statusUpdate(orderId, newStatus);
-      const response = await apiCall(`http://localhost:5000/api/sales/orders/${orderId}/status`, {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders/${orderId}/status`, {
         method: 'PUT',
         body: JSON.stringify({ status: newStatus })
       });
@@ -80,7 +80,7 @@ export default function Orders() {
     if (!confirm(`Confirm payment of Rs.${order.total_amount}?`)) return;
 
     try {
-      const response = await apiCall('http://localhost:5000/api/payments/confirm', {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payments/confirm`, {
         method: 'POST',
         body: JSON.stringify({ payment_id: order.payment_id, status: status })
       });

@@ -18,7 +18,7 @@ export default function Payments() {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const response = await apiCall('http://localhost:5000/api/orders');
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/orders`);
       const data = await response.json();
       if (response.ok) {
         setPayments(data.orders || []);
@@ -32,7 +32,7 @@ export default function Payments() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await apiCall('http://localhost:5000/api/customer/notifications');
+      const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`);
       if (res.ok) {
         const data = await res.json();
         // Show both payment and order verifications
@@ -55,7 +55,7 @@ export default function Payments() {
       formData.append('order_id', uploadOrder);
       formData.append('slip', slipFile);
 
-      const response = await apiCall('http://localhost:5000/api/payments/upload-slip', {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payments/upload-slip`, {
         method: 'POST',
         body: formData
       });

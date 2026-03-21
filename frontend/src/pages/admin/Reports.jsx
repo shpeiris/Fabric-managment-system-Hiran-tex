@@ -16,7 +16,7 @@ export default function Reports() {
   const fetchSalesReport = async () => {
     try {
       setLoading(true);
-      const res = await apiCall("http://localhost:5000/api/reports/sales");
+      const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/sales`);
       const data = await res.json();
       if (res.ok) setSalesReport(data.report || []);
     } catch (err) {
@@ -29,7 +29,7 @@ export default function Reports() {
   const fetchInventoryReport = async () => {
     try {
       setLoading(true);
-      const res = await apiCall("http://localhost:5000/api/reports/inventory");
+      const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/inventory`);
       const data = await res.json();
       if (res.ok) setInventoryReport(data);
     } catch (err) {

@@ -98,7 +98,7 @@ export default function Reports() {
   const fetchSalesReports = async () => {
     try {
       setLoading(true);
-      const response = await apiCall('http://localhost:5000/api/reports/sales');
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/sales`);
       const data = await response.json();
 
       if (response.ok) {
@@ -139,7 +139,7 @@ export default function Reports() {
   const fetchInventoryReports = async () => {
     try {
         setLoading(true);
-        const response = await apiCall('http://localhost:5000/api/reports/inventory');
+        const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/inventory`);
         const data = await response.json();
         
         if (response.ok) {
@@ -157,7 +157,7 @@ export default function Reports() {
   const fetchSupplierReports = async () => {
     try {
         setLoading(true);
-        const response = await apiCall('http://localhost:5000/api/reports/suppliers');
+        const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/suppliers`);
         const data = await response.json();
         
         if (response.ok) {

@@ -36,10 +36,10 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const [fabricsRes, statsRes, ordersRes, notificationsRes] = await Promise.all([
-        apiCall('http://localhost:5000/api/inventory/fabrics'),
-        apiCall('http://localhost:5000/api/customer/dashboard-stats'),
-        apiCall('http://localhost:5000/api/orders'),
-        apiCall('http://localhost:5000/api/customer/notifications')
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/dashboard-stats`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/orders`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`)
       ]);
 
       const [fabricsData, statsData, ordersData, notificationsData] = await Promise.all([
@@ -170,7 +170,7 @@ export default function Dashboard() {
                       src={!fabric.image 
                         ? fabric1 
                         : (typeof fabric.image === 'string' && fabric.image.startsWith('uploads/') 
-                            ? `http://localhost:5000/${fabric.image}` 
+                            ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${fabric.image}` 
                             : (typeof fabric.image === 'string' && fabric.image.startsWith('http') 
                                 ? fabric.image 
                                 : (typeof fabric.image === 'string' ? `/src/assets/Fabrics/${fabric.image}` : fabric1)))

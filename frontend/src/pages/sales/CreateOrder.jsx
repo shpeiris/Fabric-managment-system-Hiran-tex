@@ -37,7 +37,7 @@ export default function NewOrder() {
 
     const fetchCustomers = async () => {
         try {
-            const res = await apiCall("http://localhost:5000/api/sales/customers");
+            const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/customers`);
             const data = await res.json();
             if (res.ok) setCustomers(data.customers || []);
         } catch (err) {
@@ -47,7 +47,7 @@ export default function NewOrder() {
 
     const fetchFabrics = async () => {
         try {
-            const res = await apiCall("http://localhost:5000/api/fabrics");
+            const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics`);
             const data = await res.json();
             if (res.ok) setFabrics(data.fabrics || []);
         } catch (err) {
@@ -103,7 +103,7 @@ export default function NewOrder() {
                 payment_method: paymentMethod
             };
 
-            const res = await apiCall("http://localhost:5000/api/sales/orders", {
+            const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders`, {
                 method: "POST",
                 body: JSON.stringify(payload)
             });

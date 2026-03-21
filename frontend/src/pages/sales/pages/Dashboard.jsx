@@ -103,9 +103,9 @@ export default function SalesDashboard() {
       SalesLogger.dashboard.dataFetch({ action: 'fetch_dashboard_data' });
       
       const [dashboardRes, paymentsRes, verificationsRes] = await Promise.all([
-        apiCall('http://localhost:5000/api/sales/dashboard'),
-        apiCall('http://localhost:5000/api/sales/pending-payments'),
-        apiCall('http://localhost:5000/api/sales/pending-verifications')
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/dashboard`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/pending-payments`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/pending-verifications`)
       ]);
 
       const dashboardData = await dashboardRes.json();
@@ -135,7 +135,7 @@ export default function SalesDashboard() {
       setActionLoading(true);
       SalesLogger.dashboard.paymentAction({ action: 'confirm_payment', paymentId });
       
-      const response = await apiCall('http://localhost:5000/api/payments/confirm', {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/payments/confirm`, {
         method: 'POST',
         body: JSON.stringify({
           payment_id: paymentId,
@@ -175,7 +175,7 @@ export default function SalesDashboard() {
   const handleVerifyOrder = async (orderId, action) => {
     try {
       setActionLoading(true);
-      const response = await apiCall(`http://localhost:5000/api/sales/verify-order/${orderId}`, {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/verify-order/${orderId}`, {
         method: 'POST',
         body: JSON.stringify({
           action,
@@ -203,7 +203,7 @@ export default function SalesDashboard() {
       setActionLoading(true);
       SalesLogger.dashboard.notificationAction({ type, orderId });
       
-      const response = await apiCall('http://localhost:5000/api/sales/send-confirmation', {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/send-confirmation`, {
         method: 'POST',
         body: JSON.stringify({
           orderId,
@@ -392,18 +392,18 @@ export default function SalesDashboard() {
           </div>
         </div>
 
-        <div className="stat-card">
+        <div className="stat-card verification" onClick={() => setShowVerificationModal(true)}>
           <div className="stat-icon-container">
-            <Package size={32} color="#001a66" />
+            <CheckCircle size={32} color="#001a66" />
           </div>
           <div className="stat-info">
-            <h4>Orders to Fulfill</h4>
-            <h2>{stats.pendingOrders}</h2>
+            <h4>Initial Verifications</h4>
+            <h2>{stats.verificationRequired || 0}</h2>
+            <p className="stat-subtitle">Approve new orders</p>
           </div>
         </div>
 
-
-        <div className="stat-card payment" onClick={() => setShowPaymentModal(true)}>
+        <div className="stat-card payment" onClick={() => navigate('/sales/payments')}>
           <div className="stat-icon-container">
             <CreditCard size={32} color="#155724" />
           </div>
@@ -554,10 +554,10 @@ export default function SalesDashboard() {
                       <h5>Bank Slip Proof:</h5>
                       <div className="slip-image-container">
                         <img 
-                          src={`http://localhost:5000/${selectedOrder.bank_slip_url}`} 
+                          src={`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${selectedOrder.bank_slip_url}`} 
                           alt="Bank Slip" 
                           className="bank-slip-img"
-                          onClick={() => window.open(`http://localhost:5000/${selectedOrder.bank_slip_url}`, '_blank')}
+                          onClick={() => window.open(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${selectedOrder.bank_slip_url}`, '_blank')}
                         />
                       </div>
                       <p className="slip-hint">Click image to enlarge</p>

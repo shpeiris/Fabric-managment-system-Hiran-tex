@@ -181,35 +181,25 @@ const forgotPassword = async (req, res) => {
 
     await authService.createOTP(email, otp);
 
-    // Send Real Email (or Ethereal fallback)
+    // Send Real Email
     const emailResult = await sendOTPEmail(email, otp);
 
     if (emailResult.success) {
-        if (emailResult.previewUrl) {
-            console.log("\n" + "=".repeat(50));
-            console.log("📧 [SMTP_TEST] OTP Email generated via Ethereal");
-            console.log(`🔗 PREVIEW LINK: ${emailResult.previewUrl}`);
-            console.log("=".repeat(50) + "\n");
-            
-            return res.json({ 
-                message: "Verification code sent! (Dev Mode: Check the terminal for the email preview link)",
-                previewUrl: emailResult.previewUrl
-            });
-        }
         return res.json({ message: "Verification code sent to your email address!" });
     }
 
-    // --- CRITICAL FALLBACK (Terminal Only) ---
-    // If we reach here, BOTH real SMTP and Ethereal failed
+    // --- DEVELOPER FALLBACK ---
+    // Log to terminal ONLY if real email delivery fails
     console.log("\n" + "!".repeat(50));
-    console.log("🛠️  [DEVELOPER FALLBACK] ALL SMTP DELIVERY FAILED");
+    console.log("🛠️  [ERROR] OTP EMAIL DELIVERY FAILED");
     console.log(`📧 TARGET: ${email}`);
     console.log(`🔢 CODE  : ${otp}`);
+    console.log(`⚠️  REASON: ${emailResult.error === 'AUTH_FAILED' ? 'Gmail SMTP Authentication Failed' : 'SMTP Configuration Missing'}`);
     console.log("!".repeat(50) + "\n");
 
     res.json({ 
-        message: "OTP generated! (Emergency Fallback: Check the backend terminal for the code)",
-        devFallback: true 
+        message: "We're having trouble sending the email. Please check the backend terminal for your code during development.",
+        error: emailResult.error
     });
   } catch (error) {
     console.error("Forgot password error:", error);

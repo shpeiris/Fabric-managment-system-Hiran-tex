@@ -14,7 +14,7 @@ export default function StockAlerts() {
   const fetchAlerts = async () => {
     try {
       setLoading(true);
-      const response = await apiCall('http://localhost:5000/api/inventory/fabrics');
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
       const data = await response.json();
 
       if (response.ok) {
