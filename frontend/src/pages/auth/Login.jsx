@@ -59,7 +59,7 @@ export default function Login() {
     try {
       // Use authService instead of direct fetch
       const data = await authService.login({
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
       });
 

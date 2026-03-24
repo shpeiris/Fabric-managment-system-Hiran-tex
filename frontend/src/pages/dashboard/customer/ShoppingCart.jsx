@@ -146,12 +146,13 @@ const ShoppingCart = () => {
                       </button>
                       <input
                         type="number"
+                        step="0.01"
                         value={item.quantity}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value);
+                          const val = parseFloat(e.target.value);
                           if (val > 0) updateQuantity(item.cart_id, val);
                         }}
-                        min="1"
+                        min="0.01"
                         disabled={updating}
                         className="stepper-input"
                       />
@@ -199,7 +200,7 @@ const ShoppingCart = () => {
                 {cartItems.map((item) => (
                   <div key={item.cart_id} className="summary-item-detail">
                     <span className="summary-item-name">
-                      {item.fabric_name} ({item.quantity}m)
+                      {item.fabric_name} ({parseFloat(item.quantity).toFixed(2)}m)
                     </span>
                     <span className="summary-item-price">
                       Rs. {(parseFloat(item.price_per_meter) * item.quantity).toFixed(2)}

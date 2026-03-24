@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 async function resetAdminPassword() {
   const email = "admin@system.com";
-  const newPassword = "admin123";
+  const newPassword = "Admin@123";
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   try {

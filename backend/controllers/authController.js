@@ -4,7 +4,8 @@ import { generateToken } from "../utils/jwtHelper.js";
 import { sendOTPEmail } from "../utils/emailHelper.js";
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  let { email, password } = req.body;
+  email = email ? email.trim() : email;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });

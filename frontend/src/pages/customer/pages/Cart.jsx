@@ -138,7 +138,7 @@ export default function Cart() {
                     style={{ background: '#f3f4f6', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
                   >−</button>
                   <span style={{ fontSize: '14px', fontWeight: '500', minWidth: '40px', textAlign: 'center' }}>
-                    {parseFloat(item.quantity)}m
+                    {parseFloat(item.quantity).toFixed(2)}m
                   </span>
                   <button
                     onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 1)}
@@ -147,7 +147,7 @@ export default function Cart() {
                   >+</button>
                 </div>
                 <p style={{ fontSize: '15px', fontWeight: '700', color: '#1f2937' }}>
-                  Rs. {parseFloat(item.total_price || 0).toLocaleString()}
+                  Rs. {parseFloat(item.total_price || 0).toFixed(2)}
                 </p>
               </div>
             </div>

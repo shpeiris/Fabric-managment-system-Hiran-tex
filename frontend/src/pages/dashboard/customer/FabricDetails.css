@@ -334,25 +334,32 @@
 }
 
 .swatch-item {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 1px #e2e8f0;
+    border-radius: 10px;
+    border: 2px solid transparent;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    padding: 0;
+    padding: 8px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
 }
 
-.swatch-item:hover {
-    transform: scale(1.15);
-    z-index: 10;
+.swatch-item:hover:not(:disabled) {
+    background: rgba(0, 26, 102, 0.05);
+    transform: translateY(-2px);
 }
 
 .swatch-item.active {
-    box-shadow: 0 0 0 2px #001a66;
-    transform: scale(1.1);
+    border-color: #001a66;
+    background: rgba(0, 26, 102, 0.05);
+}
+
+.swatch-item.swatch-oos {
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .active-indicator {

@@ -1,6 +1,7 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getUser, removeUser, apiCall } from "../../../utils/auth.js";
+import Sidebar from "../components/Sidebar.jsx";
 import "./AdminLayout.css";
 
 export default function AdminLayout() {
@@ -30,35 +31,7 @@ export default function AdminLayout() {
   return (
     <div className="admin-container">
       {/* Sidebar */}
-      <aside className="admin-sidebar">
-        <div className="sidebar-header">
-          <span className="sidebar-title" style={{ color: '#7cff00' }}>Hiran Fabrics</span>
-        </div>
-
-        <nav className="sidebar-nav">
-          <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            Dashboard
-          </NavLink>
-          <NavLink to="/admin/users" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            User Management
-          </NavLink>
-          <NavLink to="/admin/fabrics" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            Fabric Management
-          </NavLink>
-          <NavLink to="/admin/suppliers" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            Suppliers
-          </NavLink>
-          <NavLink to="/admin/reports" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            Reports
-          </NavLink>
-        </nav>
-
-        <div className="sidebar-footer">
-          <button className="logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </aside>
+      <Sidebar onLogout={handleLogout} />
 
       {/* Main Content */}
       <main className="admin-main">

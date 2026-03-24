@@ -50,7 +50,11 @@ const addFabric = async (req, res) => {
         // Convert string fields from FormData to appropriate numbers
         if (fabricData.price_per_meter) fabricData.price_per_meter = parseFloat(fabricData.price_per_meter);
         if (fabricData.stock_quantity) fabricData.stock_quantity = parseFloat(fabricData.stock_quantity);
-        if (fabricData.reorder_level) fabricData.reorder_level = parseFloat(fabricData.reorder_level);
+        // Map form field reorder_level → DB column restock_level
+        if (fabricData.reorder_level) {
+          fabricData.restock_level = parseFloat(fabricData.reorder_level);
+          delete fabricData.reorder_level;
+        }
         
         // Handle empty fields
         if (fabricData.width === '') fabricData.width = null;
@@ -80,7 +84,11 @@ const updateFabric = async (req, res) => {
         // Convert string fields from FormData to appropriate numbers
         if (fabricData.price_per_meter) fabricData.price_per_meter = parseFloat(fabricData.price_per_meter);
         if (fabricData.stock_quantity) fabricData.stock_quantity = parseFloat(fabricData.stock_quantity);
-        if (fabricData.reorder_level) fabricData.reorder_level = parseFloat(fabricData.reorder_level);
+        // Map form field reorder_level → DB column restock_level
+        if (fabricData.reorder_level) {
+          fabricData.restock_level = parseFloat(fabricData.reorder_level);
+          delete fabricData.reorder_level;
+        }
         
         // Handle empty fields
         if (fabricData.width === '') fabricData.width = null;

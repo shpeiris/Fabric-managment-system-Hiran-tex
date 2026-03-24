@@ -2,73 +2,54 @@ import { useEffect, useState } from "react";
 import { apiCall } from "../../utils/auth.js";
 import "./Dashboard.css";
 import { activityService } from "../../services";
+import { 
+  RefreshCw
+} from "lucide-react";
+
+/* Icons removed per user request */
+
+const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const REFRESH_INTERVAL_MS = 30_000; 
 
 export default function Dashboard() {
-  const [activities, setActivities] = useState([]);
-  const [activityError, setActivityError] = useState("");
-  const [activityLoading, setActivityLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalOrders: 0,
-    totalFabrics: 0,
-    totalRevenue: 0,
-    activeUsers: 0,
-    pendingOrders: 0
-  });
+  const [stats, setStats]               = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError]     = useState("");
+  const [lastUpdated, setLastUpdated]   = useState(null);
+
+  const [activities, setActivities]           = useState([]);
+  const [activityError, setActivityError]     = useState("");
+  const [activityLoading, setActivityLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchStats();
     fetchActivities();
+
+    const interval = setInterval(() => {
+      fetchStats(true); 
+    }, REFRESH_INTERVAL_MS);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchStats = async (silent = false) => {
     try {
-      setStatsLoading(true);
-      
-      // Fetch fabrics data for total count
-      const fabricsResponse = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
-      const fabricsData = await fabricsResponse.json();
-      
-      // You can add more API calls here for users, orders, etc.
-      // For now, we'll update what we can and use mock data for others
-      
-      if (fabricsResponse.ok) {
-        const fabricsCount = fabricsData.fabrics?.length || 0;
-        const totalStockValue = fabricsData.fabrics?.reduce((sum, fabric) => {
-          return sum + (parseFloat(fabric.price_per_meter) * parseInt(fabric.stock_quantity || 0));
-        }, 0) || 0;
-        
-        setStats(prev => ({
-          ...prev,
-          totalFabrics: fabricsCount,
-          totalRevenue: totalStockValue,
-          // Mock data for other stats that don't have endpoints yet
-          totalUsers: 120,
-          totalOrders: 45,
-          activeUsers: 85,
-          pendingOrders: 12
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      // Use fallback mock data
-      setStats({
-        totalUsers: 120,
-        totalOrders: 45,
-        totalFabrics: 25,
-        totalRevenue: 150000,
-        activeUsers: 85,
-        pendingOrders: 12
-      });
+      if (!silent) setStatsLoading(true);
+      const res = await apiCall(`${BASE}/admin/dashboard-stats`);
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setStats(data);
+      setLastUpdated(new Date());
+    } catch {
+      if (!silent) setStatsError("Could not load dashboard stats.");
     } finally {
-      setStatsLoading(false);
+      if (!silent) setStatsLoading(false);
     }
   };
 
   const fetchActivities = async () => {
     try {
-      const result = await activityService.getRecent(6);
+      const result = await activityService.getRecent(8);
       setActivities(result);
     } catch (error) {
       setActivityError(error.error || "Could not load recent activities");
@@ -77,73 +58,181 @@ export default function Dashboard() {
     }
   };
 
+  const fmt = (n) =>
+    typeof n === "number"
+      ? n.toLocaleString("en-LK")
+      : "0";
+
+  const fmtCurrency = (n) =>
+    typeof n === "number"
+      ? `Rs. ${n.toLocaleString("en-LK", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+      : "Rs. 0";
+
   return (
     <div className="dashboard-container">
-      <h1 style={{ marginBottom: "30px" }}>Admin Dashboard Overview</h1>
-      
-      {statsLoading ? (
-        <div style={{ textAlign: 'center', padding: '20px' }}>Loading dashboard data...</div>
+      <div className="dash-header">
+        <div>
+          <h1 style={{ marginBottom: "4px", fontSize: '28px' }}>Admin Overview</h1>
+          <p style={{ color: "#6c757d", fontSize: "14px", margin: 0 }}>
+            {new Date().toLocaleDateString("en-LK", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          </p>
+        </div>
+        <div className="dash-refresh">
+          {lastUpdated && (
+            <span className="last-updated">
+              Last sync: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+          <button
+            className="refresh-btn"
+            onClick={() => { fetchStats(); fetchActivities(); }}
+            title="Refresh now"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <RefreshCw size={16} className={statsLoading ? "spin" : ""} />
+            {statsLoading ? "Updating..." : "Refresh"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Stat Cards ── */}
+      {statsLoading && !stats ? (
+        <div className="dash-loading">
+            <RefreshCw size={40} className="spin" style={{ marginBottom: '15px', color: '#001a66' }} />
+            <p>Gathering intelligence...</p>
+        </div>
+      ) : statsError ? (
+        <div className="dash-error">{statsError}</div>
       ) : (
         <>
-          <StatCard title="Active Users" value={stats.activeUsers.toString()} />
-
-          {/* Stats Grid */}
-          <h2 style={{ fontSize: "18px", marginBottom: "20px", opacity: 0.8 }}>Key Metrics</h2>
           <div className="stats-grid">
-            <StatCard title="Total Users" value={stats.totalUsers.toString()} />
-            <StatCard title="Total Fabrics" value={stats.totalFabrics.toString()} />
-            <StatCard title="Pending Orders" value={stats.pendingOrders.toString()} />
+            <StatCard
+              title="Operational Staff"
+              value={fmt(stats?.employees?.active)}
+              sub={`${fmt(stats?.employees?.total)} total employees`}
+              color="#001a66"
+            />
+            <StatCard
+              title="Client Base"
+              value={fmt(stats?.customers?.total)}
+              sub="Direct customers"
+              color="#0066cc"
+            />
+            <StatCard
+              title="Sales Volume"
+              value={fmt(stats?.orders?.total)}
+              sub={`${fmt(stats?.orders?.pending)} pending action`}
+              color="#7b2d8b"
+            />
+            <StatCard
+              title="Total Revenue"
+              value={fmtCurrency(stats?.revenue?.total)}
+              sub="Completed transactions"
+              color="#1a7a4a"
+            />
+            <StatCard
+              title="Inventory Risk"
+              value={fmt(stats?.lowStockFabrics?.length)}
+              sub="Items below threshold"
+              color="#c1121f"
+              alert={stats?.lowStockFabrics?.length > 0}
+            />
           </div>
+
+          {/* ── Order Status Breakdown ── */}
+          <div style={{ marginBottom: '20px', marginTop: '40px' }}>
+            <h2 className="section-title" style={{ margin: 0 }}>Fulfillment Pipeline</h2>
+          </div>
+          <div className="order-status-grid">
+            <StatusPill label="Pending"    count={stats?.orders?.pending}    color="#f4a261" />
+            <StatusPill label="Processing" count={stats?.orders?.processing} color="#457b9d" />
+            <StatusPill label="Delivered"  count={stats?.orders?.delivered}  color="#2a9d8f" />
+            <StatusPill label="Cancelled"  count={stats?.orders?.cancelled}  color="#e63946" />
+          </div>
+
+          {/* ── Low Stock Alerts ── */}
+          {stats?.lowStockFabrics?.length > 0 && (
+            <>
+              <div style={{ marginBottom: '20px', marginTop: '40px' }}>
+                <h2 className="section-title" style={{ margin: 0, color: "#c1121f" }}>
+                  Critical Inventory Alerts
+                </h2>
+              </div>
+              <div className="activity-section" style={{ marginBottom: "40px" }}>
+                <table className="activity-table">
+                  <thead>
+                    <tr>
+                      <th>Fabric Resource</th>
+                      <th>Material</th>
+                      <th>Colorway</th>
+                      <th>Current Level</th>
+                      <th>Critical Mark</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.lowStockFabrics.map((f) => (
+                      <tr key={f.fabric_id}>
+                        <td style={{ fontWeight: 600 }}>{f.name}</td>
+                        <td>{f.material_type || "—"}</td>
+                        <td>{f.color || "—"}</td>
+                        <td>
+                          <span className="stock-badge stock-low">
+                            {f.stock_quantity} m
+                          </span>
+                        </td>
+                        <td style={{ color: "#6c757d" }}>{f.restock_level} m</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </>
       )}
 
-
-      {/* Recent System Activities */}
-      <h2 style={{ fontSize: "18px", marginBottom: "20px", opacity: 0.8 }}>Recent System Activities</h2>
+      {/* ── Recent System Activities ── */}
+      <div style={{ marginBottom: '20px', marginTop: '40px' }}>
+        <h2 className="section-title" style={{ margin: 0 }}>Audit Trail / System Logs</h2>
+      </div>
       <div className="activity-section">
         <table className="activity-table">
           <thead>
             <tr>
-              <th>Activity</th>
-              <th>User</th>
-              <th>Details</th>
-              <th>When</th>
+              <th>Operation</th>
+              <th>Responsible Actor</th>
+              <th>Category</th>
+              <th>Timestamp</th>
             </tr>
           </thead>
           <tbody>
             {activityLoading && (
-              <tr>
-                <td colSpan="4">Loading recent activity...</td>
-              </tr>
+              <tr><td colSpan="4" style={{ textAlign: "center", padding: "40px", color: "#6c757d" }}>
+                <RefreshCw size={24} className="spin" style={{ marginBottom: '10px' }} /><br/>
+                Syncing audit logs...
+              </td></tr>
             )}
-
             {!activityLoading && activityError && (
-              <tr>
-                <td colSpan="4" className="error-text">{activityError}</td>
-              </tr>
+              <tr><td colSpan="4" className="error-text" style={{ padding: "20px 25px" }}>{activityError}</td></tr>
             )}
-
             {!activityLoading && !activityError && activities.length === 0 && (
-              <tr>
-                <td colSpan="4">No activity recorded yet.</td>
-              </tr>
+              <tr><td colSpan="4" style={{ textAlign: "center", padding: "40px", color: "#6c757d" }}>Void. No system events recorded yet.</td></tr>
             )}
-
-            {!activityLoading &&
-              !activityError &&
-              activities.map((activity) => (
-                <tr key={activity.log_id}>
-                  <td>{activity.action || "Activity"}</td>
-                  <td className="user-highlight">
-                    {activity.actor_name || "Unknown"}
-                    <div className="actor-role">{activity.actor_role || ""}</div>
-                  </td>
-                  <td>{formatDetails(activity.details)}</td>
-                  <td>
-                    <span className="time-badge">{formatTimeAgo(activity.created_at)}</span>
-                  </td>
-                </tr>
-              ))}
+            {!activityLoading && !activityError && activities.map((a) => (
+              <tr key={a.log_id}>
+                <td>{a.action || "Activity"}</td>
+                <td className="user-highlight">
+                  {a.actor_name || "System"}
+                  <div className="actor-role">{a.actor_role || "Internal"}</div>
+                </td>
+                <td>
+                  <span className="type-badge">{a.action_type || "LOG"}</span>
+                </td>
+                <td>
+                  <span className="time-badge">{formatTimeAgo(a.created_at)}</span>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -151,39 +240,40 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value }) {
+/* ── Sub-components ── */
+
+function StatCard({ title, value, sub, color, alert }) {
   return (
-    <div className="stat-card" style={{ borderLeft: "4px solid #28a745" }}>
-      <div>
+    <div className="stat-card shadow-premium" style={{ borderLeft: `5px solid ${color}` }}>
+      <div className="stat-info">
         <h4 className="stat-title">{title}</h4>
-        <h2 className="stat-value">{value}</h2>
+        <h2 className="stat-value" style={{ color }}>{value}</h2>
+        {sub && <p className="stat-sub">{sub}</p>}
       </div>
+      {alert && <div className="alert-dot" />}
     </div>
   );
 }
 
-const formatDetails = (text) => {
-  if (!text) return "—";
-  if (text.length <= 80) return text;
-  return `${text.slice(0, 77)}...`;
-};
+function StatusPill({ label, count, color }) {
+  return (
+    <div className="status-pill shadow-premium" style={{ borderTop: `4px solid ${color}` }}>
+      <span className="status-pill-count" style={{ color }}>{count ?? 0}</span>
+      <span className="status-pill-label">{label}</span>
+    </div>
+  );
+}
 
+/* ── Helpers ── */
 const formatTimeAgo = (timestamp) => {
-  if (!timestamp) return "Just now";
-  const now = Date.now();
-  const then = new Date(timestamp).getTime();
-  const diffMs = now - then;
-
-  const mins = Math.floor(diffMs / 60000);
+  if (!timestamp) return "Present";
+  const diffMs = Date.now() - new Date(timestamp).getTime();
+  const mins  = Math.floor(diffMs / 60000);
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
-
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
-
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-
-  const weeks = Math.floor(days / 7);
-  return `${weeks}w ago`;
+  return `${Math.floor(days / 7)}w ago`;
 };

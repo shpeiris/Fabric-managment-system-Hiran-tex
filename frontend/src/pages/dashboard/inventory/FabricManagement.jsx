@@ -672,9 +672,9 @@ const InventoryFabricManagement = () => {
                   </div>
 
                   {/* Individual Variant Quantities */}
-                  {!isEditing && selectedColors.length > 1 && (
+                  {!isEditing && selectedColors.length >= 1 && (
                     <div className="col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                      <label className="block text-sm font-semibold text-blue-900 mb-3">Set Stock per Color (Meters):</label>
+                      <label className="block text-sm font-semibold text-blue-900 mb-3">Set Stock per Color Variant (Meters):</label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         {selectedColors.map(colorHex => {
                           const colorName = [...FABRIC_COLORS, ...customColors.map(hex => ({ name: 'Custom', hex }))].find(c => c.hex === colorHex)?.name || 'Custom';

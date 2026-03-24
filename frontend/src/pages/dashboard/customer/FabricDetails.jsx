@@ -193,22 +193,46 @@ const FabricDetails = () => {
                     {/* Color Swatch Section */}
                     {variants.length > 0 && (
                         <div className="color-selection-section">
-                            <h3 className="section-title">Fabric Color</h3>
+                            <h3 className="section-title">Available Colors & Stock</h3>
                             <div className="swatch-grid">
-                                {variants.map((variant) => (
-                                    <button
-                                        key={variant.fabric_id}
-                                        className={`swatch-item ${variant.fabric_id === fabric.fabric_id ? 'active' : ''}`}
-                                        style={{ backgroundColor: variant.color || '#cccccc' }}
-                                        onClick={() => navigate(`/customer/fabric/${variant.fabric_id}`)}
-                                        title={variant.color}
-                                    >
-                                        {variant.fabric_id === fabric.fabric_id && <span className="active-indicator"></span>}
-                                    </button>
-                                ))}
+                                {variants.map((variant) => {
+                                    const isActive = variant.fabric_id === fabric.fabric_id;
+                                    const outOfStock = variant.stock_quantity <= 0;
+                                    return (
+                                        <button
+                                            key={variant.fabric_id}
+                                            className={`swatch-item ${isActive ? 'active' : ''} ${outOfStock ? 'swatch-oos' : ''}`}
+                                            onClick={() => !outOfStock && navigate(`/customer/fabric/${variant.fabric_id}`)}
+                                            title={`${variant.color} — ${variant.stock_quantity}m available`}
+                                            disabled={outOfStock}
+                                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '8px', background: 'transparent', border: isActive ? '2px solid #001a66' : '2px solid transparent', borderRadius: '10px' }}
+                                        >
+                                            <span
+                                                className="swatch-dot"
+                                                style={{
+                                                    backgroundColor: variant.color || '#cccccc',
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '50%',
+                                                    display: 'block',
+                                                    border: '1px solid rgba(0,0,0,0.1)',
+                                                    opacity: outOfStock ? 0.35 : 1,
+                                                    position: 'relative'
+                                                }}
+                                            >
+                                                {isActive && (
+                                                    <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 700, textShadow: '0 0 3px rgba(0,0,0,0.7)' }}>✓</span>
+                                                )}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                             <p className="selected-color-name">
-                                Current: <strong>{fabric.color && fabric.color.startsWith('#') ? 'Selected Tone' : fabric.color}</strong>
+                                Selected: <strong>{fabric.color && fabric.color.startsWith('#') ? 'Custom Tone' : fabric.color}</strong>
+                                {' '}— <span style={{ color: fabric.stock_quantity > 0 ? '#1a7a4a' : '#c1121f', fontWeight: 600 }}>
+                                    {fabric.stock_quantity > 0 ? `${fabric.stock_quantity}m in stock` : 'Out of stock'}
+                                </span>
                             </p>
                         </div>
                     )}
