@@ -24,7 +24,7 @@ const getDashboardStats = async (req, res) => {
         FROM orders
       `),
       // Total revenue from completed payments
-      pool.query(`SELECT COALESCE(SUM(amount), 0) AS total FROM payments WHERE status = 'COMPLETED'`),
+      pool.query(`SELECT COALESCE(SUM(amount), 0) AS total FROM payments WHERE payment_status = 'COMPLETED'`),
       // Low stock fabrics (below restock_level)
       pool.query(`
         SELECT fabric_id, name, stock_quantity, restock_level, color, material_type

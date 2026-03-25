@@ -32,7 +32,7 @@ export default function Cart() {
   useEffect(() => { fetchCart(); }, []);
 
   const updateQuantity = async (cartId, newQuantity) => {
-    if (newQuantity < 1) return;
+    if (newQuantity < 0.01) return;
     setUpdating(cartId);
     try {
       const res = await apiCall(`${API}/api/cart/${cartId}`, {
@@ -137,9 +137,27 @@ export default function Cart() {
                     disabled={updating === item.cart_id || parseFloat(item.quantity) <= 1}
                     style={{ background: '#f3f4f6', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
                   >−</button>
-                  <span style={{ fontSize: '14px', fontWeight: '500', minWidth: '40px', textAlign: 'center' }}>
-                    {parseFloat(item.quantity).toFixed(2)}m
-                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (val > 0) updateQuantity(item.cart_id, val);
+                    }}
+                    style={{ 
+                      width: '80px', 
+                      border: '1px solid #e5e7eb', 
+                      borderRadius: '4px', 
+                      padding: '4px',
+                      textAlign: 'center', 
+                      fontSize: '14px', 
+                      fontWeight: '500', 
+                      color: '#1f2937'
+                    }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>m</span>
                   <button
                     onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 1)}
                     disabled={updating === item.cart_id}
@@ -174,18 +192,18 @@ export default function Cart() {
             <div style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '15px', marginBottom: '15px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <span style={{ fontSize: '14px', color: '#6b7280' }}>Subtotal ({cartItems.length} items)</span>
-                <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {subtotal.toLocaleString()}</span>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {subtotal.toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '14px', color: '#6b7280' }}>Delivery</span>
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>
-                  {delivery > 0 ? `Rs. ${delivery.toLocaleString()}` : 'Free'}
+                  {delivery > 0 ? `Rs. ${delivery.toFixed(2)}` : 'Free'}
                 </span>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937' }}>Total</span>
-              <span style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>Rs. {total.toLocaleString()}</span>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>Rs. {total.toFixed(2)}</span>
             </div>
             <button
               onClick={() => navigate('/customer/checkout')}

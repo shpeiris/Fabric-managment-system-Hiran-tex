@@ -295,14 +295,11 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
         if (!customerInfo) {
             const customerQuery = `
                 SELECT c.full_name, c.email, 
-                       cc.contact_value as tel, 
+                       c.tel, 
                        o.total_amount, 
-                       os.status_name as order_status
+                       o.order_status
                 FROM orders o 
                 LEFT JOIN customers c ON o.customer_id = c.customer_id 
-                LEFT JOIN customer_contacts cc ON c.customer_id = cc.customer_id 
-                    AND cc.contact_type = 'PHONE' AND cc.is_primary = TRUE
-                LEFT JOIN order_statuses os ON o.status_id = os.status_id
                 WHERE o.order_id = $1
             `;
 

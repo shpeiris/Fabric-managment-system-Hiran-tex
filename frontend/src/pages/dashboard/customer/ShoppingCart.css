@@ -172,13 +172,16 @@
 }
 
 .stepper-input {
-    width: 50px;
-    border: none;
-    background: transparent;
+    width: 80px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 4px;
     text-align: center;
     font-size: 16px;
     font-weight: 700;
     color: #001a66;
+    padding: 4px;
+    margin: 0 5px;
 }
 
 .stepper-unit {

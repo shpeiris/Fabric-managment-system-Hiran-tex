@@ -160,8 +160,8 @@ export default function Orders() {
                     }}>
                       {order.payment_status || 'No Record'}
                     </span>
-                    {order.payment_method === 'Bank Transfer' && order.bank_slip_url && (
-                      <a href={order.bank_slip_url} target="_blank" rel="noopener noreferrer" style={{ color: 'blue', textDecoration: 'underline' }}>View Slip</a>
+                    {order.payment_method === 'BANK_TRANSFER' && order.bank_slip_url && (
+                      <a href={`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${order.bank_slip_url}`} target="_blank" rel="noopener noreferrer" style={{ color: 'blue', textDecoration: 'underline' }}>View Slip</a>
                     )}
                   </div>
                 </td>
