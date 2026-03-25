@@ -373,7 +373,9 @@ const generateConfirmationMessage = (orderId, type, customerInfo) => {
         'order_confirmation': `Hello ${customerInfo.customerName}, your order #${orderId} has been confirmed and is being processed. Total amount: Rs. ${customerInfo.totalAmount}. Thank you for shopping with us!`,
         'payment_confirmation': `Dear ${customerInfo.customerName}, we have received your payment for order #${orderId}. Your order will be processed shortly.`,
         'payment_rejection': `Hi ${customerInfo.customerName}, your payment proof for order #${orderId} was not accepted. Please re-upload your bank slip in the 'Order Details' section or contact support.`,
-        'delivery_update': `Hi ${customerInfo.customerName}, your order #${orderId} status has been updated to: ${customerInfo.orderStatus}. We'll keep you informed of any further updates.`
+        'delivery_update': customerInfo.orderStatus === 'DELIVERED' 
+            ? `Hi ${customerInfo.customerName}, your order #${orderId} has been successfully delivered. Thank you for shopping with Hiran Fabric Textile! We'd love to hear your feedback.`
+            : `Hi ${customerInfo.customerName}, your order #${orderId} status has been updated to: ${customerInfo.orderStatus}. We'll keep you informed of any further updates.`
     };
 
     return messages[type] || `Order #${orderId} update for ${customerInfo.customerName}`;

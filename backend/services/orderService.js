@@ -180,10 +180,25 @@ const createOrder = async (orderData) => {
     }
 };
 
-const updateOrderStatus = async (orderId, status) => {
-    const result = await pool.query("UPDATE orders SET order_status = $1 WHERE order_id = $2 RETURNING order_id", [status, orderId]);
+const updateOrderStatus = async (orderId, status, deliveredBy = null, deliveryContactNumber = null) => {
+    let query = "UPDATE orders SET order_status = $1";
+    const params = [status, orderId];
+    let paramIndex = 3;
+
+    if (deliveredBy) {
+        query += `, delivered_by = $${paramIndex++}`;
+        params.push(deliveredBy);
+    }
+    if (deliveryContactNumber) {
+        query += `, delivery_contact_number = $${paramIndex++}`;
+        params.push(deliveryContactNumber);
+    }
+
+    query += " WHERE order_id = $2 RETURNING *";
+
+    const result = await pool.query(query, params);
     if (result.rows.length === 0) return null;
-    return { order_id: orderId, status };
+    return result.rows[0];
 };
 
 export {

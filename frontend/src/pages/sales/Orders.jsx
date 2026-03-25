@@ -9,6 +9,14 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
+  
+  // Delivery Modal State
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [deliveryData, setDeliveryData] = useState({
+    orderId: null,
+    delivered_by: '',
+    delivery_contact_number: ''
+  });
 
   useEffect(() => {
     SalesLogger.orders.pageLoad({ timestamp: new Date().toISOString() });
@@ -43,6 +51,16 @@ export default function Orders() {
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
+    if (newStatus === 'DELIVERED') {
+      setDeliveryData({
+        orderId: orderId,
+        delivered_by: '',
+        delivery_contact_number: ''
+      });
+      setShowDeliveryModal(true);
+      return;
+    }
+
     try {
       SalesLogger.orders.statusUpdate(orderId, newStatus);
       const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders/${orderId}/status`, {
@@ -53,6 +71,38 @@ export default function Orders() {
       if (response.ok) {
         alert('Order status updated successfully!');
         SalesLogger.orders.statusUpdate(orderId, `${newStatus}_success`);
+        fetchOrders();
+      }
+    } catch (err) {
+      console.error('Error updating order:', err);
+      SalesLogger.orders.statusUpdateError(orderId, err);
+      alert('Failed to update order status');
+    }
+  };
+
+  const submitDeliveredStatus = async () => {
+    const { orderId, delivered_by, delivery_contact_number } = deliveryData;
+    
+    if (!delivered_by || !delivery_contact_number) {
+      alert('Please enter both name and contact number');
+      return;
+    }
+
+    try {
+      SalesLogger.orders.statusUpdate(orderId, 'DELIVERED');
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders/${orderId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ 
+          status: 'DELIVERED',
+          delivered_by,
+          delivery_contact_number
+        })
+      });
+
+      if (response.ok) {
+        alert('Order marked as Delivered!');
+        SalesLogger.orders.statusUpdate(orderId, 'DELIVERED_success');
+        setShowDeliveryModal(false);
         fetchOrders();
       }
     } catch (err) {
@@ -165,7 +215,16 @@ export default function Orders() {
                     )}
                   </div>
                 </td>
-                <td>{order.delivery_type || 'Standard'}</td>
+                <td>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span>{order.delivery_type || 'Standard'}</span>
+                    {order.order_status === 'DELIVERED' && order.delivered_by && (
+                      <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>
+                        By: {order.delivered_by}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td>
                   {order.feedback_rating ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -226,6 +285,36 @@ export default function Orders() {
           </tbody>
         </table>
       </div>
+      {/* Delivery Modal */}
+      {showDeliveryModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Delivery Details</h2>
+            <div className="form-group">
+              <label>Delivered Person Name</label>
+              <input 
+                type="text" 
+                value={deliveryData.delivered_by}
+                onChange={(e) => setDeliveryData({...deliveryData, delivered_by: e.target.value})}
+                placeholder="Enter name"
+              />
+            </div>
+            <div className="form-group">
+              <label>Contact Number</label>
+              <input 
+                type="text" 
+                value={deliveryData.delivery_contact_number}
+                onChange={(e) => setDeliveryData({...deliveryData, delivery_contact_number: e.target.value})}
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={() => setShowDeliveryModal(false)}>Cancel</button>
+              <button className="btn-confirm" onClick={submitDeliveredStatus}>Confirm Delivered</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
