@@ -186,10 +186,6 @@ export default function Reports() {
           </div>
           <p className="subtitle" style={{ marginBottom: 0 }}>Comprehensive analytics for your business operations</p>
         </div>
-        <button className="print-report-btn" onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#001a66', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
-          <Printer size={18} />
-          Print {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Report
-        </button>
       </div>
 
       {/* Tab Switcher */}
