@@ -7,8 +7,8 @@ const adminOnly = [isAuthenticated, hasRole('ADMIN')];
 const adminOrInventoryManager = [isAuthenticated, hasRole(['ADMIN', 'INVENTORY_MANAGER', 'SALESPERSON'])];
 const allStaff = [isAuthenticated, hasRole(['ADMIN', 'INVENTORY_MANAGER', 'SALESPERSON'])];
 
-router.get('/sales', ...allStaff, reportController.getSalesReport);
-router.get('/inventory', ...allStaff, reportController.getInventoryReport);
-router.get('/suppliers', ...allStaff, reportController.getSupplierReport);
+router.get('/api/reports/sales', ...allStaff, reportController.getSalesReport);
+router.get('/api/reports/inventory', ...allStaff, reportController.getInventoryReport);
+router.get('/api/reports/suppliers', ...allStaff, reportController.getSupplierReport);
 
 export default router;

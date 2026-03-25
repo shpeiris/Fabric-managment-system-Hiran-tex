@@ -110,7 +110,7 @@ export default function Reports() {
             setStats({
                 totalSales: data.report.reduce((acc, curr) => acc + Number(curr.total_sales), 0),
                 monthlySales: Number(data.report[0]?.total_sales || 0),
-                totalCustomers: 124, 
+                activeCustomers: data.activeCustomers || 0,
                 pendingOrders: 5,
                 dailyTrend: data.report.map(r => ({
                     date: new Date(r.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
@@ -237,10 +237,10 @@ export default function Reports() {
                   <h2>Rs. {Number(stats.monthlySales).toLocaleString()}</h2>
                   <p>Last recorded day</p>
                 </div>
-                <div className="stat-card">
-                  <h3>Total Customers</h3>
-                  <h2>{stats.totalCustomers}</h2>
-                  <p>Active customers</p>
+                <div className="stat-card highlight">
+                  <h3>Active Customers</h3>
+                  <h2>{stats.activeCustomers}</h2>
+                  <p>Customers with orders</p>
                 </div>
                 <div className="stat-card">
                   <h3>Pending Orders</h3>
@@ -255,7 +255,7 @@ export default function Reports() {
                     <h3><TrendingUp size={20} /> Daily Sales Trend</h3>
                   </div>
                   <div className="chart-container">
-                    {stats.monthlyTrend.length > 0 ? (
+                    {stats.dailyTrend.length > 0 ? (
                       <div className="bar-chart">
                         {stats.dailyTrend.slice().reverse().map((item, index) => {
                           const maxTotal = Math.max(...stats.dailyTrend.map(m => m.total)) || 1;
