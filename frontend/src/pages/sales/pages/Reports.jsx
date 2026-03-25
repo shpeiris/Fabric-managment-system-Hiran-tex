@@ -66,7 +66,7 @@ export default function Reports() {
     monthlySales: 0,
     totalCustomers: 0,
     pendingOrders: 0,
-    monthlyTrend: []
+    dailyTrend: []
   });
 
   const [inventoryData, setInventoryData] = useState({
@@ -110,10 +110,10 @@ export default function Reports() {
             setStats({
                 totalSales: data.report.reduce((acc, curr) => acc + Number(curr.total_sales), 0),
                 monthlySales: Number(data.report[0]?.total_sales || 0),
-                totalCustomers: 124, // Fallback/Static for now if not in payload
+                totalCustomers: 124, 
                 pendingOrders: 5,
-                monthlyTrend: data.report.map(r => ({
-                    month: new Date(r.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                dailyTrend: data.report.map(r => ({
+                    date: new Date(r.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
                     total: Number(r.total_sales),
                     order_count: r.order_count
                 }))
@@ -125,7 +125,7 @@ export default function Reports() {
                 monthlySales: 76800,
                 totalCustomers: 104,
                 pendingOrders: 8,
-                monthlyTrend: DUMMY_TREND
+                dailyTrend: DUMMY_TREND.map(d => ({ ...d, date: d.month.split(' ')[0] }))
             });
         }
       }
@@ -233,9 +233,9 @@ export default function Reports() {
                   <p>All time revenue</p>
                 </div>
                 <div className="stat-card highlight">
-                  <h3>Monthly Sales</h3>
+                  <h3>Recent Sales</h3>
                   <h2>Rs. {Number(stats.monthlySales).toLocaleString()}</h2>
-                  <p>Current month</p>
+                  <p>Last recorded day</p>
                 </div>
                 <div className="stat-card">
                   <h3>Total Customers</h3>
@@ -252,19 +252,19 @@ export default function Reports() {
               <div className="report-grid">
                 <div className="report-section chart-section">
                   <div className="section-header">
-                    <h3><TrendingUp size={20} /> Sales Trend</h3>
+                    <h3><TrendingUp size={20} /> Daily Sales Trend</h3>
                   </div>
                   <div className="chart-container">
                     {stats.monthlyTrend.length > 0 ? (
                       <div className="bar-chart">
-                        {stats.monthlyTrend.slice().reverse().map((item, index) => {
-                          const maxTotal = Math.max(...stats.monthlyTrend.map(m => m.total)) || 1;
+                        {stats.dailyTrend.slice().reverse().map((item, index) => {
+                          const maxTotal = Math.max(...stats.dailyTrend.map(m => m.total)) || 1;
                           const heightPercentage = (item.total / maxTotal) * 100;
                           return (
                             <div className="chart-bar-wrapper" key={index}>
                               <div className="bar-tooltip">Rs. {Number(item.total).toLocaleString()}</div>
                               <div className="bar" style={{ height: `${heightPercentage}%` }}></div>
-                              <span className="bar-label">{item.month.split(' ')[0]}</span>
+                              <span className="bar-label">{item.date}</span>
                             </div>
                           );
                         })}
@@ -277,25 +277,25 @@ export default function Reports() {
 
                 <div className="report-section table-section">
                   <div className="section-header">
-                    <h3><Calendar size={20} /> Monthly Breakdown</h3>
+                    <h3><Calendar size={20} /> Daily Performance Breakdown</h3>
                   </div>
                   <div className="table-responsive">
                     <table className="performance-table">
                       <thead>
                         <tr>
-                          <th>Month</th>
+                          <th>Date</th>
                           <th>Orders</th>
                           <th>Revenue</th>
                           <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {stats.monthlyTrend.map((item, index) => (
+                        {stats.dailyTrend.map((item, index) => (
                           <tr key={index}>
-                            <td className="month-name">{item.month}</td>
+                            <td className="month-name">{item.date}</td>
                             <td>{item.order_count}</td>
                             <td className="revenue-cell">Rs. {Number(item.total).toLocaleString()}</td>
-                            <td><span className="growth-tag"><ArrowUpRight size={12} /> Active</span></td>
+                            <td><span className="growth-tag"><ArrowUpRight size={12} /> Live</span></td>
                           </tr>
                         ))}
                       </tbody>

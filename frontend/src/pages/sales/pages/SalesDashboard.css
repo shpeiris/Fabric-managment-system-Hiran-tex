@@ -152,32 +152,26 @@
 }
 
 .status-badge {
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .status-badge.pending {
-    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-    color: white;
+    color: #856404;
 }
 
 .status-badge.processing {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    color: white;
+    color: #0c5460;
 }
 
 .status-badge.delivered {
-    background: linear-gradient(135deg, #7cff00 0%, #6ee000 100%);
-    color: #001a66;
+    color: #155724;
 }
 
 .status-badge.cancelled {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    color: white;
+    color: #721c24;
 }
 
 /* Enhanced stat cards for verification and payment */
@@ -300,24 +294,19 @@
 
 .payment-status {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 10px;
 }
 
 .payment-status.completed {
-    background: #d4edda;
     color: #155724;
 }
 
 .payment-status.pending {
-    background: #fff3cd;
     color: #856404;
 }
 
 .payment-status.failed {
-    background: #f8d7da;
     color: #721c24;
 }
 

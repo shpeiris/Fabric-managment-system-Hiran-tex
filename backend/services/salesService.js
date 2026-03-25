@@ -297,7 +297,9 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
                 SELECT c.full_name, c.email, 
                        c.tel, 
                        o.total_amount, 
-                       o.order_status
+                       o.order_status,
+                       o.delivered_by,
+                       o.delivery_contact_number
                 FROM orders o 
                 LEFT JOIN customers c ON o.customer_id = c.customer_id 
                 WHERE o.order_id = $1
@@ -312,7 +314,9 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
                 email: customer.email,
                 phone: customer.tel,
                 totalAmount: customer.total_amount,
-                orderStatus: customer.order_status
+                orderStatus: customer.order_status,
+                deliveredBy: customer.delivered_by,
+                deliveryContact: customer.delivery_contact_number
             };
         }
 
@@ -374,7 +378,7 @@ const generateConfirmationMessage = (orderId, type, customerInfo) => {
         'payment_confirmation': `Dear ${customerInfo.customerName}, we have received your payment for order #${orderId}. Your order will be processed shortly.`,
         'payment_rejection': `Hi ${customerInfo.customerName}, your payment proof for order #${orderId} was not accepted. Please re-upload your bank slip in the 'Order Details' section or contact support.`,
         'delivery_update': customerInfo.orderStatus === 'DELIVERED' 
-            ? `Hi ${customerInfo.customerName}, your order #${orderId} has been successfully delivered. Thank you for shopping with Hiran Fabric Textile! We'd love to hear your feedback.`
+            ? `Hi ${customerInfo.customerName}, your order #${orderId} has been successfully delivered${customerInfo.deliveredBy ? ' by ' + customerInfo.deliveredBy : ''}${customerInfo.deliveryContact ? ' (Contact: ' + customerInfo.deliveryContact + ')' : ''}. Thank you for shopping with Hiran Fabric Textile! We'd love to hear your feedback.`
             : `Hi ${customerInfo.customerName}, your order #${orderId} status has been updated to: ${customerInfo.orderStatus}. We'll keep you informed of any further updates.`
     };
 

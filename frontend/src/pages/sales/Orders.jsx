@@ -61,6 +61,7 @@ export default function Orders() {
       return;
     }
 
+    setLoading(true);
     try {
       SalesLogger.orders.statusUpdate(orderId, newStatus);
       const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders/${orderId}/status`, {
@@ -72,11 +73,16 @@ export default function Orders() {
         alert('Order status updated successfully!');
         SalesLogger.orders.statusUpdate(orderId, `${newStatus}_success`);
         fetchOrders();
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error || 'Failed to update order status'}`);
       }
     } catch (err) {
       console.error('Error updating order:', err);
       SalesLogger.orders.statusUpdateError(orderId, err);
       alert('Failed to update order status');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,6 +95,7 @@ export default function Orders() {
     }
 
     try {
+      setLoading(true);
       SalesLogger.orders.statusUpdate(orderId, 'DELIVERED');
       const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders/${orderId}/status`, {
         method: 'PUT',
@@ -104,11 +111,16 @@ export default function Orders() {
         SalesLogger.orders.statusUpdate(orderId, 'DELIVERED_success');
         setShowDeliveryModal(false);
         fetchOrders();
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error || 'Failed to mark as Delivered'}`);
       }
     } catch (err) {
       console.error('Error updating order:', err);
       SalesLogger.orders.statusUpdateError(orderId, err);
       alert('Failed to update order status');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -218,9 +230,9 @@ export default function Orders() {
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <span>{order.delivery_type || 'Standard'}</span>
-                    {order.order_status === 'DELIVERED' && order.delivered_by && (
+                    {order.order_status === 'DELIVERED' && (order.delivered_by || order.delivery_contact_number) && (
                       <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>
-                        By: {order.delivered_by}
+                        By: {order.delivered_by || 'N/A'} {order.delivery_contact_number ? `(${order.delivery_contact_number})` : ''}
                       </span>
                     )}
                   </div>
@@ -309,8 +321,10 @@ export default function Orders() {
               />
             </div>
             <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => setShowDeliveryModal(false)}>Cancel</button>
-              <button className="btn-confirm" onClick={submitDeliveredStatus}>Confirm Delivered</button>
+              <button className="btn-cancel" onClick={() => setShowDeliveryModal(false)} disabled={loading}>Cancel</button>
+              <button className="btn-confirm" onClick={submitDeliveredStatus} disabled={loading}>
+                {loading ? 'Processing...' : 'Confirm Delivered'}
+              </button>
             </div>
           </div>
         </div>

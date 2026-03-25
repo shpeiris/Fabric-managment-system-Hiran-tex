@@ -388,59 +388,6 @@ const PaymentQueue = () => {
                 </div>
             )}
 
-            {/* Order Management Sample Section */}
-            <div className="order-management-sample-section">
-                <div className="section-header">
-                    <div className="title-group">
-                        <Clipboard size={22} color="#001a66" />
-                        <h2>Order Management (Sample View)</h2>
-                    </div>
-                    <button className="view-all-btn" onClick={() => navigate('/sales/orders')}>
-                        View Full Order Management →
-                    </button>
-                </div>
-                
-                <div className="sample-table-container">
-                    <table className="sample-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Payment</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {HISTORICAL_ORDERS_SAMPLE.map(order => (
-                                <tr key={order.order_id}>
-                                    <td>#{order.order_id}</td>
-                                    <td>{order.customer_name}</td>
-                                    <td>{order.order_date}</td>
-                                    <td className="amount-cell">Rs. {order.total_amount.toLocaleString()}</td>
-                                    <td>
-                                        <span className={`status-pill ${order.order_status.toLowerCase()}`}>
-                                            {order.order_status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span className={`payment-pill ${order.payment_status.toLowerCase()}`}>
-                                            {order.payment_status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button className="manage-btn" onClick={() => navigate('/sales/orders')}>
-                                            Manage
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     );
 };
