@@ -162,7 +162,7 @@ const CompleteOrder = ({
                 <div className="option-content">
                   <strong>Gampaha</strong>
                   <p>Delivered within 2-5 business days</p>
-                  <p className="shipping-note">and every Additional kilo or part thereof is LKR 100</p>
+
                   <span className="shipping-price">Rs 500.00</span>
                 </div>
               </label>
@@ -180,7 +180,7 @@ const CompleteOrder = ({
                 <div className="option-content">
                   <strong>Out of Gampaha</strong>
                   <p>Delivered within 2-7 business days</p>
-                  <p className="shipping-note">and every Additional kilo or part thereof is LKR 100</p>
+
                   <span className="shipping-price">Rs 750.00</span>
                 </div>
               </label>

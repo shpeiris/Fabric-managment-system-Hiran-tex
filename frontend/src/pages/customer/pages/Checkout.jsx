@@ -515,7 +515,7 @@ export default function Checkout() {
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Gampaha</p>
                     <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0' }}>Delivered within 2-5 business days</p>
-                    <p style={{ fontSize: '11px', color: '#9ca3af', margin: 0 }}>and every Additional kilo or part thereof is LKR 100 • <strong>Rs 500.00</strong></p>
+                    <p style={{ fontSize: '11px', color: '#9ca3af', margin: 0 }}><strong>Rs 500.00</strong></p>
                   </div>
                 </label>
 
@@ -526,7 +526,7 @@ export default function Checkout() {
                   <div>
                     <p style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>Out of Gampaha</p>
                     <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0' }}>Delivered within 2-7 business days</p>
-                    <p style={{ fontSize: '11px', color: '#9ca3af', margin: 0 }}>and every Additional kilo or part thereof is LKR 100 • <strong>Rs 750.00</strong></p>
+                    <p style={{ fontSize: '11px', color: '#9ca3af', margin: 0 }}><strong>Rs 750.00</strong></p>
                   </div>
                 </label>
               </div>
