@@ -71,13 +71,13 @@ const uploadBankSlip = async (userId, orderId, slipUrl) => {
     }
 };
 
-const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
+const confirmPayment = async (paymentId, order_status, verifierId, options = {}) => {
     const client = await pool.connect();
     
     try {
         await client.query('BEGIN');
 
-        // Update payment status with enhanced tracking
+        // Update payment order_status with enhanced tracking
         const updatePaymentQuery = `
             UPDATE payments 
             SET payment_status = $1, 
@@ -89,7 +89,7 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
         `;
         
         const paymentResult = await client.query(updatePaymentQuery, [
-            status, 
+            order_status, 
             verifierId, 
             verifierId,
             paymentId
@@ -101,8 +101,8 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
 
         const payment = paymentResult.rows[0];
 
-        if (status === 'COMPLETED') {
-            // Update order status to PROCESSING when payment is confirmed
+        if (order_status === 'COMPLETED') {
+            // Update order order_status to PROCESSING when payment is confirmed
             const updateOrderQuery = `
                 UPDATE orders 
                 SET order_status = 'PROCESSING',
@@ -135,7 +135,7 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
                 console.error("Failed to send payment confirmation notification:", notifyErr);
                 // Don't fail the whole transaction if notification fails
             }
-        } else if (status === 'FAILED') {
+        } else if (order_status === 'FAILED') {
             // Send rejection notification
             try {
                 await salesService.sendConfirmation(payment.order_id, 'payment_rejection', 'Salesperson', verifierId);
@@ -147,9 +147,9 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
         await client.query('COMMIT');
         
         return { 
-            message: status === 'COMPLETED' ? "Payment confirmed successfully" : "Payment status updated",
+            message: order_status === 'COMPLETED' ? "Payment confirmed successfully" : "Payment order_status updated",
             payment: payment,
-            orderUpdated: status === 'COMPLETED'
+            orderUpdated: order_status === 'COMPLETED'
         };
         
     } catch (error) {

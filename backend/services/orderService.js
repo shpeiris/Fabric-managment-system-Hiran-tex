@@ -66,7 +66,7 @@ const getOrderById = async (orderId, userId = null) => {
 };
 
 const getOrders = async (filters) => {
-    const { status, customer_id } = filters;
+    const { order_status, customer_id } = filters;
     let query = `
     SELECT o.*, 
            CASE 
@@ -84,10 +84,10 @@ const getOrders = async (filters) => {
     const params = [];
     let paramCount = 0;
 
-    if (status) {
+    if (order_status) {
         paramCount++;
         query += ` AND o.order_status = $${paramCount}`;
-        params.push(status);
+        params.push(order_status);
     }
 
     if (customer_id) {
@@ -180,9 +180,9 @@ const createOrder = async (orderData) => {
     }
 };
 
-const updateOrderStatus = async (orderId, status, deliveredBy = null, deliveryContactNumber = null) => {
+const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deliveryContactNumber = null) => {
     let query = "UPDATE orders SET order_status = $1";
-    const params = [status, orderId];
+    const params = [order_status, orderId];
     let paramIndex = 3;
 
     if (deliveredBy) {

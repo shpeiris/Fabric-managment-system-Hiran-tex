@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { 
+  ShoppingBag, 
+  Trash2, 
+  Plus, 
+  Minus, 
+  RefreshCcw, 
+  ChevronRight, 
+  ArrowLeft,
+  Loader2,
+  AlertCircle
+} from "lucide-react";
 import cartService from "../../../services/cartService";
 import "./ShoppingCart.css";
 
@@ -13,20 +24,31 @@ const ShoppingCart = () => {
   const fetchCart = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await cartService.getCart();
       setCartItems(data.cart || []);
     } catch (err) {
       console.error("Error fetching cart:", err);
-      setError("Failed to load cart. Please refresh.");
+      setError("Failed to load your cart. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchCart(); }, []);
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
   const updateQuantity = async (cartId, newQuantity) => {
-    if (newQuantity < 1) return;
+    if (newQuantity < 0.01) return;
+    
+    // Find item to check stock
+    const item = cartItems.find(i => i.cart_id === cartId);
+    if (item && newQuantity > parseFloat(item.stock_available_quantity)) {
+        alert(`Only ${item.stock_available_quantity}m available in stock.`);
+        return;
+    }
+
     setUpdating(cartId);
     try {
       await cartService.updateCartItem(cartId, newQuantity);
@@ -37,27 +59,46 @@ const ShoppingCart = () => {
             : item
         )
       );
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error("Error updating quantity:", err);
+      alert(err.error || "Failed to update quantity");
     } finally {
       setUpdating(null);
     }
   };
 
   const removeItem = async (cartId) => {
-    if (!confirm("Remove this item from cart?")) return;
+    if (!confirm("Remove this premium fabric from your cart?")) return;
     setUpdating(cartId);
     try {
       await cartService.removeFromCart(cartId);
       setCartItems((prev) => prev.filter((item) => item.cart_id !== cartId));
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error("Error removing item:", err);
+      alert("Failed to remove item");
     } finally {
       setUpdating(null);
     }
   };
 
-  const calculateTotal = () => {
+  const clearCart = async () => {
+    if (!confirm("Are you sure you want to empty your entire cart?")) return;
+    setLoading(true);
+    try {
+      await cartService.clearCart();
+      setCartItems([]);
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch (err) {
+      console.error("Error clearing cart:", err);
+      alert("Failed to clear cart");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
       const price = parseFloat(item.price_per_meter || 0);
       const quantity = parseFloat(item.quantity || 0);
@@ -65,84 +106,121 @@ const ShoppingCart = () => {
     }, 0);
   };
 
-  if (loading) return (
-    <div className="shopping-cart-container">
-      <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>Loading cart...</div>
-    </div>
-  );
+  const deliveryFee = cartItems.length > 0 ? 500 : 0;
+  const subtotal = calculateSubtotal();
+  const total = subtotal + deliveryFee;
 
-  if (error) return (
-    <div className="shopping-cart-container">
-      <div style={{ textAlign: 'center', padding: '60px', color: '#ef4444' }}>
-        <p>{error}</p>
-        <button onClick={fetchCart} style={{ marginTop: '12px', padding: '8px 20px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Retry</button>
+  const getImageSrc = (imageUrl) => {
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    if (!imageUrl) return "/src/assets/Fabrics/fabric-collage.jpg";
+    if (imageUrl.startsWith('uploads/')) return `${API_URL}/${imageUrl}`;
+    if (imageUrl.startsWith('http')) return imageUrl;
+    return `/src/assets/Fabrics/${imageUrl}`;
+  };
+
+  if (loading && cartItems.length === 0) {
+    return (
+      <div className="shopping-cart-container">
+        <div className="loading-state">
+          <Loader2 className="spinner" size={48} />
+          <p>Preparing your selection...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="shopping-cart-container">
+        <div className="cart-empty-state">
+          <div className="empty-icon-box" style={{ color: '#ef4444', backgroundColor: '#fef2f2' }}>
+            <AlertCircle size={48} />
+          </div>
+          <h2>Something went wrong</h2>
+          <p>{error}</p>
+          <button onClick={fetchCart} className="btn-primary-lg" style={{ width: 'auto' }}>
+            <RefreshCcw size={18} /> Retry Loading
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="shopping-cart-container">
       <div className="cart-header">
-        <h1>Shopping Cart</h1>
-        <p className="cart-count">
-          {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
-        </p>
+        <div className="cart-header-title">
+          <ShoppingBag size={32} color="#001a66" />
+          <h1>My Cart</h1>
+          <span className="cart-count-badge">{cartItems.length}</span>
+        </div>
+        {cartItems.length > 0 && (
+          <button onClick={clearCart} className="btn-clear-cart">
+            <Trash2 size={16} /> Clear Cart
+          </button>
+        )}
       </div>
 
       {cartItems.length === 0 ? (
-        <div className="empty-cart">
-          <div className="empty-cart-icon">🛒</div>
+        <div className="cart-empty-state">
+          <div className="empty-icon-box">
+            <ShoppingBag size={48} />
+          </div>
           <h2>Your cart is empty</h2>
-          <p>Add some fabrics to get started!</p>
+          <p>Looks like you haven't added any premium fabrics to your collection yet.</p>
           <button
             onClick={() => navigate("/customer/browse")}
-            className="btn-continue-shopping"
+            className="btn-primary-lg"
+            style={{ width: 'auto' }}
           >
-            Browse Fabrics
+            Start Shopping <ChevronRight size={18} />
           </button>
         </div>
       ) : (
-        <div className="cart-content">
-          <div className="cart-items-section">
+        <div className="cart-main-layout">
+          <div className="cart-items-list">
             {cartItems.map((item) => (
               <div key={item.cart_id} className="cart-item-card">
-                <div className="cart-item-info">
-                  <div className="item-main-header">
-                    <span className="item-material-badge">
-                      {item.material_type}
-                    </span>
-                    <h3 className="item-name">{item.fabric_name}</h3>
-                    <p className="item-sku">
-                      SKU: FAB{item.fabric_id.toString().padStart(3, "0")}
-                    </p>
+                {updating === item.cart_id && (
+                  <div className="updating-overlay">
+                    <Loader2 className="spinner-sm" />
                   </div>
+                )}
+                <div className="item-image-container">
+                  <img
+                    src={getImageSrc(item.image_url)}
+                    alt={item.fabric_name}
+                    onError={(e) => { e.target.src = "/src/assets/Fabrics/fabric-collage.jpg"; }}
+                  />
+                </div>
 
-                  <div className="item-specs">
-                    <div className="spec-unit">
-                      <span className="spec-label">Color</span>
-                      <span className="spec-value">{item.color}</span>
+                <div className="item-details">
+                  <span className="item-brand">{item.material_type}</span>
+                  <h3 className="item-name">{item.fabric_name}</h3>
+                  <div className="item-meta">
+                    <div className="meta-item">
+                      <strong>Color:</strong> {item.color}
                     </div>
-                    <div className="spec-unit">
-                      <span className="spec-label">Price</span>
-                      <span className="spec-value">
-                        Rs. {parseFloat(item.price_per_meter).toFixed(2)}/m
-                      </span>
+                    <div className="meta-item">
+                      <strong>SKU:</strong> FAB{item.fabric_id.toString().padStart(3, "0")}
                     </div>
                   </div>
                 </div>
 
-                <div className="item-controls-section">
-                  <div className="quantity-panel">
-                    <label>Order Quantity</label>
-                    <div className="qty-stepper">
+                <div className="item-controls">
+                  <div className="item-price-info">
+                    <span className="unit-price">Rs. {parseFloat(item.price_per_meter).toLocaleString()}/m</span>
+                    <span className="total-price">Rs. {(item.quantity * item.price_per_meter).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  </div>
+
+                  <div className="actions-row">
+                    <div className="quantity-selector">
                       <button
-                        onClick={() =>
-                          updateQuantity(item.cart_id, item.quantity - 1)
-                        }
-                        disabled={updating || item.quantity <= 1}
-                        className="stepper-btn"
+                        onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) - 1)}
+                        disabled={updating || parseFloat(item.quantity) <= 1}
+                        className="qty-btn"
                       >
-                        −
+                        <Minus size={14} />
                       </button>
                       <input
                         type="number"
@@ -152,96 +230,63 @@ const ShoppingCart = () => {
                           const val = parseFloat(e.target.value);
                           if (val > 0) updateQuantity(item.cart_id, val);
                         }}
-                        min="0.01"
+                        className="qty-input"
                         disabled={updating}
-                        className="stepper-input"
                       />
                       <button
-                        onClick={() =>
-                          updateQuantity(item.cart_id, item.quantity + 1)
-                        }
+                        onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 1)}
                         disabled={updating}
-                        className="stepper-btn"
+                        className="qty-btn"
                       >
-                        +
+                        <Plus size={14} />
                       </button>
-                      <span className="stepper-unit">meters</span>
                     </div>
+                    <button
+                      onClick={() => removeItem(item.cart_id)}
+                      disabled={updating}
+                      className="btn-remove"
+                      title="Remove item"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-
-                  <div className="item-subtotal-panel">
-                    <span className="panel-label">Subtotal</span>
-                    <span className="panel-amount">
-                      Rs.{" "}
-                      {(
-                        parseFloat(item.price_per_meter) * item.quantity
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => removeItem(item.cart_id)}
-                    disabled={updating}
-                    className="item-delete-btn"
-                    title="Remove item"
-                  >
-                    🗑️
-                  </button>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="cart-summary-section">
-            <div className="cart-summary-card">
+          <div className="summary-section">
+            <div className="summary-container">
               <h2>Order Summary</h2>
-
-              <div className="summary-items-list">
-                {cartItems.map((item) => (
-                  <div key={item.cart_id} className="summary-item-detail">
-                    <span className="summary-item-name">
-                      {item.fabric_name} ({parseFloat(item.quantity).toFixed(2)}m)
-                    </span>
-                    <span className="summary-item-price">
-                      Rs. {(parseFloat(item.price_per_meter) * item.quantity).toFixed(2)}
-                    </span>
-                  </div>
-                ))}
+              <div className="summary-rows">
+                <div className="summary-row">
+                  <span>Subtotal ({cartItems.length} items)</span>
+                  <span>Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                </div>
+                <div className="summary-row">
+                  <span>Standard Delivery</span>
+                  <span>Rs. {deliveryFee.toLocaleString()}</span>
+                </div>
+                <div className="summary-row total">
+                  <span>Grand Total</span>
+                  <span className="grand-total">Rs. {total.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                </div>
               </div>
 
-              <div className="summary-divider"></div>
-
-              <div className="summary-row">
-                <span>
-                  Subtotal ({cartItems.length}{" "}
-                  {cartItems.length === 1 ? "item" : "items"})
-                </span>
-                <span>Rs. {calculateTotal().toFixed(2)}</span>
+              <div className="checkout-actions">
+                <button
+                  onClick={() => navigate("/customer/checkout")}
+                  className="btn-primary-lg"
+                >
+                  Proceed to Checkout <ChevronRight size={20} />
+                </button>
+                <button
+                  onClick={() => navigate("/customer/browse")}
+                  className="btn-secondary-lg"
+                >
+                  <ArrowLeft size={16} /> Continue Shopping
+                </button>
               </div>
-
-
-              <div className="summary-divider"></div>
-
-              <div className="summary-row total-row">
-                <span>Total</span>
-                <span className="total-amount">
-                  Rs. {calculateTotal().toFixed(2)}
-                </span>
-              </div>
-
-              <button
-                onClick={() => navigate("/customer/checkout")}
-                className="btn-checkout"
-              >
-                Proceed to Checkout
-              </button>
-
-              <button
-                onClick={() => navigate("/customer/browse")}
-                className="btn-continue"
-              >
-                Continue Shopping
-              </button>
             </div>
           </div>
         </div>

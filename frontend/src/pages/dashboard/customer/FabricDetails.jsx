@@ -84,8 +84,13 @@ const FabricDetails = () => {
 
             if (response.ok) {
                 setCartMessage({ type: 'success', text: '✅ Added to cart successfully!' });
+                
+                // Trigger cart count update in layout
+                window.dispatchEvent(new Event('cartUpdated'));
+                
                 setTimeout(() => setCartMessage({ type: '', text: '' }), 3000);
             } else {
+
                 const data = await response.json();
                 setCartMessage({ type: 'error', text: `❌ ${data.error || 'Failed to add to cart'}` });
             }

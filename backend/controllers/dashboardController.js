@@ -13,7 +13,7 @@ const getDashboardStats = async (req, res) => {
       pool.query(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE status = 'ACTIVE') AS active FROM employees`),
       // Total customers
       pool.query(`SELECT COUNT(*) AS total FROM customers`),
-      // Orders by status
+      // Orders by order_status
       pool.query(`
         SELECT 
           COUNT(*) AS total,

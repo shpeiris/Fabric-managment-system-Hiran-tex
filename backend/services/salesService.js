@@ -247,7 +247,7 @@ const verifyOrder = async (orderId, action, verifiedBy, verifierId) => {
             }
         }
 
-        return { orderId, status: newStatus, action };
+        return { orderId, order_status: newStatus, action };
     } catch (error) {
         console.error('Error verifying order:', error);
         throw error;
@@ -379,7 +379,7 @@ const generateConfirmationMessage = (orderId, type, customerInfo) => {
         'payment_rejection': `Hi ${customerInfo.customerName}, your payment proof for order #${orderId} was not accepted. Please re-upload your bank slip in the 'Order Details' section or contact support.`,
         'delivery_update': customerInfo.orderStatus === 'DELIVERED' 
             ? `Hi ${customerInfo.customerName}, your order #${orderId} has been successfully delivered${customerInfo.deliveredBy ? ' by ' + customerInfo.deliveredBy : ''}${customerInfo.deliveryContact ? ' (Contact: ' + customerInfo.deliveryContact + ')' : ''}. Thank you for shopping with Hiran Fabric Textile! We'd love to hear your feedback.`
-            : `Hi ${customerInfo.customerName}, your order #${orderId} status has been updated to: ${customerInfo.orderStatus}. We'll keep you informed of any further updates.`
+            : `Hi ${customerInfo.customerName}, your order #${orderId} order_status has been updated to: ${customerInfo.orderStatus}. We'll keep you informed of any further updates.`
     };
 
     return messages[type] || `Order #${orderId} update for ${customerInfo.customerName}`;

@@ -12,13 +12,14 @@ const getCart = async (req, res) => {
 
 const addToCart = async (req, res) => {
     const { fabric_id, quantity } = req.body;
+    console.log("addToCart called with:", { customerId: req.user.id, fabric_id, quantity });
 
     if (!fabric_id || !quantity || quantity < 1) {
         return res.status(400).json({ error: "Invalid fabric_id or quantity" });
     }
 
     try {
-        const result = await cartService.addToCart(req.user.id, fabric_id, quantity);
+        const result = await cartService.addToCart(req.user.id, parseInt(fabric_id), quantity);
         res.json(result);
     } catch (err) {
         console.error("Error adding to cart:", err);
@@ -31,13 +32,14 @@ const addToCart = async (req, res) => {
 const updateCartItem = async (req, res) => {
     const cartId = req.params.id;
     const { quantity } = req.body;
+    console.log("updateCartItem called with:", { customerId: req.user.id, cartId, quantity });
 
     if (!quantity || quantity < 1) {
         return res.status(400).json({ error: "Invalid quantity" });
     }
 
     try {
-        const result = await cartService.updateCartItem(req.user.id, cartId, quantity);
+        const result = await cartService.updateCartItem(req.user.id, parseInt(cartId), quantity);
         res.json(result);
     } catch (err) {
         console.error("Error updating cart:", err);
@@ -49,7 +51,7 @@ const updateCartItem = async (req, res) => {
 const removeFromCart = async (req, res) => {
     const cartId = req.params.id;
     try {
-        const result = await cartService.removeFromCart(req.user.id, cartId);
+        const result = await cartService.removeFromCart(req.user.id, parseInt(cartId));
         res.json(result);
     } catch (err) {
         console.error("Error removing from cart:", err);
@@ -58,9 +60,32 @@ const removeFromCart = async (req, res) => {
     }
 };
 
+const getCartCount = async (req, res) => {
+    try {
+        const result = await cartService.getCartCount(req.user.id);
+        res.json(result);
+    } catch (err) {
+        console.error("Error fetching cart count:", err);
+        res.status(500).json({ error: "Failed to fetch cart count" });
+    }
+};
+
+const clearCart = async (req, res) => {
+    try {
+        const result = await cartService.clearCart(req.user.id);
+        res.json(result);
+    } catch (err) {
+        console.error("Error clearing cart:", err);
+        res.status(500).json({ error: "Failed to clear cart" });
+    }
+};
+
 export {
     getCart,
     addToCart,
     updateCartItem,
-    removeFromCart
+    removeFromCart,
+    getCartCount,
+    clearCart
 };
+

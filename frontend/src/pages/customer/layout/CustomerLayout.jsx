@@ -1,16 +1,38 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getUser, removeUser, apiCall } from "../../../utils/auth.js";
+import cartService from "../../../services/cartService.js";
 import "./CustomerLayout.css";
+
 
 export default function CustomerLayout() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
+
+  const fetchCartCount = async () => {
+    try {
+      const data = await cartService.getCartCount();
+      setCartCount(data.count);
+    } catch (err) {
+      console.error("Error fetching cart count:", err);
+    }
+  };
 
   useEffect(() => {
     const userData = getUser();
     setUser(userData);
+    fetchCartCount();
+
+    // Listen for cart updates from other components
+    const handleCartUpdate = () => {
+      fetchCartCount();
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
   }, []);
+
 
   const handleLogout = async () => {
     try {
@@ -70,15 +92,23 @@ export default function CustomerLayout() {
             <input type="text" placeholder="Search fabrics..." />
           </div>
 
-          <div className="header-profile">
-            <div className="user-info">
-              <span className="user-name">{user?.full_name || 'Customer'}</span>
-              <span className="user-role">{user?.role || 'CUSTOMER'}</span>
+          <div className="header-actions">
+            <div className="cart-icon-container" onClick={() => navigate('/customer/cart')}>
+              <span className="cart-icon">🛒</span>
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </div>
-            <div className="user-avatar">
-              {(user?.full_name || 'C').charAt(0)}
+            
+            <div className="header-profile">
+              <div className="user-info">
+                <span className="user-name">{user?.full_name || 'Customer'}</span>
+                <span className="user-role">{user?.role || 'CUSTOMER'}</span>
+              </div>
+              <div className="user-avatar">
+                {(user?.full_name || 'C').charAt(0)}
+              </div>
             </div>
           </div>
+
         </header>
 
         {/* Dynamic Page Content */}

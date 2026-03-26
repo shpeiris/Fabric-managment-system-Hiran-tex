@@ -47,7 +47,10 @@ const BrowseFabrics = () => {
 
             if (response.ok) {
                 alert('Added to cart!');
+                // Trigger cart count update in layout
+                window.dispatchEvent(new Event('cartUpdated'));
             } else {
+
                 const data = await response.json();
                 alert(data.error || 'Failed to add to cart');
             }
