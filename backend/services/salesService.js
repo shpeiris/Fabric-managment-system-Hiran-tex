@@ -14,11 +14,22 @@ const getSalesDashboardStats = async () => {
             AND EXTRACT(MONTH FROM order_date) = EXTRACT(MONTH FROM CURRENT_DATE) 
             AND EXTRACT(YEAR FROM order_date) = EXTRACT(YEAR FROM CURRENT_DATE)
         `,
-        totalCustomers: "SELECT COUNT(*) as total FROM customers WHERE status = 'ACTIVE'",
+        totalCustomers: "SELECT COUNT(*) as total FROM customers",
         pendingOrders: `
             SELECT COUNT(*) as total 
             FROM orders 
             WHERE order_status IN ('PENDING', 'PROCESSING')
+        `,
+        monthlyTrend: `
+            SELECT 
+                TO_CHAR(order_date, 'Mon YYYY') as month,
+                SUM(total_amount) as total,
+                COUNT(*) as order_count
+            FROM orders
+            WHERE order_status = 'DELIVERED'
+            AND order_date >= CURRENT_DATE - INTERVAL '6 months'
+            GROUP BY TO_CHAR(order_date, 'Mon YYYY'), EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date)
+            ORDER BY EXTRACT(YEAR FROM order_date) DESC, EXTRACT(MONTH FROM order_date) DESC
         `,
         recentOrders: `
             SELECT o.order_id, o.customer_id, o.total_amount, o.order_date,
@@ -27,21 +38,49 @@ const getSalesDashboardStats = async () => {
                    c.tel as phone_number,
                    p.payment_status,
                    p.payment_id,
-                   p.payment_method
+                   p.payment_method,
+                   p.bank_slip_url,
+                   fb.overall_rating as feedback_rating,
+                   fb.comments as feedback_comments,
+                   (
+                       SELECT JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'fabric_name', f.name,
+                               'quantity', oi.quantity,
+                               'unit_price', oi.unit_price,
+                               'total_price', oi.total_price
+                           )
+                       )
+                       FROM order_items oi
+                       LEFT JOIN fabrics f ON oi.fabric_id = f.fabric_id
+                       WHERE oi.order_id = o.order_id
+                   ) as items
             FROM orders o 
             LEFT JOIN customers c ON o.customer_id = c.customer_id 
-            LEFT JOIN payments p ON o.order_id = p.order_id
+            LEFT JOIN (
+                SELECT DISTINCT ON (order_id) *
+                FROM payments
+                ORDER BY order_id, payment_date DESC
+            ) p ON o.order_id = p.order_id
+            LEFT JOIN feedback fb ON o.order_id = fb.order_id
             ORDER BY o.order_date DESC LIMIT 5
+        `,
+        verificationRequired: `
+            SELECT COUNT(*) as total 
+            FROM orders 
+            WHERE order_status = 'PENDING' AND verified_at IS NULL
         `
     };
 
     try {
-        const [totalSales, monthlySales, customers, pending, recentOrders] = await Promise.all([
+        const [totalSales, monthlySales, customers, pending, recentOrders, verificationRequired, monthlyTrend] = await Promise.all([
             pool.query(queries.totalSales),
             pool.query(queries.monthlySales),
             pool.query(queries.totalCustomers),
             pool.query(queries.pendingOrders),
-            pool.query(queries.recentOrders)
+            pool.query(queries.recentOrders),
+            pool.query(queries.verificationRequired),
+            pool.query(queries.monthlyTrend)
         ]);
 
         return {
@@ -49,9 +88,11 @@ const getSalesDashboardStats = async () => {
                 totalSales: parseFloat(totalSales.rows[0]?.total || 0),
                 monthlySales: parseFloat(monthlySales.rows[0]?.total || 0),
                 totalCustomers: parseInt(customers.rows[0]?.total || 0),
-                pendingOrders: parseInt(pending.rows[0]?.total || 0)
+                pendingOrders: parseInt(pending.rows[0]?.total || 0),
+                verificationRequired: parseInt(verificationRequired.rows[0]?.total || 0)
             },
-            recentOrders: recentOrders.rows || []
+            recentOrders: recentOrders.rows || [],
+            monthlyTrend: monthlyTrend.rows || []
         };
     } catch (error) {
         console.error('Error fetching sales dashboard stats:', error);
@@ -62,7 +103,7 @@ const getSalesDashboardStats = async () => {
 const getCustomerStats = async () => {
     try {
         const query = `
-            SELECT c.customer_id, c.full_name, c.email, c.registration_date,
+            SELECT c.customer_id, c.full_name, c.email, c.created_at as registration_date,
                    cc_phone.contact_value as phone,
                    COUNT(DISTINCT o.order_id) as total_orders,
                    COALESCE(SUM(o.total_amount), 0) as total_spent
@@ -70,8 +111,7 @@ const getCustomerStats = async () => {
             LEFT JOIN customer_contacts cc_phone ON c.customer_id = cc_phone.customer_id 
                 AND cc_phone.contact_type = 'PHONE' AND cc_phone.is_primary = TRUE
             LEFT JOIN orders o ON c.customer_id = o.customer_id
-            WHERE c.status = 'ACTIVE'
-            GROUP BY c.customer_id, c.full_name, c.email, c.registration_date, cc_phone.contact_value
+            GROUP BY c.customer_id, c.full_name, c.email, c.created_at, cc_phone.contact_value
             ORDER BY total_spent DESC
         `;
         const result = await pool.query(query);
@@ -85,17 +125,38 @@ const getCustomerStats = async () => {
 const getPendingVerifications = async () => {
     try {
         const query = `
-            SELECT o.order_id, o.customer_id, o.total_amount, o.order_date,
-                   c.full_name as customer_name, c.email,
-                   c.tel as phone_number
-            FROM orders o 
-            LEFT JOIN customers c ON o.customer_id = c.customer_id 
-            WHERE o.order_status = 'PENDING' 
+            SELECT DISTINCT ON (o.order_id)
+                   o.*, 
+                   c.full_name as customer_name,
+                   c.email as customer_email,
+                   p.bank_slip_url,
+                   p.payment_status,
+                   p.payment_method,
+                   (
+                       SELECT JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'order_item_id', oi.order_item_id,
+                               'fabric_id', oi.fabric_id,
+                               'quantity', oi.quantity,
+                               'unit_price', oi.unit_price,
+                               'total_price', oi.total_price,
+                               'fabric_name', f.name
+                           )
+                       )
+                       FROM order_items oi
+                       LEFT JOIN fabrics f ON oi.fabric_id = f.fabric_id
+                       WHERE oi.order_id = o.order_id
+                   ) as items
+            FROM orders o
+            JOIN customers c ON o.customer_id = c.customer_id
+            LEFT JOIN payments p ON o.order_id = p.order_id
+            WHERE o.order_status = 'PENDING'
             AND o.verified_at IS NULL
-            ORDER BY o.order_date ASC
+            ORDER BY o.order_id, p.payment_date DESC
         `;
         const result = await pool.query(query);
         const orders = result.rows || [];
+        
         return {
             count: orders.length,
             orders
@@ -109,16 +170,35 @@ const getPendingVerifications = async () => {
 const getPendingPayments = async () => {
     try {
         const query = `
-            SELECT o.order_id, o.customer_id, o.total_amount, o.order_date,
-                   c.full_name as customer_name, c.email,
-                   c.tel as phone_number,
-                   p.payment_id, p.payment_method, p.payment_status
-            FROM orders o 
-            LEFT JOIN customers c ON o.customer_id = c.customer_id 
+            SELECT DISTINCT ON (o.order_id)
+                   o.*, 
+                   c.full_name as customer_name,
+                   c.email as customer_email,
+                   p.payment_id,
+                   p.payment_status,
+                   p.payment_method,
+                   p.bank_slip_url,
+                   (
+                       SELECT JSON_AGG(
+                           JSON_BUILD_OBJECT(
+                               'order_item_id', oi.order_item_id,
+                               'fabric_id', oi.fabric_id,
+                               'quantity', oi.quantity,
+                               'unit_price', oi.unit_price,
+                               'total_price', oi.total_price,
+                               'fabric_name', f.name
+                           )
+                       )
+                       FROM order_items oi
+                       LEFT JOIN fabrics f ON oi.fabric_id = f.fabric_id
+                       WHERE oi.order_id = o.order_id
+                   ) as items
+            FROM orders o
+            JOIN customers c ON o.customer_id = c.customer_id
             LEFT JOIN payments p ON o.order_id = p.order_id
             WHERE p.payment_status = 'PENDING' 
-            OR (o.order_status IN ('PROCESSING', 'PENDING') AND p.payment_id IS NULL)
-            ORDER BY o.order_date ASC
+               OR (o.order_status IN ('PROCESSING', 'PENDING') AND p.payment_id IS NULL)
+            ORDER BY o.order_id, p.payment_date DESC NULLS LAST
         `;
         const result = await pool.query(query);
         const orders = result.rows || [];
@@ -146,22 +226,9 @@ const verifyOrder = async (orderId, action, verifiedBy, verifierId) => {
 
         const result = await pool.query(updateQuery, [newStatus, verifierId, orderId]);
 
-        // Log status change in history
-        const historyQuery = `
-            INSERT INTO order_status_history (order_id, new_status, changed_by, notes)
-            VALUES ($1, $2, $3, $4)
-        `;
-
-        await pool.query(historyQuery, [
-            orderId,
-            newStatus,
-            verifierId,
-            `Order ${action}d by ${verifiedBy}`
-        ]);
-
         // Log the verification activity
         const activityQuery = `
-            INSERT INTO activity_logs (actor_id, actor_type, action, details)
+            INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
             VALUES ($1, 'EMPLOYEE', $2, $3)
         `;
 
@@ -171,14 +238,23 @@ const verifyOrder = async (orderId, action, verifiedBy, verifierId) => {
             `Order #${orderId} ${action}d by ${verifiedBy}`
         ]);
 
-        return { orderId, status: newStatus, action };
+        // Send notification to customer if approved
+        if (action === 'approve') {
+            try {
+                await sendConfirmation(orderId, 'order_confirmation', verifiedBy, verifierId);
+            } catch (notifyErr) {
+                console.error("Failed to send order verification notification:", notifyErr);
+            }
+        }
+
+        return { orderId, order_status: newStatus, action };
     } catch (error) {
         console.error('Error verifying order:', error);
         throw error;
     }
 };
 
-const sendConfirmation = async (orderId, type, sentBy, senderId) => {
+const sendConfirmation = async (orderId, type, sentBy, senderId, customMessage = null) => {
     try {
         // If orderId is 'all', handle bulk confirmations
         if (orderId === 'all') {
@@ -186,7 +262,7 @@ const sendConfirmation = async (orderId, type, sentBy, senderId) => {
                 SELECT o.order_id, o.customer_id, c.full_name, c.email, c.tel 
                 FROM orders o 
                 LEFT JOIN customers c ON o.customer_id = c.customer_id 
-                WHERE o.order_status IN ('PROCESSING', 'SHIPPED', 'DELIVERED')
+                WHERE o.order_status IN ('PROCESSING', 'DELIVERED')
                 AND (c.email IS NOT NULL OR c.tel IS NOT NULL)
             `;
 
@@ -198,14 +274,14 @@ const sendConfirmation = async (orderId, type, sentBy, senderId) => {
                     customerName: order.full_name,
                     email: order.email,
                     phone: order.tel
-                });
+                }, customMessage);
             });
 
             const results = await Promise.all(confirmationPromises);
             return { type, count: results.length, results };
         } else {
             // Single order confirmation
-            return await sendSingleConfirmation(orderId, type, sentBy, senderId);
+            return await sendSingleConfirmation(orderId, type, sentBy, senderId, null, customMessage);
         }
     } catch (error) {
         console.error('Error sending confirmation:', error);
@@ -213,20 +289,19 @@ const sendConfirmation = async (orderId, type, sentBy, senderId) => {
     }
 };
 
-const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerInfo = null) => {
+const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerInfo = null, customMessage = null) => {
     try {
         // Get customer info if not provided
         if (!customerInfo) {
             const customerQuery = `
                 SELECT c.full_name, c.email, 
-                       cc.contact_value as tel, 
+                       c.tel, 
                        o.total_amount, 
-                       os.status_name as order_status
+                       o.order_status,
+                       o.delivered_by,
+                       o.delivery_contact_number
                 FROM orders o 
                 LEFT JOIN customers c ON o.customer_id = c.customer_id 
-                LEFT JOIN customer_contacts cc ON c.customer_id = cc.customer_id 
-                    AND cc.contact_type = 'PHONE' AND cc.is_primary = TRUE
-                LEFT JOIN order_statuses os ON o.status_id = os.status_id
                 WHERE o.order_id = $1
             `;
 
@@ -239,40 +314,45 @@ const sendSingleConfirmation = async (orderId, type, sentBy, senderId, customerI
                 email: customer.email,
                 phone: customer.tel,
                 totalAmount: customer.total_amount,
-                orderStatus: customer.order_status
+                orderStatus: customer.order_status,
+                deliveredBy: customer.delivered_by,
+                deliveryContact: customer.delivery_contact_number
             };
         }
 
         // Create confirmation record
+        // Note: DB constraint only allows 'order_confirmation', 'payment_confirmation', 'delivery_update'
+        // Map 'payment_rejection' => 'payment_confirmation' with a [REJECTED] prefix in the message
+        const dbType = type === 'payment_rejection' ? 'payment_confirmation' : type;
         const confirmationQuery = `
-            INSERT INTO confirmation_logs (order_id, confirmation_type, sent_by, recipient_email, recipient_phone, message_content, recipient_type)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO confirmation_logs (order_id, confirmation_type, sent_by, recipient_email, recipient_phone, message_content)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *
         `;
 
-        const confirmationMessage = generateConfirmationMessage(orderId, type, customerInfo);
-        const recipientType = customerInfo.email && customerInfo.phone ? 'BOTH' :
-            customerInfo.email ? 'EMAIL' : 'SMS';
+        const confirmationMessage = customMessage || generateConfirmationMessage(orderId, type, customerInfo);
+        const storedMessage = (type === 'payment_rejection' && !customMessage)
+            ? '[REJECTED] ' + confirmationMessage
+            : confirmationMessage;
 
         await pool.query(confirmationQuery, [
             orderId,
-            type.toUpperCase(),
+            dbType,
             senderId,
             customerInfo.email,
             customerInfo.phone,
-            confirmationMessage,
-            recipientType
+            storedMessage
         ]);
 
         // Log the activity
         const activityQuery = `
-            INSERT INTO activity_logs (actor_id, actor_type, action, details)
+            INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
             VALUES ($1, 'EMPLOYEE', $2, $3)
         `;
 
         await pool.query(activityQuery, [
             senderId,
-            'CONFIRMATION_SENT',
+            'NOTIFICATION_SENT',
             `${type} sent for Order #${orderId} by ${sentBy}`
         ]);
 
@@ -296,7 +376,10 @@ const generateConfirmationMessage = (orderId, type, customerInfo) => {
     const messages = {
         'order_confirmation': `Hello ${customerInfo.customerName}, your order #${orderId} has been confirmed and is being processed. Total amount: Rs. ${customerInfo.totalAmount}. Thank you for shopping with us!`,
         'payment_confirmation': `Dear ${customerInfo.customerName}, we have received your payment for order #${orderId}. Your order will be processed shortly.`,
-        'delivery_update': `Hi ${customerInfo.customerName}, your order #${orderId} status has been updated to: ${customerInfo.orderStatus}. We'll keep you informed of any further updates.`
+        'payment_rejection': `Hi ${customerInfo.customerName}, your payment proof for order #${orderId} was not accepted. Please re-upload your bank slip in the 'Order Details' section or contact support.`,
+        'delivery_update': customerInfo.orderStatus === 'DELIVERED' 
+            ? `Hi ${customerInfo.customerName}, your order #${orderId} has been successfully delivered${customerInfo.deliveredBy ? ' by ' + customerInfo.deliveredBy : ''}${customerInfo.deliveryContact ? ' (Contact: ' + customerInfo.deliveryContact + ')' : ''}. Thank you for shopping with Hiran Fabric Textile! We'd love to hear your feedback.`
+            : `Hi ${customerInfo.customerName}, your order #${orderId} order_status has been updated to: ${customerInfo.orderStatus}. We'll keep you informed of any further updates.`
     };
 
     return messages[type] || `Order #${orderId} update for ${customerInfo.customerName}`;

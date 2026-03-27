@@ -61,6 +61,19 @@ const cartService = {
   },
 
   /**
+   * Get current user's cart item count
+   * @returns {Promise} { count }
+   */
+  getCartCount: async () => {
+    try {
+      const response = await apiClient.get("/api/cart/count");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: "Failed to fetch cart count" };
+    }
+  },
+
+  /**
    * Clear entire cart
    * @returns {Promise}
    */

@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
+import Register from "./pages/register/Register";
 import ForgotPassword from "./pages/forgot/ForgotPassword";
 import ResetSent from "./pages/forgot/ResetSent";
 import NewPassword from "./pages/forgot/NewPassword";
@@ -20,7 +20,6 @@ import InventoryDashboard from "./pages/inventory/pages/Dashboard"; // Left behi
 import FabricList from "./pages/inventory/FabricList";
 import StockAlerts from "./pages/inventory/StockAlerts";
 import StockArrivals from "./pages/inventory/pages/StockArrivals"; // Left behind
-import Transactions from "./pages/inventory/pages/Transactions"; // Left behind
 import InventorySuppliers from "./pages/inventory/pages/SupplierManagement"; // Left behind
 
 // Sales Imports
@@ -29,6 +28,7 @@ import SalesDashboard from "./pages/sales/pages/Dashboard"; // Left behind
 import SalesCustomers from "./pages/sales/pages/Customers"; // Left behind
 import SalesOrders from "./pages/sales/Orders";
 import CreateOrder from "./pages/sales/CreateOrder";
+import PaymentQueue from "./pages/sales/pages/PaymentQueue";
 import SalesReports from "./pages/sales/pages/Reports"; // Left behind
 
 // Customer Imports
@@ -36,7 +36,7 @@ import CustomerLayout from "./pages/customer/layout/CustomerLayout";
 import CustomerDashboard from "./pages/customer/pages/Dashboard"; // Left behind
 import Shop from "./pages/customer/Shop";
 import Cart from "./pages/dashboard/customer/ShoppingCart"; // Updated cart component
-import MyOrders from "./pages/customer/MyOrders";
+import MyOrders from "./pages/dashboard/customer/MyOrders";
 import Payments from "./pages/customer/Payments";
 import Profile from "./pages/customer/pages/Profile"; // Left behind
 import Checkout from "./pages/dashboard/customer/Checkout"; // Updated checkout component
@@ -44,6 +44,7 @@ import OrderDetails from "./pages/customer/pages/OrderDetails"; // Left behind
 import OrderHistory from "./pages/customer/pages/OrderHistory"; // Left behind
 import Feedback from "./pages/customer/pages/Feedback"; // Left behind
 import FabricDetails from "./pages/dashboard/customer/FabricDetails";
+import Notifications from "./pages/dashboard/customer/Notifications";
 
 function App() {
   return (
@@ -67,6 +68,7 @@ function App() {
         }>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="fabrics" element={<FabricList />} />
           <Route path="suppliers" element={<InventorySuppliers />} />
           <Route path="reports" element={<Reports />} />
         </Route>
@@ -81,7 +83,6 @@ function App() {
           <Route path="fabrics" element={<FabricList />} />
           <Route path="alerts" element={<StockAlerts />} />
           <Route path="stock-arrivals" element={<StockArrivals />} />
-          <Route path="transactions" element={<Transactions />} />
           <Route path="suppliers" element={<InventorySuppliers />} />
         </Route>
 
@@ -92,6 +93,7 @@ function App() {
           </ProtectedRoute>
         }>
           <Route path="dashboard" element={<SalesDashboard />} />
+          <Route path="payments" element={<PaymentQueue />} />
           <Route path="customers" element={<SalesCustomers />} />
           <Route path="orders" element={<SalesOrders />} />
           <Route path="new-order" element={<CreateOrder />} />
@@ -115,6 +117,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="feedback" element={<Feedback />} />
           <Route path="fabric/:id" element={<FabricDetails />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { setUser, getRedirectPath } from "../../utils/auth.js";
 import { authService } from "../../services";
+import loginImage from "../../assets/Fabrics/login.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ export default function Login() {
     try {
       // Use authService instead of direct fetch
       const data = await authService.login({
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
       });
 
@@ -85,11 +86,11 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      {/* Header */}
+      {/* Header - Matching other pages */}
       <header className="top-bar">
-        <div className="logo">
-          <span className="home-icon">🏠</span>
-          <h1>Hiran Fabric Textile</h1>
+        <div className="sidebar-header">
+          <span className="sidebar-logo-icon">🏠</span>
+          <span className="sidebar-title">Hiran Fabrics</span>
         </div>
       </header>
 
@@ -100,94 +101,97 @@ export default function Login() {
           <p className="login-subtitle">Sign in to access your dashboard</p>
 
           <div className="login-content">
-            <div className="login-form">
-              <form onSubmit={handleSubmit}>
-                {errors.submit && (
-                  <div className="error-message">✗ {errors.submit}</div>
-                )}
+            {/* Image Side Panel */}
+            <div className="image-side-panel">
+              <img src={loginImage} alt="Luxury Fabrics" />
+            </div>
 
-                <div className="input-group">
-                  <label htmlFor="email">Email Address</label>
-                  <input
-                    id="email"
-                    type="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={errors.email ? "error" : ""}
-                    disabled={isLoading}
-                  />
-                  {errors.email && (
-                    <span className="field-error">{errors.email}</span>
+            {/* Form Wrapper */}
+            <div className="login-form-wrapper">
+              <div className="login-form">
+                <form onSubmit={handleSubmit}>
+                  {errors.submit && (
+                    <div className="error-message">✗ {errors.submit}</div>
                   )}
-                </div>
 
-                <div className="input-group">
-                  <label htmlFor="password">Password</label>
-                  <input
-                    id="password"
-                    type="password"
-                    name="password"
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className={errors.password ? "error" : ""}
-                    disabled={isLoading}
-                  />
-                  {errors.password && (
-                    <span className="field-error">{errors.password}</span>
-                  )}
-                </div>
-
-                <div className="options">
-                  <label className="remember-me">
+                  <div className="input-group">
+                    <label htmlFor="email">Email Address</label>
                     <input
-                      type="checkbox"
-                      name="rememberMe"
-                      checked={formData.rememberMe}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          rememberMe: e.target.checked,
-                        })
-                      }
+                      id="email"
+                      type="email"
+                      name="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className={errors.email ? "error" : ""}
+                      disabled={isLoading}
                     />
-                    <span>Remember me</span>
-                  </label>
-                  <Link to="/forgot" className="forgot-link">
-                    Forgot password?
-                  </Link>
-                </div>
+                    {errors.email && (
+                      <span className="field-error">{errors.email}</span>
+                    )}
+                  </div>
 
-                <button
-                  type="submit"
-                  className={`login-btn ${isLoading ? "loading" : ""}`}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="spinner"></span>
-                      Logging in...
-                    </>
-                  ) : (
-                    "Login"
-                  )}
-                </button>
-              </form>
+                  <div className="input-group">
+                    <label htmlFor="password">Password</label>
+                    <input
+                      id="password"
+                      type="password"
+                      name="password"
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={errors.password ? "error" : ""}
+                      disabled={isLoading}
+                    />
+                    {errors.password && (
+                      <span className="field-error">{errors.password}</span>
+                    )}
+                  </div>
 
-              <p className="signup-text">
-                Don't have an account?{" "}
-                <Link to="/register">Sign up as Customer</Link>
-              </p>
+                  <div className="options">
+                    <label className="remember-me">
+                      <input
+                        type="checkbox"
+                        name="rememberMe"
+                        checked={formData.rememberMe}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            rememberMe: e.target.checked,
+                          })
+                        }
+                      />
+                      <span>Remember me</span>
+                    </label>
+                    <Link to="/forgot" className="forgot-link">
+                      Forgot password?
+                    </Link>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`login-btn ${isLoading ? "loading" : ""}`}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="spinner"></span>
+                        Logging in...
+                      </>
+                    ) : (
+                      "Login"
+                    )}
+                  </button>
+                </form>
+
+                <p className="signup-text">
+                  Don't have an account?{" "}
+                  <Link to="/register">Sign up as Customer</Link>
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Image Banner */}
-      <div className="image-banner">
-        <img src="/fabrics.jpg" alt="Fabric rolls" />
       </div>
     </div>
   );

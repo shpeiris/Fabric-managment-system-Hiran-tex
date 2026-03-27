@@ -1,6 +1,7 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getUser, removeUser, apiCall } from "../../../utils/auth.js";
+import Sidebar from "../components/Sidebar.jsx";
 import "./AdminLayout.css";
 
 export default function AdminLayout() {
@@ -14,7 +15,7 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     try {
-      await apiCall('http://localhost:5000/logout', {
+      await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/logout`, {
         method: 'POST'
       });
       removeUser();
@@ -30,44 +31,13 @@ export default function AdminLayout() {
   return (
     <div className="admin-container">
       {/* Sidebar */}
-      <aside className="admin-sidebar">
-        <div className="sidebar-header">
-          <span className="sidebar-logo-icon">👑</span>
-          <span className="sidebar-title">Hiran Fabrics</span>
-        </div>
-
-        <nav className="sidebar-nav">
-          <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">📊</span>
-            Dashboard
-          </NavLink>
-          <NavLink to="/admin/users" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">👥</span>
-            User Management
-          </NavLink>
-          <NavLink to="/admin/suppliers" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">🏭</span>
-            Suppliers
-          </NavLink>
-          <NavLink to="/admin/reports" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <span className="nav-icon">📑</span>
-            Reports
-          </NavLink>
-        </nav>
-
-        <div className="sidebar-footer">
-          <button className="logout-btn" onClick={handleLogout}>
-            <span>🚪</span> Logout
-          </button>
-        </div>
-      </aside>
+      <Sidebar onLogout={handleLogout} />
 
       {/* Main Content */}
       <main className="admin-main">
         {/* Top Header */}
         <header className="admin-header">
           <div className="header-search">
-            <span className="search-icon">🔍</span>
             <input type="text" placeholder="Search..." />
           </div>
 

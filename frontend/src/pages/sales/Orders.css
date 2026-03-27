@@ -65,36 +65,25 @@
 }
 
 .status-badge {
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
 }
 
 .status-badge.pending {
-    background: #ffc107;
-    color: white;
+    color: #856404;
 }
 
 .status-badge.processing {
-    background: #17a2b8;
-    color: white;
-}
-
-.status-badge.shipped {
-    background: #007bff;
-    color: white;
+    color: #0c5460;
 }
 
 .status-badge.delivered {
-    background: #7cff00;
-    color: #001a66;
+    color: #155724;
 }
 
 .status-badge.cancelled {
-    background: #dc3545;
-    color: white;
+    color: #721c24;
 }
 
 .status-select {

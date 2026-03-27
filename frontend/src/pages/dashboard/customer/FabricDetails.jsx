@@ -8,6 +8,7 @@ const FabricDetails = () => {
     const navigate = useNavigate();
 
     const [fabric, setFabric] = useState(null);
+    const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [quantity, setQuantity] = useState(1);
@@ -21,15 +22,17 @@ const FabricDetails = () => {
     const fetchFabricDetails = async () => {
         try {
             setLoading(true);
-            const response = await apiCall(`http://localhost:5000/api/fabrics/${id}`);
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics/${id}`);
             const data = await response.json();
 
             if (response.ok) {
-                // Ensure price is a number
                 const fabricData = data.fabric;
                 fabricData.price_per_meter = parseFloat(fabricData.price_per_meter);
                 setFabric(fabricData);
                 setError(null);
+                
+                // Fetch other variants of the same fabric
+                fetchVariants(fabricData.name);
             } else {
                 setError(data.error || 'Fabric not found');
             }
@@ -38,6 +41,20 @@ const FabricDetails = () => {
             setError('Failed to load fabric details');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchVariants = async (name) => {
+        try {
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics?search=${encodeURIComponent(name)}`);
+            const data = await response.json();
+            if (response.ok) {
+                // Filter to ensure exact name match and include current fabric
+                const matches = (data.fabrics || []).filter(f => f.name === name);
+                setVariants(matches);
+            }
+        } catch (err) {
+            console.error('Error fetching variants:', err);
         }
     };
 
@@ -56,7 +73,7 @@ const FabricDetails = () => {
 
         try {
             setAddingToCart(true);
-            const response = await apiCall('http://localhost:5000/api/cart', {
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/cart`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -67,8 +84,13 @@ const FabricDetails = () => {
 
             if (response.ok) {
                 setCartMessage({ type: 'success', text: '✅ Added to cart successfully!' });
+                
+                // Trigger cart count update in layout
+                window.dispatchEvent(new Event('cartUpdated'));
+                
                 setTimeout(() => setCartMessage({ type: '', text: '' }), 3000);
             } else {
+
                 const data = await response.json();
                 setCartMessage({ type: 'error', text: `❌ ${data.error || 'Failed to add to cart'}` });
             }
@@ -116,9 +138,20 @@ const FabricDetails = () => {
                 <div className="image-view">
                     <div className="image-frame">
                         <img
-                            src={fabric.image_url || 'https://via.placeholder.com/600x600?text=Premium+Fabric'}
+                            src={!fabric.image_url 
+                                ? '/src/assets/Fabrics/fabric-collage.jpg' 
+                                : (fabric.image_url.startsWith('uploads/') 
+                                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${fabric.image_url}` 
+                                    : (fabric.image_url.startsWith('http') 
+                                        ? fabric.image_url 
+                                        : `/src/assets/Fabrics/${fabric.image_url}`))
+                            }
                             alt={fabric.name}
                             className="main-fabric-image"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/src/assets/Fabrics/fabric-collage.jpg';
+                            }}
                         />
                         {fabric.stock_quantity <= (fabric.reorder_level || 50) && (
                             <span className="stock-warning-label">
@@ -147,12 +180,12 @@ const FabricDetails = () => {
                             <span className="attr-value">{fabric.material_type}</span>
                         </div>
                         <div className="attr-item">
-                            <span className="attr-label">Color</span>
-                            <span className="attr-value">{fabric.color}</span>
-                        </div>
-                        <div className="attr-item">
                             <span className="attr-label">Design</span>
                             <span className="attr-value">{fabric.design}</span>
+                        </div>
+                        <div className="attr-item">
+                            <span className="attr-label">Width</span>
+                            <span className="attr-value">{fabric.width || 'Standard'}</span>
                         </div>
                         <div className="attr-item">
                             <span className="attr-label">Availability</span>
@@ -162,13 +195,60 @@ const FabricDetails = () => {
                         </div>
                     </div>
 
+                    {/* Color Swatch Section */}
+                    {variants.length > 0 && (
+                        <div className="color-selection-section">
+                            <h3 className="section-title">Available Colors & Stock</h3>
+                            <div className="swatch-grid">
+                                {variants.map((variant) => {
+                                    const isActive = variant.fabric_id === fabric.fabric_id;
+                                    const outOfStock = variant.stock_quantity <= 0;
+                                    return (
+                                        <button
+                                            key={variant.fabric_id}
+                                            className={`swatch-item ${isActive ? 'active' : ''} ${outOfStock ? 'swatch-oos' : ''}`}
+                                            onClick={() => !outOfStock && navigate(`/customer/fabric/${variant.fabric_id}`)}
+                                            title={`${variant.color} — ${variant.stock_quantity}m available`}
+                                            disabled={outOfStock}
+                                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '8px', background: 'transparent', border: isActive ? '2px solid #001a66' : '2px solid transparent', borderRadius: '10px' }}
+                                        >
+                                            <span
+                                                className="swatch-dot"
+                                                style={{
+                                                    backgroundColor: variant.color || '#cccccc',
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '50%',
+                                                    display: 'block',
+                                                    border: '1px solid rgba(0,0,0,0.1)',
+                                                    opacity: outOfStock ? 0.35 : 1,
+                                                    position: 'relative'
+                                                }}
+                                            >
+                                                {isActive && (
+                                                    <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 700, textShadow: '0 0 3px rgba(0,0,0,0.7)' }}>✓</span>
+                                                )}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <p className="selected-color-name">
+                                Selected: <strong>{fabric.color && fabric.color.startsWith('#') ? 'Custom Tone' : fabric.color}</strong>
+                                {' '}— <span style={{ color: fabric.stock_quantity > 0 ? '#1a7a4a' : '#c1121f', fontWeight: 600 }}>
+                                    {fabric.stock_quantity > 0 ? `${fabric.stock_quantity}m in stock` : 'Out of stock'}
+                                </span>
+                            </p>
+                        </div>
+                    )}
+
                     {/* Restock Date Section */}
                     {fabric.restock_date && fabric.stock_quantity <= (fabric.reorder_level || 50) && (
                         <div className="restock-alert-box">
                             <span className="icon">📅</span>
                             <div className="text">
                                 <strong>Expected Restock</strong>
-                                <p>{new Date(fabric.restock_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                                <p>{new Date(fabric.restock_date).toLocaleDateString()}</p>
                             </div>
                         </div>
                     )}

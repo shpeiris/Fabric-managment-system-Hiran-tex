@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { apiCall } from "../../../utils/auth.js";
+import "./InventoryDashboard.css";
 
 export default function StockArrivals() {
+  const location = useLocation();
   const [showModal, setShowModal] = useState(false);
   const [arrivals, setArrivals] = useState([]);
   const [fabrics, setFabrics] = useState([]);
@@ -17,21 +20,36 @@ export default function StockArrivals() {
     arrival_date: new Date().toISOString().split('T')[0]
   });
 
+  const [fabricSearch, setFabricSearch] = useState("");
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const [showFabricDropdown, setShowFabricDropdown] = useState(false);
+  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
+
   // Calculate total value automatically
   const totalValue = formData.quantity && formData.supply_unit_price ?
     parseFloat(formData.quantity) * parseFloat(formData.supply_unit_price) : 0;
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+    
+    // Check for incoming fabric state from Alerts
+    if (location.state && location.state.fabric_id) {
+      setFormData(prev => ({ ...prev, fabric_id: location.state.fabric_id }));
+      setFabricSearch(`${location.state.fabric_name} (${location.state.material_type || ''})`);
+      setShowModal(true);
+      
+      // Clear location state to prevent modal reopening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const fetchInitialData = async () => {
     try {
       setLoading(true);
       const [arrivalsRes, fabricsRes, suppliersRes] = await Promise.all([
-        apiCall('http://localhost:5000/api/inventory/stock-arrivals'),
-        apiCall('http://localhost:5000/api/inventory/fabrics'),
-        apiCall('http://localhost:5000/api/inventory/suppliers')
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/suppliers`)
       ]);
 
       const [arrivalsData, fabricsData, suppliersData] = await Promise.all([
@@ -65,7 +83,7 @@ export default function StockArrivals() {
 
     try {
       setSubmitting(true);
-      const response = await apiCall('http://localhost:5000/api/inventory/stock-arrivals', {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`, {
         method: 'POST',
         body: JSON.stringify({
           ...formData,
@@ -77,18 +95,20 @@ export default function StockArrivals() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        alert("Stock arrival recorded successfully!");
-        setShowModal(false);
-        setFormData({
-          fabric_id: "",
-          supplier_id: "",
-          quantity: "",
-          supply_unit_price: "",
-          arrival_date: new Date().toISOString().split('T')[0]
-        });
-        fetchInitialData(); // Refresh list
-      } else {
+        if (response.ok) {
+            alert("Stock arrival recorded successfully!");
+            setShowModal(false);
+            setFormData({
+                fabric_id: "",
+                supplier_id: "",
+                quantity: "",
+                supply_unit_price: "",
+                arrival_date: new Date().toISOString().split('T')[0]
+            });
+            setFabricSearch("");
+            setSupplierSearch("");
+            fetchInitialData(); // Refresh list
+        } else {
         alert(data.error || "Failed to record arrival");
       }
     } catch (err) {
@@ -233,36 +253,72 @@ export default function StockArrivals() {
 
             <form onSubmit={handleSubmit}>
               <div style={{ display: "grid", gap: "20px" }}>
-                <div>
+                <div style={{ position: "relative" }}>
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Fabric Item *</label>
-                  <select
-                    name="fabric_id"
+                  <input
+                    type="text"
+                    value={fabricSearch}
+                    onChange={(e) => {
+                      setFabricSearch(e.target.value);
+                      setShowFabricDropdown(true);
+                    }}
+                    onFocus={() => setShowFabricDropdown(true)}
                     required
-                    value={formData.fabric_id}
-                    onChange={handleInputChange}
-                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none", transition: "border-color 0.2s" }}
-                  >
-                    <option value="">Select Fabric</option>
-                    {fabrics.map(f => (
-                      <option key={f.fabric_id} value={f.fabric_id}>{f.name} ({f.material_type})</option>
-                    ))}
-                  </select>
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
+                  />
+                  {showFabricDropdown && fabricSearch && (
+                    <div className="search-results-dropdown">
+                      {fabrics
+                        .filter(f => f.name.toLowerCase().includes(fabricSearch.toLowerCase()) || f.material_type.toLowerCase().includes(fabricSearch.toLowerCase()))
+                        .map(f => (
+                          <div 
+                            key={f.fabric_id} 
+                            className="search-item"
+                            onClick={() => {
+                              setFormData({...formData, fabric_id: f.fabric_id});
+                              setFabricSearch(`${f.name} (${f.material_type})`);
+                              setShowFabricDropdown(false);
+                            }}
+                          >
+                            {f.name} ({f.material_type})
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
 
-                <div>
+                <div style={{ position: "relative" }}>
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Supplier *</label>
-                  <select
-                    name="supplier_id"
+                  <input
+                    type="text"
+                    value={supplierSearch}
+                    onChange={(e) => {
+                      setSupplierSearch(e.target.value);
+                      setShowSupplierDropdown(true);
+                    }}
+                    onFocus={() => setShowSupplierDropdown(true)}
                     required
-                    value={formData.supplier_id}
-                    onChange={handleInputChange}
                     style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
-                  >
-                    <option value="">Select Supplier</option>
-                    {suppliers.map(s => (
-                      <option key={s.supplier_id} value={s.supplier_id}>{s.name}</option>
-                    ))}
-                  </select>
+                  />
+                  {showSupplierDropdown && supplierSearch && (
+                    <div className="search-results-dropdown">
+                      {suppliers
+                        .filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()))
+                        .map(s => (
+                          <div 
+                            key={s.supplier_id} 
+                            className="search-item"
+                            onClick={() => {
+                              setFormData({...formData, supplier_id: s.supplier_id});
+                              setSupplierSearch(s.name);
+                              setShowSupplierDropdown(false);
+                            }}
+                          >
+                            {s.name}
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>

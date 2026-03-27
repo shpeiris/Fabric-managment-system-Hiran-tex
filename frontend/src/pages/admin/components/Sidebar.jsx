@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 
-export default function Sidebar() {
+export default function Sidebar({ onLogout }) {
   const location = useLocation();
 
   const isActive = (path) => {
@@ -20,15 +20,16 @@ export default function Sidebar() {
       }}
     >
       {/* Header */}
-      <div style={{ padding: "20px", background: "#083366" }}>
-        <div style={{ 
-          background: "linear-gradient(45deg, #28a745, #20c997)", 
-          padding: "8px 12px", 
-          borderRadius: "4px",
-          display: "inline-block"
+      <div style={{ padding: "30px 20px", borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}>
+        <h3 style={{ 
+          margin: 0, 
+          fontSize: "18px", 
+          fontWeight: "700", 
+          color: "#7cff00",
+          letterSpacing: "0.5px"
         }}>
-          <h3 style={{ margin: 0, fontSize: "16px" }}>🏠 Hiran Fabric Textile</h3>
-        </div>
+          Hiran Fabrics
+        </h3>
       </div>
 
       {/* Navigation */}
@@ -39,11 +40,11 @@ export default function Sidebar() {
               to="/admin/dashboard" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/dashboard") ? "rgba(40, 167, 69, 0.2)" : "transparent",
-                borderLeft: isActive("/admin/dashboard") ? "4px solid #28a745" : "4px solid transparent"
+                background: isActive("/admin/dashboard") ? "rgba(124, 255, 0, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/dashboard") ? "4px solid #7cff00" : "4px solid transparent"
               }}
             >
-              📊 Dashboard
+              Dashboard
             </Link>
           </li>
           <li>
@@ -51,11 +52,11 @@ export default function Sidebar() {
               to="/admin/users" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/users") ? "rgba(40, 167, 69, 0.2)" : "transparent",
-                borderLeft: isActive("/admin/users") ? "4px solid #28a745" : "4px solid transparent"
+                background: isActive("/admin/users") ? "rgba(124, 255, 0, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/users") ? "4px solid #7cff00" : "4px solid transparent"
               }}
             >
-              👥 User Management
+              User Management
             </Link>
           </li>
           <li>
@@ -63,11 +64,11 @@ export default function Sidebar() {
               to="/admin/suppliers" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/suppliers") ? "rgba(40, 167, 69, 0.2)" : "transparent",
-                borderLeft: isActive("/admin/suppliers") ? "4px solid #28a745" : "4px solid transparent"
+                background: isActive("/admin/suppliers") ? "rgba(124, 255, 0, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/suppliers") ? "4px solid #7cff00" : "4px solid transparent"
               }}
             >
-              🏭 Supplier Management
+              Supplier Management
             </Link>
           </li>
           <li>
@@ -75,28 +76,35 @@ export default function Sidebar() {
               to="/admin/reports" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/reports") ? "rgba(40, 167, 69, 0.2)" : "transparent",
-                borderLeft: isActive("/admin/reports") ? "4px solid #28a745" : "4px solid transparent"
+                background: isActive("/admin/reports") ? "rgba(124, 255, 0, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/reports") ? "4px solid #7cff00" : "4px solid transparent"
               }}
             >
-              📈 Reports and Analytics
+              Reports and Analytics
             </Link>
           </li>
         </ul>
       </div>
-
-      {/* Fabric Image */}
-      <div style={{ padding: "20px" }}>
-        <img 
-          src="/fabric-rolls.jpg" 
-          alt="Fabric Collection" 
-          style={{ 
-            width: "100%", 
-            borderRadius: "8px",
-            maxHeight: "200px",
-            objectFit: "cover"
-          }} 
-        />
+      {/* Footer */}
+      <div style={{ padding: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
+        <button 
+          onClick={onLogout}
+          style={{
+            width: "100%",
+            padding: "12px",
+            background: "rgba(255, 255, 255, 0.05)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            color: "white",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "600",
+            transition: "all 0.3s ease"
+          }}
+          onMouseOver={(e) => e.target.style.background = "rgba(255, 0, 0, 0.2)"}
+          onMouseOut={(e) => e.target.style.background = "rgba(255, 255, 255, 0.05)"}
+        >
+          Logout
+        </button>
       </div>
     </div>
   );

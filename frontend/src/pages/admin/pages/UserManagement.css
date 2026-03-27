@@ -45,44 +45,30 @@
 /* Tabs */
 .tabs {
   display: flex;
-  gap: 15px;
+  gap: 10px;
   margin-bottom: 25px;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
   overflow-x: auto;
 }
 
 .tabs button {
-  background: none;
-  border: none;
-  padding: 8px 15px;
+  background: #f0f2f5;
+  border: 1px solid #e0e0e0;
+  padding: 10px 20px;
   color: #666;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  position: relative;
+  border-radius: 8px;
   transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .tabs button.active {
-  color: #001a66;
-}
-
-.tabs button::after {
-  content: "";
-  position: absolute;
-  bottom: -11px;
-  left: 0;
-  width: 100%;
-  height: 3px;
   background: #7cff00;
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
-.tabs button.active::after {
-  transform: scaleX(1);
+  color: #001a66;
+  border-color: #7cff00;
+  box-shadow: 0 4px 10px rgba(124, 255, 0, 0.2);
 }
 
 /* Users Section */

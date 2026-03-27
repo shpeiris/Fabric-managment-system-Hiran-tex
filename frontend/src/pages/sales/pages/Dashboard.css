@@ -201,3 +201,72 @@
     padding: 1rem;
   }
 }
+
+
+/* Bank Slip Preview in Modals */
+.slip-preview {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.slip-image-container {
+  height: 200px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px dashed #cbd5e1;
+  margin-top: 10px;
+}
+
+.bank-slip-img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+
+.bank-slip-img:hover {
+  transform: scale(1.05);
+}
+
+.slip-hint {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin-top: 5px;
+}
+
+.order-items-preview table th {
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.order-items-preview table td {
+  color: #1e293b;
+}
+
+.verification-checklist ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.verification-checklist li {
+  font-size: 13px;
+  color: #16a34a;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

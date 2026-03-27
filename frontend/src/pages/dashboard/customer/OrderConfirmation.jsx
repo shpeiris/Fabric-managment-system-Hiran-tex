@@ -58,7 +58,7 @@ const OrderConfirmation = ({ orderId, orderData, totalAmount, navigate }) => {
 
             <div className="info-item">
               <label>Delivery Method</label>
-              <span>{orderData.deliveryMethod === 'HOME_DELIVERY' ? 'Home Delivery' : 'Store Pickup'}</span>
+              <span>{orderData.deliveryMethod === 'STORE_PICKUP' ? 'Store Pickup' : 'Home Delivery'}</span>
             </div>
 
             <div className="info-item">
@@ -127,6 +127,7 @@ const OrderConfirmation = ({ orderId, orderData, totalAmount, navigate }) => {
         <div className="next-steps">
           <h3>What happens next?</h3>
           <div className="steps-timeline">
+            {/* Step 1: Order Placed */}
             <div className="timeline-step completed">
               <div className="step-icon">✓</div>
               <div className="step-content">
@@ -135,14 +136,23 @@ const OrderConfirmation = ({ orderId, orderData, totalAmount, navigate }) => {
               </div>
             </div>
 
+            {/* Step 2: Verification */}
             <div className="timeline-step pending">
               <div className="step-icon">2</div>
               <div className="step-content">
-                <h4>Payment Verification</h4>
-                <p>We're verifying your payment</p>
+                <h4>
+                  {orderData.paymentMethod === 'BANK_TRANSFER' ? 'Payment Verification' : 'Order Verification'}
+                </h4>
+                <p>
+                  {orderData.paymentMethod === 'BANK_TRANSFER' 
+                    ? "We're verifying your payment slip" 
+                    : "We're verifying your order details"
+                  }
+                </p>
               </div>
             </div>
 
+            {/* Step 3: Processing */}
             <div className="timeline-step pending">
               <div className="step-icon">3</div>
               <div className="step-content">
@@ -151,16 +161,17 @@ const OrderConfirmation = ({ orderId, orderData, totalAmount, navigate }) => {
               </div>
             </div>
 
+            {/* Step 4: Final Stage */}
             <div className="timeline-step pending">
               <div className="step-icon">4</div>
               <div className="step-content">
                 <h4>
-                  {orderData.deliveryMethod === 'HOME_DELIVERY' ? 'Delivery' : 'Ready for Pickup'}
+                  {orderData.deliveryMethod === 'STORE_PICKUP' ? 'Ready for Pickup' : 'Delivery'}
                 </h4>
                 <p>
-                  {orderData.deliveryMethod === 'HOME_DELIVERY' 
-                    ? 'Your order will be delivered' 
-                    : 'You can collect your order'
+                  {orderData.deliveryMethod === 'STORE_PICKUP' 
+                    ? 'You can collect your order' 
+                    : 'Your order will be delivered to your address'
                   }
                 </p>
               </div>

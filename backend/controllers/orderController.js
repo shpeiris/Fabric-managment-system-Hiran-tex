@@ -1,4 +1,6 @@
 import * as orderService from '../services/orderService.js';
+import * as salesService from '../services/salesService.js';
+
 
 const getUserOrders = async (req, res) => {
     try {
@@ -41,10 +43,10 @@ const getOrders = async (req, res) => {
 };
 
 const createOrder = async (req, res) => {
-    const { customer_id, items, delivery_address, delivery_type, payment_method } = req.body;
+    const { customer_id, customer_name, items, delivery_address, delivery_type, payment_method } = req.body;
 
-    if (!customer_id || !items || items.length === 0) {
-        return res.status(400).json({ error: "Customer ID and items are required" });
+    if ((!customer_id && !customer_name) || !items || items.length === 0) {
+        return res.status(400).json({ error: "Customer ID or Name, and items are required" });
     }
 
     try {
@@ -92,16 +94,25 @@ const createCustomerOrder = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, delivered_by, delivery_contact_number } = req.body;
 
-    const validStatuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+    const validStatuses = ['PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: "Invalid status" });
     }
 
     try {
-        const result = await orderService.updateOrderStatus(id, status);
+        const result = await orderService.updateOrderStatus(id, status, delivered_by, delivery_contact_number);
         if (!result) return res.status(404).json({ error: "Order not found" });
+
+        if (status === 'DELIVERED') {
+            try {
+                await salesService.sendConfirmation(id, 'delivery_update', req.user.name, req.user.id);
+            } catch (notifyErr) {
+                console.error("Failed to send delivery update notification:", notifyErr);
+            }
+        }
+
         res.json({ message: "Order status updated successfully" });
     } catch (err) {
         console.error("Error updating order status:", err);

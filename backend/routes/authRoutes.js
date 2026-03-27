@@ -10,5 +10,6 @@ router.post("/register", authController.register);
 router.post("/forgot-password", authController.forgotPassword);
 router.post("/verify-otp", authController.verifyOTP);
 router.post("/reset-password", authController.resetPassword);
+router.patch("/api/customer/profile", isAuthenticated, authController.updateProfile);
 
 export default router;

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiCall } from "../../../utils/auth.js";
 import "./InventoryDashboard.css";
 
 export default function InventoryDashboard() {
+  const navigate = useNavigate();
   const [fabrics, setFabrics] = useState([]);
   const [arrivals, setArrivals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,15 +24,15 @@ export default function InventoryDashboard() {
       setLoading(true);
 
       // Fetch dashboard stats
-      const statsRes = await apiCall('http://localhost:5000/api/inventory/dashboard');
+      const statsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/dashboard`);
       const statsData = await statsRes.json();
 
       // Fetch fabrics
-      const fabricsRes = await apiCall('http://localhost:5000/api/inventory/fabrics');
+      const fabricsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
       const fabricsData = await fabricsRes.json();
 
       // Fetch recent arrivals
-      const arrivalsRes = await apiCall('http://localhost:5000/api/inventory/stock-arrivals');
+      const arrivalsRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`);
       const arrivalsData = await arrivalsRes.json();
 
       if (statsRes.ok && fabricsRes.ok && arrivalsRes.ok) {
@@ -103,7 +105,6 @@ export default function InventoryDashboard() {
                 <th>Current Stock</th>
                 <th>Reorder Level</th>
                 <th>Expected Restock</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -119,12 +120,7 @@ export default function InventoryDashboard() {
                       color: parseFloat(fabric.stock_quantity) === 0 ? '#dc2626' : '#059669',
                       fontWeight: '500'
                     }}>
-                      {fabric.restock_date || 'Not Set'}
-                    </td>
-                    <td>
-                      <button className="btn-primary">
-                        {parseFloat(fabric.stock_quantity) === 0 ? 'Urgent Order' : 'Order Stock'}
-                      </button>
+                      {fabric.restock_date ? new Date(fabric.restock_date).toLocaleDateString() : 'Not Set'}
                     </td>
                   </tr>
                 ))

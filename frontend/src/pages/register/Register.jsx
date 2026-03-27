@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../../services";
 import { setUser } from "../../utils/auth";
 import { useFormValidation } from "../../hooks/useFormValidation";
+import registrationImage from "../../assets/Fabrics/registration.png";
 import {
   validateRequired,
   validateEmail,
@@ -87,17 +88,22 @@ const Register = () => {
 
   return (
     <div className="register-page">
-      <header className="compact-header">
-        <div className="header-content">
-          <h1>Hiran Fabric Textile</h1>
-          <Link to="/" className="back-link">
-            ← Home
-          </Link>
+      {/* Header - Matching other pages */}
+      <header className="top-bar">
+        <div className="sidebar-header">
+          <span className="sidebar-logo-icon">🏠</span>
+          <span className="sidebar-title">Hiran Fabrics</span>
         </div>
       </header>
 
       <div className="register-container">
         <div className="register-card-compact">
+          {/* Image Side Panel */}
+          <div className="image-side-panel">
+            <img src={registrationImage} alt="Fabric Collection" />
+          </div>
+
+          {/* Form Section */}
           <div className="form-section-compact">
             <div className="form-header">
               <h2>Customer Registration</h2>

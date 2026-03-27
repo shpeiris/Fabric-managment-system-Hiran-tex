@@ -66,9 +66,9 @@ const verifyOrder = async (req, res) => {
 
 const sendConfirmation = async (req, res) => {
     try {
-        const { orderId, type, sentBy } = req.body;
+        const { orderId, type, sentBy, customMessage } = req.body;
         
-        const result = await salesService.sendConfirmation(orderId, type, sentBy, req.user.id);
+        const result = await salesService.sendConfirmation(orderId, type, sentBy, req.user.id, customMessage);
         res.json({ message: "Confirmation sent successfully", result });
     } catch (err) {
         console.error("Error sending confirmation:", err);
@@ -79,9 +79,20 @@ const sendConfirmation = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, delivered_by, delivery_contact_number } = req.body;
         
-        const result = await orderService.updateOrderStatus(id, status);
+        const result = await orderService.updateOrderStatus(id, status, delivered_by, delivery_contact_number);
+        
+        if (result && status === 'DELIVERED') {
+            try {
+                // Send notification to customer
+                await salesService.sendConfirmation(id, 'delivery_update', req.user.name, req.user.id);
+            } catch (notifyErr) {
+                console.error("Failed to send delivery update notification:", notifyErr);
+                // Don't fail the whole request if only notification fails
+            }
+        }
+        
         res.json({ message: "Order status updated successfully", result });
     } catch (err) {
         console.error("Error updating order status:", err);

@@ -2,6 +2,7 @@
 
 -- Drop tables if they exist (clean setup)
 DROP TABLE IF EXISTS activity_logs CASCADE;
+DROP TABLE IF EXISTS feedback CASCADE;
 DROP TABLE IF EXISTS confirmation_logs CASCADE;
 DROP TABLE IF EXISTS payments CASCADE;
 DROP TABLE IF EXISTS stock_arrivals CASCADE;
@@ -61,6 +62,7 @@ CREATE TABLE fabrics (
     stock_available_quantity DECIMAL(10, 2) DEFAULT 0,
     reorder_level DECIMAL(10, 2) DEFAULT 50,
     image_url TEXT,
+    width VARCHAR(50),
     restock_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -79,7 +81,7 @@ CREATE TABLE cart (
 CREATE TABLE orders (
     order_id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL REFERENCES customers(customer_id) ON DELETE CASCADE,
-    order_status VARCHAR(20) DEFAULT 'PENDING' CHECK (order_status IN ('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED')),
+    order_status VARCHAR(20) DEFAULT 'PENDING' CHECK (order_status IN ('PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED')),
     total_amount DECIMAL(12, 2) NOT NULL,
     delivery_address TEXT,
     delivery_type VARCHAR(50) DEFAULT 'STANDARD',
@@ -127,6 +129,20 @@ CREATE TABLE payments (
     confirmed_by INTEGER REFERENCES employees(employee_id) ON DELETE SET NULL,
     confirmation_date TIMESTAMP NULL,
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 11. Feedback Table (for order-specific customer reviews)
+CREATE TABLE feedback (
+    feedback_id SERIAL PRIMARY KEY,
+    customer_id INTEGER NOT NULL REFERENCES customers(customer_id) ON DELETE CASCADE,
+    order_id INTEGER REFERENCES orders(order_id) ON DELETE SET NULL,
+    overall_rating INTEGER NOT NULL CHECK (overall_rating BETWEEN 1 AND 5),
+    fabric_quality INTEGER CHECK (fabric_quality BETWEEN 1 AND 5),
+    delivery INTEGER CHECK (delivery BETWEEN 1 AND 5),
+    customer_service INTEGER CHECK (customer_service BETWEEN 1 AND 5),
+    comments TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(customer_id, order_id)
 );
 
 -- 10. Confirmation Logs Table (for customer notifications)

@@ -1,10 +1,9 @@
-import React from "react";
-import FabricCatalog from "../dashboard/customer/FabricCatalog";
+import BrowseFabrics from "./BrowseFabrics";
 
 export default function Shop() {
   return (
     <div className="w-full">
-      <FabricCatalog />
+      <BrowseFabrics />
     </div>
   );
 }

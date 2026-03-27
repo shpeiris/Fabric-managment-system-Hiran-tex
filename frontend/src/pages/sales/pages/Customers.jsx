@@ -19,72 +19,34 @@ export default function CustomerManagement() {
         }
     }, [searchTerm]);
 
-    const HARDCODED_SRI_LANKAN_CUSTOMERS = [
-        {
-            id: 'H1',
-            full_name: 'Anura Kumara Dissanayake',
-            email: 'anura.k@example.lk',
-            phone: '+94 11 234 5678',
-            total_orders: 12,
-            total_spent: 45000,
-            created_at: '2024-01-15T10:30:00Z'
-        },
-        {
-            id: 'H2',
-            full_name: 'Nimmi Harasgama',
-            email: 'nimmi.h@example.lk',
-            phone: '+94 77 123 4567',
-            total_orders: 8,
-            total_spent: 28500,
-            created_at: '2024-02-20T14:45:00Z'
-        },
-        {
-            id: 'H3',
-            full_name: 'Pathum Nissanka',
-            email: 'pathum.n@example.lk',
-            phone: '+94 71 987 6543',
-            total_orders: 5,
-            total_spent: 15200,
-            created_at: '2024-03-05T09:15:00Z'
-        },
-        {
-            id: 'H4',
-            full_name: 'Chamari Athapaththu',
-            email: 'chamari.a@example.lk',
-            phone: '+94 76 555 4433',
-            total_orders: 15,
-            total_spent: 62000,
-            created_at: '2023-11-12T11:20:00Z'
-        },
-        {
-            id: 'H5',
-            full_name: 'Wanindu Hasaranga',
-            email: 'wanindu.h@example.lk',
-            phone: '+94 72 333 2211',
-            total_orders: 3,
-            total_spent: 9800,
-            created_at: '2024-05-01T16:00:00Z'
-        }
-    ];
+    const SAMPLE_CUSTOMER = {
+        customer_id: 'PRE-001',
+        full_name: 'Pathum Nissanka (Sample)',
+        email: 'pathum.n@example.lk',
+        phone: '+94 71 987 6543',
+        total_orders: 5,
+        total_spent: 15200,
+        registration_date: '2024-03-05T09:15:00Z'
+    };
 
     const fetchCustomers = async () => {
         try {
             setLoading(true);
             SalesLogger.customers.customersFetch({ action: 'fetch_customers' });
-            const response = await apiCall('http://localhost:5000/api/sales/customers');
+            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/customers`);
             const data = await response.json();
 
             if (response.ok) {
-                const fetchedCustomers = data.customers || [];
-                setCustomers([...HARDCODED_SRI_LANKAN_CUSTOMERS, ...fetchedCustomers]);
-                SalesLogger.customers.customersFetch((data.customers?.length || 0) + HARDCODED_SRI_LANKAN_CUSTOMERS.length);
+                const fetched = data.customers || [];
+                setCustomers([SAMPLE_CUSTOMER, ...fetched]);
+                SalesLogger.customers.customersFetch(fetched.length + 1);
             } else {
-                setCustomers(HARDCODED_SRI_LANKAN_CUSTOMERS);
+                setCustomers([SAMPLE_CUSTOMER]);
             }
         } catch (err) {
             console.error('Error fetching customers:', err);
             SalesLogger.customers.customersFetchError(err);
-            setCustomers(HARDCODED_SRI_LANKAN_CUSTOMERS);
+            setCustomers([SAMPLE_CUSTOMER]);
         } finally {
             setLoading(false);
         }
@@ -97,11 +59,20 @@ export default function CustomerManagement() {
 
     return (
         <div className="customer-management">
-            <div className="header">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div>
-                    <h1>Customer Management</h1>
-                    <p className="subtitle">Manage your customer relationships</p>
+                    <h1>Customer Relationships</h1>
+                    <p className="subtitle">Manage and track your client base</p>
                 </div>
+                <button 
+                  onClick={fetchCustomers} 
+                  disabled={loading}
+                  className="action-btn orders-btn" 
+                  style={{ padding: '8px 16px', fontSize: '12px', border: 'none', background: '#001a66', color: 'white', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }}
+                >
+                  <span style={{ fontSize: '14px' }}>🔄</span>
+                  {loading ? 'Syncing...' : 'Sync Customers'}
+                </button>
             </div>
 
             {/* Search */}
@@ -131,14 +102,14 @@ export default function CustomerManagement() {
                     </thead>
                     <tbody>
                         {filteredCustomers.map(customer => (
-                            <tr key={customer.id}>
-                                <td>#{customer.id}</td>
+                            <tr key={customer.customer_id}>
+                                <td>#{customer.customer_id}</td>
                                 <td>{customer.full_name}</td>
                                 <td>{customer.email}</td>
                                 <td>{customer.phone || 'N/A'}</td>
                                 <td>{customer.total_orders}</td>
                                 <td>Rs. {Number(customer.total_spent).toLocaleString()}</td>
-                                <td>{new Date(customer.created_at).toLocaleDateString()}</td>
+                                <td>{new Date(customer.registration_date).toLocaleDateString()}</td>
                             </tr>
                         ))}
                     </tbody>

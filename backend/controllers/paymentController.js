@@ -11,14 +11,20 @@ const getPayments = async (req, res) => {
 };
 
 const uploadBankSlip = async (req, res) => {
-    const { order_id, slip_url } = req.body;
+    const { order_id } = req.body;
+    let slip_url = req.body.slip_url;
+
+    if (req.file) {
+        slip_url = `uploads/slips/${req.file.filename}`;
+    }
+
     if (!order_id || !slip_url) {
-        return res.status(400).json({ error: "Order ID and Slip URL are required" });
+        return res.status(400).json({ error: "Order ID and Slip (file or URL) are required" });
     }
 
     try {
         const result = await paymentService.uploadBankSlip(req.user.id, order_id, slip_url);
-        res.json(result);
+        res.json({ ...result, slip_url });
     } catch (err) {
         console.error("Error uploading slip:", err);
         if (err.message === "Order not found") return res.status(404).json({ error: err.message });

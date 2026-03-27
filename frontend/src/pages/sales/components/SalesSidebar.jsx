@@ -5,15 +5,32 @@ import { getUser, removeUser, apiCall } from '../../../utils/auth.js';
 const SalesSidebar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const userData = getUser();
     setUser(userData);
+    fetchPendingCount();
+
+    const interval = setInterval(fetchPendingCount, 10000); // Poll every 10s for faster updates
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchPendingCount = async () => {
+    try {
+      const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/pending-payments`);
+      const data = await res.json();
+      if (res.ok) {
+        setPendingCount(data.count || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching pending count:', err);
+    }
+  };
 
   const handleLogout = async () => {
     try {
-      await apiCall('http://localhost:5000/logout', {
+      await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/logout`, {
         method: 'POST'
       });
       removeUser();
@@ -26,21 +43,26 @@ const SalesSidebar = () => {
   };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/sales/dashboard', icon: '📊' },
-    { name: 'Customers', path: '/sales/customers', icon: '👥' },
-    { name: 'Orders', path: '/sales/orders', icon: '📦' },
-    { name: 'Reports', path: '/sales/reports', icon: '📈' }
+    { name: 'Dashboard', path: '/sales/dashboard' },
+    { name: 'Payment Queue', path: '/sales/payments' },
+    { name: 'Customers', path: '/sales/customers' },
+    { name: 'Orders', path: '/sales/orders' },
+    { name: 'Reports', path: '/sales/reports' }
   ];
 
   return (
     <aside style={{
       width: '260px',
-      minHeight: '100vh',
+      height: '100vh',
+      position: 'fixed',
+      left: 0,
+      top: 0,
       background: '#001a66',
       color: 'white',
       display: 'flex',
       flexDirection: 'column',
-      boxShadow: '4px 0 15px rgba(0, 0, 0, 0.3)'
+      boxShadow: '4px 0 15px rgba(0, 0, 0, 0.3)',
+      zIndex: 100
     }}>
       {/* Header */}
       <div style={{
@@ -49,8 +71,7 @@ const SalesSidebar = () => {
         background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '28px', filter: 'drop-shadow(0 0 5px rgba(124, 255, 0, 0.5))' }}>💼</span>
-          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px' }}>Hiran Fabrics</span>
+          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px', color: '#7cff00' }}>Hiran Fabrics</span>
         </div>
       </div>
 
@@ -73,10 +94,21 @@ const SalesSidebar = () => {
               background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent'
             })}
           >
-            <span style={{ marginRight: '15px', fontSize: '18px', width: '20px', textAlign: 'center' }}>
-              {item.icon}
-            </span>
             {item.name}
+            {item.name === 'Payment Queue' && pendingCount > 0 && (
+              <span style={{
+                marginLeft: 'auto',
+                background: '#ff4d4d',
+                color: 'white',
+                fontSize: '11px',
+                fontWeight: '700',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }}>
+                {pendingCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -150,7 +182,7 @@ const SalesSidebar = () => {
             e.target.style.color = 'white';
           }}
         >
-          <span>🚪</span> Logout
+          Logout
         </button>
       </div>
     </aside>

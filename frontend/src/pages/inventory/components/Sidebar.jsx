@@ -13,7 +13,7 @@ const InventorySidebar = () => {
 
   const handleLogout = async () => {
     try {
-      await apiCall('http://localhost:5000/logout', {
+      await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/logout`, {
         method: 'POST'
       });
       removeUser();
@@ -26,12 +26,11 @@ const InventorySidebar = () => {
   };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/inventory/dashboard', icon: '📊' },
-    { name: 'Fabric Management', path: '/inventory/fabrics', icon: '🧵' },
-    { name: 'Stock Arrivals', path: '/inventory/stock-arrivals', icon: '📥' },
-    { name: 'Suppliers', path: '/inventory/suppliers', icon: '🏭' },
-    { name: 'Low Stock Alerts', path: '/inventory/alerts', icon: '⚠️' },
-    { name: 'Transactions', path: '/inventory/transactions', icon: '📝' }
+    { name: 'Dashboard', path: '/inventory/dashboard' },
+    { name: 'Fabric Management', path: '/inventory/fabrics' },
+    { name: 'Stock Arrivals', path: '/inventory/stock-arrivals' },
+    { name: 'Suppliers', path: '/inventory/suppliers' },
+    { name: 'Low Stock Alerts', path: '/inventory/alerts' }
   ];
 
   return (
@@ -51,8 +50,7 @@ const InventorySidebar = () => {
         background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '28px', filter: 'drop-shadow(0 0 5px rgba(124, 255, 0, 0.5))' }}>📦</span>
-          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px' }}>Hiran Fabrics</span>
+          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px', color: '#7cff00' }}>Hiran Fabrics</span>
         </div>
       </div>
 
@@ -75,9 +73,6 @@ const InventorySidebar = () => {
               background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent'
             })}
           >
-            <span style={{ marginRight: '15px', fontSize: '18px', width: '20px', textAlign: 'center' }}>
-              {item.icon}
-            </span>
             {item.name}
           </NavLink>
         ))}
@@ -152,7 +147,7 @@ const InventorySidebar = () => {
             e.target.style.color = 'white';
           }}
         >
-          <span>🚪</span> Logout
+          Logout
         </button>
       </div>
     </aside>

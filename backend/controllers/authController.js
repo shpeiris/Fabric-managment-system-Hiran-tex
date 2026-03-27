@@ -1,9 +1,11 @@
 import * as authService from "../services/authService.js";
 import logActivity from "../middleware/activityLogger.js";
 import { generateToken } from "../utils/jwtHelper.js";
+import { sendOTPEmail } from "../utils/emailHelper.js";
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  let { email, password } = req.body;
+  email = email ? email.trim() : email;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
@@ -180,14 +182,26 @@ const forgotPassword = async (req, res) => {
 
     await authService.createOTP(email, otp);
 
-    // PRINT TO TERMINAL as requested
-    console.log("\n-------------------------------------------");
-    console.log(`🔑 PASSWORD RESET OTP FOR: ${email}`);
-    console.log(`🔢 OTP CODE: ${otp}`);
-    console.log("⏱️ EXPIRES IN: 15 minutes");
-    console.log("-------------------------------------------\n");
+    // Send Real Email
+    const emailResult = await sendOTPEmail(email, otp);
 
-    res.json({ message: "OTP sent to your email (check terminal in dev)" });
+    if (emailResult.success) {
+        return res.json({ message: "Verification code sent to your email address!" });
+    }
+
+    // --- DEVELOPER FALLBACK ---
+    // Log to terminal ONLY if real email delivery fails
+    console.log("\n" + "!".repeat(50));
+    console.log("🛠️  [ERROR] OTP EMAIL DELIVERY FAILED");
+    console.log(`📧 TARGET: ${email}`);
+    console.log(`🔢 CODE  : ${otp}`);
+    console.log(`⚠️  REASON: ${emailResult.error === 'AUTH_FAILED' ? 'Gmail SMTP Authentication Failed' : 'SMTP Configuration Missing'}`);
+    console.log("!".repeat(50) + "\n");
+
+    res.json({ 
+        message: "We're having trouble sending the email. Please check the backend terminal for your code during development.",
+        error: emailResult.error
+    });
   } catch (error) {
     console.error("Forgot password error:", error);
     res.status(500).json({ error: "Server error during password reset request" });
@@ -236,4 +250,47 @@ const resetPassword = async (req, res) => {
   }
 };
 
-export { login, logout, getMe, register, forgotPassword, verifyOTP, resetPassword };
+const updateProfile = async (req, res) => {
+  const userId = req.user.id;
+  const { full_name, phone, address } = req.body;
+
+  if (!full_name) {
+    return res.status(400).json({ error: "Full name is required" });
+  }
+
+  try {
+    const { pool } = await import('../config/db.js');
+    const result = await pool.query(
+      `UPDATE customers
+       SET full_name = $1, tel = $2, address = $3
+       WHERE customer_id = $4
+       RETURNING customer_id, full_name, email, tel, address, created_at`,
+      [full_name, phone || null, address || null, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const updated = result.rows[0];
+
+    // Update localStorage-stored token data via response
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: updated.customer_id,
+        full_name: updated.full_name,
+        email: updated.email,
+        phone: updated.tel,
+        address: updated.address,
+        created_at: updated.created_at,
+        role: 'CUSTOMER'
+      }
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: "Server error updating profile" });
+  }
+};
+
+export { login, logout, getMe, register, forgotPassword, verifyOTP, resetPassword, updateProfile };

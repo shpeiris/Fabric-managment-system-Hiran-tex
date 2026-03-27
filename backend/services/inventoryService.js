@@ -4,7 +4,7 @@ const getDashboardStats = async () => {
   const statsQuery = `
     SELECT 
       (SELECT COALESCE(SUM(stock_quantity * price_per_meter), 0) FROM fabrics) as total_stock_value,
-      (SELECT COUNT(*) FROM fabrics WHERE stock_quantity <= reorder_level) as low_stock_items,
+      (SELECT COUNT(*) FROM fabrics WHERE stock_quantity <= restock_level) as low_stock_items,
       (SELECT COUNT(*) FROM fabrics) as total_fabrics,
       (SELECT COUNT(*) FROM stock_arrivals WHERE arrival_date >= NOW() - INTERVAL '7 days') as recent_arrivals
   `;
@@ -24,7 +24,7 @@ const getInventoryFabrics = async () => {
     SELECT f.*, 
            CASE 
              WHEN f.stock_quantity = 0 THEN 'OUT_OF_STOCK'
-             WHEN f.stock_quantity <= f.reorder_level THEN 'LOW'
+             WHEN f.stock_quantity <= f.restock_level THEN 'LOW'
              ELSE 'OK'
            END as stock_status
      FROM fabrics f
@@ -43,14 +43,16 @@ const addFabric = async (fabricData) => {
     price_per_meter,
     stock_quantity,
     reorder_level,
+    restock_level,
     image_url,
+    width,
     restock_date
   } = fabricData;
 
   const query = `
     INSERT INTO fabrics (name, material_type, color, design, price_per_meter, 
-                        stock_quantity, reorder_level, image_url, restock_date)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                        stock_quantity, restock_level, image_url, width, restock_date)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING fabric_id
   `;
 
@@ -61,10 +63,19 @@ const addFabric = async (fabricData) => {
     design,
     price_per_meter,
     stock_quantity || 0,
-    reorder_level || 50,
+    restock_level ?? reorder_level ?? 50,
     image_url || null,
+    width || null,
     restock_date || null
   ]);
+
+  // Sync available quantity if that column exists (best-effort)
+  try {
+    await pool.query(
+      "UPDATE fabrics SET stock_available_quantity = stock_quantity WHERE fabric_id = $1",
+      [result.rows[0].fabric_id]
+    );
+  } catch (_) { /* column may not exist */ }
 
   return { fabric_id: result.rows[0].fabric_id, ...fabricData };
 };
@@ -78,16 +89,18 @@ const updateFabric = async (id, fabricData) => {
     price_per_meter,
     stock_quantity,
     reorder_level,
+    restock_level,
     image_url,
+    width,
     restock_date,
   } = fabricData;
 
   const query = `
     UPDATE fabrics 
     SET name = $1, material_type = $2, color = $3, design = $4, 
-        price_per_meter = $5, stock_quantity = $6, reorder_level = $7, 
-        image_url = $8, restock_date = $9
-    WHERE fabric_id = $10
+        price_per_meter = $5, stock_quantity = $6, restock_level = $7, 
+        image_url = $8, width = $9, restock_date = $10
+    WHERE fabric_id = $11
   `;
 
   const result = await pool.query(query, [
@@ -97,11 +110,20 @@ const updateFabric = async (id, fabricData) => {
     design,
     price_per_meter,
     stock_quantity,
-    reorder_level,
+    restock_level ?? reorder_level ?? 50,
     image_url || null,
+    width || null,
     restock_date || null,
     id
   ]);
+
+  // Sync available quantity if that column exists (best-effort)
+  try {
+    await pool.query(
+      "UPDATE fabrics SET stock_available_quantity = stock_quantity WHERE fabric_id = $1",
+      [id]
+    );
+  } catch (_) { /* column may not exist */ }
 
   if (result.rowCount === 0) return null;
   return { fabric_id: id, ...fabricData };
@@ -114,7 +136,8 @@ const deleteFabric = async (id) => {
 
 const getStockArrivals = async () => {
   const query = `
-    SELECT sa.*, f.name as fabric_name, f.material_type, s.name as supplier_name, e.full_name as received_by_name
+    SELECT sa.*, f.name as fabric_name, f.material_type, f.color,
+           s.name as supplier_name, e.full_name as received_by_name
     FROM stock_arrivals sa
     JOIN fabrics f ON sa.fabric_id = f.fabric_id
     JOIN suppliers s ON sa.supplier_id = s.supplier_id
@@ -212,5 +235,5 @@ export {
   getSuppliers,
   addSupplier,
   updateSupplier,
-  deleteSupplier,
+  deleteSupplier
 };

@@ -1,17 +1,17 @@
 import { pool } from '../config/db.js';
+import * as salesService from './salesService.js';
 
 const getPayments = async () => {
     try {
         const query = `
             SELECT p.payment_id, p.order_id, p.amount, p.payment_status, 
-                   p.reference_number, p.bank_slip_url, p.payment_date,
-                   pm.method_name as payment_method,
+                   p.bank_slip_url, p.payment_date,
+                   p.payment_method,
                    c.full_name as customer_name,
                    o.total_amount as order_total
             FROM payments p
             JOIN orders o ON p.order_id = o.order_id
             JOIN customers c ON o.customer_id = c.customer_id
-            JOIN payment_methods pm ON p.method_id = pm.method_id
             ORDER BY p.payment_date DESC
         `;
         const result = await pool.query(query);
@@ -34,15 +34,6 @@ const uploadBankSlip = async (userId, orderId, slipUrl) => {
 
         const order = orderResult.rows[0];
 
-        // Get bank transfer method ID
-        const methodQuery = `SELECT method_id FROM payment_methods WHERE method_name = 'BANK_TRANSFER'`;
-        const methodResult = await pool.query(methodQuery);
-        const methodId = methodResult.rows[0]?.method_id;
-
-        if (!methodId) {
-            throw new Error("Bank transfer payment method not configured");
-        }
-
         // Check if payment record exists
         const paymentQuery = `SELECT * FROM payments WHERE order_id = $1`;
         const paymentResult = await pool.query(paymentQuery, [orderId]);
@@ -51,20 +42,27 @@ const uploadBankSlip = async (userId, orderId, slipUrl) => {
             // Update existing payment
             const updateQuery = `
                 UPDATE payments 
-                SET bank_slip_url = $1, payment_status = 'PENDING', method_id = $2, reference_number = $3
-                WHERE order_id = $4
+                SET bank_slip_url = $1, payment_status = 'PENDING', payment_method = 'BANK_TRANSFER'
+                WHERE order_id = $2
                 RETURNING *
             `;
-            await pool.query(updateQuery, [slipUrl, methodId, `SLIP_${Date.now()}`, orderId]);
+            await pool.query(updateQuery, [slipUrl, orderId]);
         } else {
             // Insert new payment
             const insertQuery = `
-                INSERT INTO payments (order_id, method_id, amount, payment_status, bank_slip_url, reference_number) 
-                VALUES ($1, $2, $3, 'PENDING', $4, $5)
+                INSERT INTO payments (order_id, payment_method, amount, payment_status, bank_slip_url) 
+                VALUES ($1, 'BANK_TRANSFER', $2, 'PENDING', $3)
                 RETURNING *
             `;
-            await pool.query(insertQuery, [orderId, methodId, order.total_amount, slipUrl, `SLIP_${Date.now()}`]);
+            await pool.query(insertQuery, [orderId, order.total_amount, slipUrl]);
         }
+
+        // Log the activity for the salesperson to see
+        const logQuery = `
+            INSERT INTO activity_logs (customer_id, action_type, actor_type, action)
+            VALUES ($1, 'PAYMENT_UPLOAD', 'CUSTOMER', $2)
+        `;
+        await pool.query(logQuery, [userId, `Bank slip uploaded for order #${orderId}`]);
 
         return { message: "Bank slip uploaded successfully" };
     } catch (error) {
@@ -73,29 +71,27 @@ const uploadBankSlip = async (userId, orderId, slipUrl) => {
     }
 };
 
-const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
+const confirmPayment = async (paymentId, order_status, verifierId, options = {}) => {
     const client = await pool.connect();
     
     try {
         await client.query('BEGIN');
 
-        // Update payment status with enhanced tracking
+        // Update payment order_status with enhanced tracking
         const updatePaymentQuery = `
             UPDATE payments 
             SET payment_status = $1, 
                 verified_by = $2, 
                 confirmed_by = $3,
-                confirmation_date = NOW(),
-                notes = $4
-            WHERE payment_id = $5
+                confirmation_date = NOW()
+            WHERE payment_id = $4
             RETURNING *
         `;
         
         const paymentResult = await client.query(updatePaymentQuery, [
-            status, 
+            order_status, 
             verifierId, 
             verifierId,
-            `Payment ${status.toLowerCase()} by ${options.confirmedBy || 'system'}`,
             paymentId
         ]);
 
@@ -105,69 +101,55 @@ const confirmPayment = async (paymentId, status, verifierId, options = {}) => {
 
         const payment = paymentResult.rows[0];
 
-        if (status === 'COMPLETED') {
-            // Get processing status ID
-            const statusQuery = `SELECT status_id FROM order_statuses WHERE status_name = 'PROCESSING'`;
-            const statusResult = await client.query(statusQuery);
-            const processingStatusId = statusResult.rows[0]?.status_id;
+        if (order_status === 'COMPLETED') {
+            // Update order order_status to PROCESSING when payment is confirmed
+            const updateOrderQuery = `
+                UPDATE orders 
+                SET order_status = 'PROCESSING',
+                    verified_at = NOW(),
+                    verified_by = $2
+                WHERE order_id = $1
+                RETURNING *
+            `;
             
-            if (processingStatusId) {
-                // Get current order status for history
-                const currentOrderQuery = `
-                    SELECT o.status_id, os.status_name 
-                    FROM orders o 
-                    JOIN order_statuses os ON o.status_id = os.status_id 
-                    WHERE o.order_id = $1
-                `;
-                const currentOrderResult = await client.query(currentOrderQuery, [payment.order_id]);
-                const currentStatusId = currentOrderResult.rows[0]?.status_id;
-                
-                // Update order status to PROCESSING when payment is confirmed
-                const updateOrderQuery = `
-                    UPDATE orders 
-                    SET status_id = $1
-                    WHERE order_id = $2 AND status_id != $1
-                    RETURNING *
+            const orderResult = await client.query(updateOrderQuery, [payment.order_id, verifierId]);
+            
+            if (orderResult.rows.length > 0) {
+                // Log activity
+                const activityQuery = `
+                    INSERT INTO activity_logs (employee_id, actor_type, action_type, action)
+                    VALUES ($1, 'EMPLOYEE', $2, $3)
                 `;
                 
-                const orderResult = await client.query(updateOrderQuery, [processingStatusId, payment.order_id]);
-                
-                if (orderResult.rows.length > 0) {
-                    // Log status change in history
-                    const historyQuery = `
-                        INSERT INTO order_status_history (order_id, old_status_id, new_status_id, changed_by, reason)
-                        VALUES ($1, $2, $3, $4, $5)
-                    `;
-                    
-                    await client.query(historyQuery, [
-                        payment.order_id, 
-                        currentStatusId,
-                        processingStatusId, 
-                        verifierId, 
-                        'Payment confirmed - order moved to processing'
-                    ]);
-                }
+                await client.query(activityQuery, [
+                    verifierId, 
+                    'PAYMENT_CONFIRMATION',
+                    `Payment confirmed and order #${payment.order_id} moved to PROCESSING`
+                ]);
+            }
+
+            // Send notification to customer
+            try {
+                await salesService.sendConfirmation(payment.order_id, 'payment_confirmation', 'Salesperson', verifierId);
+            } catch (notifyErr) {
+                console.error("Failed to send payment confirmation notification:", notifyErr);
+                // Don't fail the whole transaction if notification fails
+            }
+        } else if (order_status === 'FAILED') {
+            // Send rejection notification
+            try {
+                await salesService.sendConfirmation(payment.order_id, 'payment_rejection', 'Salesperson', verifierId);
+            } catch (notifyErr) {
+                console.error("Failed to send payment rejection notification:", notifyErr);
             }
         }
-
-        // Log the payment confirmation activity
-        const activityQuery = `
-            INSERT INTO activity_logs (actor_id, actor_type, action_type, description, target_table, target_id)
-            VALUES ($1, 'EMPLOYEE', 'PAYMENT_CONFIRMATION', $2, 'payments', $3)
-        `;
-        
-        await client.query(activityQuery, [
-            verifierId, 
-            `Payment ${status.toLowerCase()} for Order #${payment.order_id} by ${options.confirmedBy || 'system'}`, 
-            payment.payment_id
-        ]);
 
         await client.query('COMMIT');
         
         return { 
-            message: status === 'COMPLETED' ? "Payment confirmed successfully" : "Payment status updated",
+            message: order_status === 'COMPLETED' ? "Payment confirmed successfully" : "Payment order_status updated",
             payment: payment,
-            orderUpdated: status === 'COMPLETED'
+            orderUpdated: order_status === 'COMPLETED'
         };
         
     } catch (error) {

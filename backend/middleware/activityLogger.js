@@ -38,19 +38,24 @@ const logActivity = async (actor, action, details, req) => {
     }
 
     const sql = `
-      INSERT INTO activity_logs (actor_id, actor_type, action, details, ip_address, user_agent, customer_id, employee_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO activity_logs (customer_id, employee_id, action_type, actor_type, action)
+      VALUES ($1, $2, $3, $4, $5)
     `;
 
+    // Map common actor_type to action_type if not provided
+    const actionType = 
+      action.includes("LOGIN") ? "LOGIN" :
+      action.includes("LOGOUT") ? "LOGOUT" :
+      action.includes("ORDER") ? "ORDER_ACTION" :
+      action.includes("PAYMENT") ? "PAYMENT_ACTION" :
+      "SYSTEM_EVENT";
+
     await pool.query(sql, [
-      actorId,
-      actorType,
-      action,
-      detailsStr,
-      ip,
-      userAgent,
       actorType === "CUSTOMER" ? actorId : null,
       actorType === "EMPLOYEE" ? actorId : null,
+      actionType,
+      actorType,
+      action
     ]);
   } catch (err) {
     console.error("Error logging activity:", err);

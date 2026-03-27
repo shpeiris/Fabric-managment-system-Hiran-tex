@@ -1,38 +1,212 @@
+import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import orderService from '../../../services/orderService'
+import cartService from '../../../services/cartService'
+import paymentService from '../../../services/paymentService'
+import customerService from '../../../services/customerService'
+import { apiCall } from '../../../utils/auth.js'
+
 export default function OrderDetails() {
-  const order = {
-    id: 'ORD001',
-    date: '2024-01-20',
-    status: 'Delivered',
-    trackingNumber: 'TRK123456',
-    items: [
-      { id: 'FAB001', name: 'Cotton Blend Blue', price: 250, quantity: 5, image: 'https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?w=400' },
-      { id: 'FAB002', name: 'Silk Satin Red', price: 650, quantity: 3, image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400' },
-      { id: 'FAB003', name: 'Linen White', price: 420, quantity: 8, image: 'https://images.unsplash.com/photo-1593032465171-b9a5cc3c52b8?w=400' }
-    ],
-    shipping: {
-      name: 'John Doe',
-      address: '123 Main Street',
-      city: 'Colombo',
-      postalCode: '00100',
-      phone: '+94 77 123 4567'
-    },
-    payment: {
-      method: 'Credit Card',
-      last4: '4242',
-      amount: 9650
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [orderData, setOrderData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [uploadLoading, setUploadLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+
+  const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [feedback, setFeedback] = useState(null)
+  const [submittingFeedback, setSubmittingFeedback] = useState(false)
+  const [newFeedback, setNewFeedback] = useState({
+    overall_rating: 0,
+    fabric_quality: 0,
+    delivery: 0,
+    customer_service: 0,
+    comments: ''
+  })
+  
+  useEffect(() => {
+    if (id) {
+      fetchOrderDetails()
+    }
+  }, [id])
+
+  const fetchOrderDetails = async () => {
+    try {
+      setLoading(true)
+      const data = await orderService.getOrderById(id)
+      
+      // Fetch notifications for this specific order
+      const notifResponse = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`)
+      if (notifResponse.ok) {
+        const notifData = await notifResponse.json()
+        data.notifications = notifData.notifications.filter(n => n.order_id === parseInt(id))
+      }
+      
+      setOrderData(data)
+      
+      // If delivered, check for existing feedback
+      if (data.order.order_status === 'DELIVERED') {
+        try {
+          const fbData = await customerService.getOrderFeedback(id)
+          if (fbData.feedback) {
+            setFeedback(fbData.feedback)
+          }
+        } catch (fbErr) {
+          console.error("Error fetching feedback:", fbErr)
+        }
+      }
+      
+      setLoading(false)
+    } catch (err) {
+      console.error("Error fetching order details:", err)
+      setError("Failed to load order details.")
+      setLoading(false)
     }
   }
 
-  const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const shipping = 500
-  const tax = subtotal * 0.08
+  const handleReorder = async () => {
+    try {
+      if (!orderData || !orderData.items) return
+      
+      setLoading(true)
+      const reorderPromises = orderData.items.map(item => 
+        cartService.addToCart({
+          fabric_id: item.fabric_id,
+          quantity: item.quantity
+        })
+      )
+      
+      await Promise.all(reorderPromises)
+      alert("Items added to cart successfully!")
+      navigate('/customer/cart')
+    } catch (err) {
+      console.error("Reorder error:", err)
+      alert("Failed to reorder items. Some items might be out of stock.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Basic validation
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload a valid image (JPG, PNG) or PDF file')
+        return
+      }
+      setSelectedFile(file)
+    }
+  }
+
+  const handleUploadSlip = async () => {
+    if (!selectedFile) {
+      alert("Please select a file first")
+      return
+    }
+
+    try {
+      setUploadLoading(true)
+      const formData = new FormData()
+      formData.append('order_id', id)
+      formData.append('slip', selectedFile)
+
+      await paymentService.uploadPaymentProof(formData)
+      setUploadSuccess(true)
+      setSelectedFile(null)
+      fetchOrderDetails() // Refresh data
+    } catch (err) {
+      console.error("Upload error:", err)
+      alert("Failed to upload bank slip. Please try again.")
+    } finally {
+      setUploadLoading(false)
+    }
+  }
+
+  const handleSubmitFeedback = async (e) => {
+    e.preventDefault()
+    if (newFeedback.fabric_quality === 0 || newFeedback.delivery === 0) {
+      alert("Please provide ratings for both Fabric Quality and Delivery Service")
+      return
+    }
+
+    try {
+      setSubmittingFeedback(true)
+      
+      // Calculate overall_rating as average of quality and delivery for legacy DB field
+      const overall = Math.round((newFeedback.fabric_quality + newFeedback.delivery) / 2)
+      
+      // Prepare clean feedback data for the API
+      const feedbackPayload = {
+        order_id: id,
+        overall_rating: overall,
+        fabric_quality: newFeedback.fabric_quality,
+        delivery: newFeedback.delivery,
+        customer_service: newFeedback.customer_service || null,
+        comments: newFeedback.comments || null
+      }
+
+      await customerService.submitFeedback(feedbackPayload)
+      
+      alert("Thank you for your feedback!")
+      
+      // Refresh to show the submitted feedback
+      const fbData = await customerService.getOrderFeedback(id)
+      if (fbData.feedback) {
+        setFeedback(fbData.feedback)
+      }
+    } catch (err) {
+      console.error("Feedback submission error:", err)
+      alert(err.error || "Failed to submit feedback. Please try again.")
+    } finally {
+      setSubmittingFeedback(false)
+    }
+  }
+
+  if (loading && !orderData) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading order details...</div>
+  if (error) return <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>{error}</div>
+  if (!orderData) return <div style={{ padding: '40px', textAlign: 'center' }}>Order not found.</div>
+
+  const { order, items } = orderData
+  const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.unit_price) * parseFloat(item.quantity)), 0)
+  const getDeliveryFee = (type) => {
+    if (type === 'GAMPAHA') return 500;
+    if (type === 'OUT_OF_GAMPAHA') return 750;
+    if (type === 'STORE_PICKUP') return 0;
+    return 500; // Default
+  }
+
+  const deliveryFee = getDeliveryFee(order.delivery_type)
+  const tax = 0 // Using 0 as tax is usually included in total or not applicable here yet
 
   return (
     <div>
+      <button 
+        onClick={() => navigate('/customer/orders')}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'none',
+          border: 'none',
+          color: '#6b7280',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: '600',
+          marginBottom: '20px',
+          padding: '0'
+        }}
+      >
+        <span>←</span> Back to My Orders
+      </button>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <div>
           <h1 style={{ fontSize: '24px', marginBottom: '5px', color: '#1f2937', fontWeight: '600' }}>Order Details</h1>
-          <p style={{ color: '#6b7280', fontSize: '14px' }}>Order #{order.id} • Placed on {order.date}</p>
+          <p style={{ color: '#6b7280', fontSize: '14px' }}>Order #{order.order_id} • Placed on {new Date(order.order_date).toLocaleString()}</p>
         </div>
         <span style={{
           background: '#d1fae5',
@@ -42,7 +216,7 @@ export default function OrderDetails() {
           fontSize: '14px',
           fontWeight: '500'
         }}>
-          {order.status}
+          {order.order_status}
         </span>
       </div>
 
@@ -58,32 +232,39 @@ export default function OrderDetails() {
             marginBottom: '20px'
           }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Order Items</h2>
-            {order.items.map(item => (
-              <div key={item.id} style={{
+            {items.map(item => (
+              <div key={item.order_item_id} style={{
                 display: 'flex',
                 gap: '15px',
                 paddingBottom: '15px',
                 marginBottom: '15px',
                 borderBottom: '1px solid #f3f4f6'
               }}>
-                <img 
-                  src={item.image} 
-                  alt={item.name}
-                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px' }}
-                />
+                <div style={{ 
+                  width: '80px', 
+                  height: '80px', 
+                  background: '#f3f4f6', 
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px'
+                }}>
+                  🧶
+                </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', marginBottom: '5px' }}>{item.name}</h3>
-                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>{item.id}</p>
+                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', marginBottom: '5px' }}>{item.fabric_name}</h3>
+                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>#{item.fabric_id}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: '14px', color: '#6b7280' }}>Quantity: {item.quantity} meters</p>
-                    <p style={{ fontSize: '16px', fontWeight: '600', color: '#2563eb' }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                    <p style={{ fontSize: '16px', fontWeight: '600', color: '#2563eb' }}>Rs. {parseFloat(item.total_price).toFixed(2)}</p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Shipping Information */}
+          {/* Delivery Information */}
           <div style={{
             background: 'white',
             border: '1px solid #e5e7eb',
@@ -91,22 +272,22 @@ export default function OrderDetails() {
             padding: '25px',
             marginBottom: '20px'
           }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Shipping Information</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Delivery Information</h2>
             <div style={{ display: 'grid', gap: '12px' }}>
               <div>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Recipient</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.shipping.name}</p>
+                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Delivery Type</p>
+                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>
+                  {order.delivery_type === 'STORE_PICKUP' ? '🏪 Store Pickup' : 
+                   order.delivery_type === 'GAMPAHA' ? '🚚 Gampaha Suburbs Delivery' : 
+                   order.delivery_type === 'OUT_OF_GAMPAHA' ? '🚛 Out of Gampaha Delivery' : 
+                   order.delivery_type?.replace('_', ' ')}
+                </p>
               </div>
               <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Address</p>
                 <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>
-                  {order.shipping.address}<br/>
-                  {order.shipping.city} {order.shipping.postalCode}
+                  {order.delivery_address}
                 </p>
-              </div>
-              <div>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Phone</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.shipping.phone}</p>
               </div>
             </div>
           </div>
@@ -121,52 +302,134 @@ export default function OrderDetails() {
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Payment Information</h2>
             <div style={{ display: 'grid', gap: '12px' }}>
               <div>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Payment Method</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.payment.method} •••• {order.payment.last4}</p>
-              </div>
-              <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Transaction Date</p>
-                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{order.date}</p>
+                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{new Date(order.order_date).toLocaleString()}</p>
               </div>
               <div>
                 <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Amount Paid</p>
-                <p style={{ fontSize: '16px', fontWeight: '700', color: '#22c55e' }}>Rs. {order.payment.amount.toLocaleString()}</p>
+                <p style={{ fontSize: '16px', fontWeight: '700', color: '#22c55e' }}>Rs. {parseFloat(order.total_amount).toLocaleString()}</p>
               </div>
+              {order.bank_slip_url && (
+                <div style={{ marginTop: '15px' }}>
+                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Bank Slip Proof</p>
+                  <div style={{ 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px', 
+                    overflow: 'hidden',
+                    maxWidth: '300px'
+                  }}>
+                    <img 
+                      src={`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${order.bank_slip_url}`} 
+                      alt="Bank Slip" 
+                      style={{ width: '100%', cursor: 'pointer' }}
+                      onClick={() => window.open(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${order.bank_slip_url}`, '_blank')}
+                    />
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Click image to view full size</p>
+                </div>
+              )}
+
+              {/* Upload section for PENDING BANK_TRANSFER orders without slip */}
+              {order.order_status === 'PENDING' && !order.bank_slip_url && order.payment_method === 'BANK_TRANSFER' && (
+                <div style={{ 
+                  marginTop: '15px', 
+                  padding: '15px', 
+                  background: uploadSuccess ? '#f0fdf4' : '#fef2f2', 
+                  border: `1px dashed ${uploadSuccess ? '#22c55e' : '#ef4444'}`, 
+                  borderRadius: '8px' 
+                }}>
+                  <p style={{ fontSize: '14px', color: uploadSuccess ? '#166534' : '#b91c1c', fontWeight: '600', marginBottom: '10px' }}>
+                    {uploadSuccess ? '✅ Slip Uploaded Successfully!' : 'Action Required: Upload Payment Slip'}
+                  </p>
+                  <p style={{ fontSize: '12px', color: uploadSuccess ? '#166534' : '#7f1d1d', marginBottom: '15px' }}>
+                    {uploadSuccess ? 'Your payment verification is now in progress. Our team will review the slip shortly.' : 'Your order is pending bank transfer verification. Please upload your bank slip to proceed.'}
+                  </p>
+                  {uploadSuccess ? (
+                    <button 
+                      onClick={() => navigate('/customer/orders')}
+                      style={{
+                        background: '#22c55e',
+                        color: 'white',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ← Back to My Orders
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input 
+                        type="file" 
+                        onChange={handleFileChange} 
+                        accept="image/*,.pdf"
+                        style={{ fontSize: '13px' }}
+                      />
+                      <button 
+                        onClick={handleUploadSlip}
+                        disabled={uploadLoading || !selectedFile}
+                        style={{
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '4px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: (uploadLoading || !selectedFile) ? 'not-allowed' : 'pointer',
+                          opacity: (uploadLoading || !selectedFile) ? 0.7 : 1
+                        }}
+                      >
+                        {uploadLoading ? 'Uploading...' : 'Upload Slip'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* New: Status Updates / Notifications */}
+          <div style={{
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            padding: '25px',
+            marginTop: '20px'
+          }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Status Updates</h2>
+            <div style={{ display: 'grid', gap: '15px' }}>
+              {orderData.notifications && orderData.notifications.length > 0 ? (
+                orderData.notifications.map((notif, idx) => (
+                  <div key={idx} style={{ 
+                    padding: '12px', 
+                    background: '#f9fafb', 
+                    borderRadius: '6px',
+                    borderLeft: '4px solid #2563eb'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151' }}>
+                        {notif.confirmation_type.replace('_', ' ').toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#6b7280' }}>
+                        {new Date(notif.sent_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#4b5563', margin: 0 }}>{notif.message_content}</p>
+                  </div>
+                ))
+              ) : (
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>No status updates yet.</p>
+              )}
             </div>
           </div>
         </div>
 
         {/* Right Column - Summary & Actions */}
         <div>
-          {/* Tracking */}
-          <div style={{
-            background: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '25px',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '15px' }}>Tracking</h2>
-            <div style={{ background: '#f9fafb', padding: '15px', borderRadius: '6px', marginBottom: '15px' }}>
-              <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>Tracking Number</p>
-              <p style={{ fontSize: '16px', fontWeight: '600', color: '#2563eb' }}>{order.trackingNumber}</p>
-            </div>
-            <button style={{
-              background: '#2563eb',
-              color: 'white',
-              border: 'none',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              width: '100%'
-            }}>
-              Track Shipment
-            </button>
-          </div>
-
-          {/* Order Summary */}
           <div style={{
             background: 'white',
             border: '1px solid #e5e7eb',
@@ -181,8 +444,8 @@ export default function OrderDetails() {
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {subtotal.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <span style={{ fontSize: '14px', color: '#6b7280' }}>Shipping</span>
-                <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {shipping.toLocaleString()}</span>
+                <span style={{ fontSize: '14px', color: '#6b7280' }}>Delivery</span>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {deliveryFee.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '14px', color: '#6b7280' }}>Tax</span>
@@ -191,7 +454,7 @@ export default function OrderDetails() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937' }}>Total</span>
-              <span style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>Rs. {order.payment.amount.toLocaleString()}</span>
+              <span style={{ fontSize: '18px', fontWeight: '700', color: '#2563eb' }}>Rs. {parseFloat(order.total_amount).toLocaleString()}</span>
             </div>
           </div>
 
@@ -203,19 +466,22 @@ export default function OrderDetails() {
             padding: '25px'
           }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '15px' }}>Actions</h2>
-            <button style={{
-              background: 'transparent',
-              color: '#2563eb',
-              border: '1px solid #2563eb',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              width: '100%',
-              marginBottom: '10px'
-            }}>
-              Download Invoice
+            <button 
+              onClick={() => window.print()}
+              style={{
+                background: 'transparent',
+                color: '#2563eb',
+                border: '1px solid #2563eb',
+                padding: '12px',
+                borderRadius: '6px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                width: '100%',
+                marginBottom: '10px'
+              }}
+            >
+              Print Invoice
             </button>
             <button style={{
               background: '#22c55e',
@@ -228,8 +494,8 @@ export default function OrderDetails() {
               fontWeight: '500',
               width: '100%',
               marginBottom: '10px'
-            }}>
-              Reorder Items
+            }} onClick={handleReorder}>
+              Reorder All Items
             </button>
             <button style={{
               background: 'transparent',
@@ -245,6 +511,116 @@ export default function OrderDetails() {
               Contact Support
             </button>
           </div>
+
+          {/* Feedback Section */}
+          {order.order_status === 'DELIVERED' && (
+            <div style={{
+              background: 'white',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '25px',
+              marginTop: '20px'
+            }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>
+                {feedback ? 'Your Review' : 'Rate Your Order'}
+              </h2>
+
+              {feedback ? (
+                <div>
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    <div style={{ fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>
+                      Fabric Quality:
+                    </div>
+                    <div style={{ fontSize: '20px', color: '#fbbf24', marginBottom: '10px' }}>
+                      {'★'.repeat(feedback.fabric_quality || 0)}{'☆'.repeat(5 - (feedback.fabric_quality || 0))}
+                    </div>
+                    
+                    <div style={{ fontSize: '14px', color: '#1f2937', fontWeight: '500' }}>
+                      Delivery Service:
+                    </div>
+                    <div style={{ fontSize: '20px', color: '#fbbf24', marginBottom: '15px' }}>
+                      {'★'.repeat(feedback.delivery || 0)}{'☆'.repeat(5 - (feedback.delivery || 0))}
+                    </div>
+                  </div>
+                  
+                  <p style={{ fontSize: '14px', color: '#4b5563', fontStyle: feedback.comments ? 'normal' : 'italic', borderTop: '1px solid #f3f4f6', paddingTop: '15px' }}>
+                    {feedback.comments || 'No comments provided.'}
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitFeedback}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#1f2937', marginBottom: '8px', fontWeight: '500' }}>Fabric Quality:</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setNewFeedback({ ...newFeedback, fabric_quality: star })}
+                          style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: star <= newFeedback.fabric_quality ? '#fbbf24' : '#e5e7eb', padding: 0 }}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#1f2937', marginBottom: '8px', fontWeight: '500' }}>Delivery Service:</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setNewFeedback({ ...newFeedback, delivery: star })}
+                          style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: star <= newFeedback.delivery ? '#fbbf24' : '#e5e7eb', padding: 0 }}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '15px' }}>
+                    <textarea
+                      placeholder="Share your experience..."
+                      value={newFeedback.comments}
+                      onChange={(e) => setNewFeedback({ ...newFeedback, comments: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        minHeight: '80px',
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingFeedback}
+                    style={{
+                      background: '#2563eb',
+                      color: 'white',
+                      border: 'none',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      width: '100%',
+                      cursor: submittingFeedback ? 'not-allowed' : 'pointer',
+                      opacity: submittingFeedback ? 0.7 : 1
+                    }}
+                  >
+                    {submittingFeedback ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

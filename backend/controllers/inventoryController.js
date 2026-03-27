@@ -36,29 +36,78 @@ const getInventoryFabrics = async (req, res) => {
 };
 
 const addFabric = async (req, res) => {
+    console.log("Add Fabric request received");
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
     const { name, price_per_meter } = req.body;
     if (!name || !price_per_meter) {
         return res.status(400).json({ error: "Name and price are required" });
     }
 
     try {
-        const result = await inventoryService.addFabric(req.body);
+        const fabricData = { ...req.body };
+        
+        // Convert string fields from FormData to appropriate numbers
+        if (fabricData.price_per_meter) fabricData.price_per_meter = parseFloat(fabricData.price_per_meter);
+        if (fabricData.stock_quantity) fabricData.stock_quantity = parseFloat(fabricData.stock_quantity);
+        // Map form field reorder_level → DB column restock_level
+        if (fabricData.reorder_level) {
+          fabricData.restock_level = parseFloat(fabricData.reorder_level);
+          delete fabricData.reorder_level;
+        }
+        
+        // Handle empty fields
+        if (fabricData.width === '') fabricData.width = null;
+        if (fabricData.restock_date === '') fabricData.restock_date = null;
+
+        if (req.file) {
+            // Set image_url to the path of the uploaded file
+            fabricData.image_url = `uploads/fabrics/${req.file.filename}`;
+        }
+
+        const result = await inventoryService.addFabric(fabricData);
         res.json({ message: "Fabric added successfully", fabric_id: result.fabric_id });
     } catch (err) {
-        console.error("Error adding fabric:", err);
-        res.status(500).json({ error: "Failed to add fabric" });
+        console.error("Error adding fabric:", err.message, err.stack);
+        res.status(500).json({ error: "Failed to add fabric: " + err.message });
     }
 };
 
 const updateFabric = async (req, res) => {
     const { id } = req.params;
+    console.log("Update Fabric request received for ID:", id);
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
     try {
-        const result = await inventoryService.updateFabric(id, req.body);
+        const fabricData = { ...req.body };
+        
+        // Convert string fields from FormData to appropriate numbers
+        if (fabricData.price_per_meter) fabricData.price_per_meter = parseFloat(fabricData.price_per_meter);
+        if (fabricData.stock_quantity) fabricData.stock_quantity = parseFloat(fabricData.stock_quantity);
+        // Map form field reorder_level → DB column restock_level
+        if (fabricData.reorder_level) {
+          fabricData.restock_level = parseFloat(fabricData.reorder_level);
+          delete fabricData.reorder_level;
+        }
+        
+        // Handle empty fields
+        if (fabricData.width === '') fabricData.width = null;
+        if (fabricData.restock_date === '') fabricData.restock_date = null;
+
+        if (req.file) {
+            // Set image_url to the path of the uploaded file
+            fabricData.image_url = `uploads/fabrics/${req.file.filename}`;
+        } else if (req.body.existing_image_url) {
+            // Preserve existing image if no new one
+            fabricData.image_url = req.body.existing_image_url;
+        }
+
+        const result = await inventoryService.updateFabric(id, fabricData);
         if (!result) return res.status(404).json({ error: "Fabric not found" });
         res.json({ message: "Fabric updated successfully" });
     } catch (err) {
-        console.error("Error updating fabric:", err);
-        res.status(500).json({ error: "Failed to update fabric" });
+        console.error("Error updating fabric:", err.message, err.stack);
+        res.status(500).json({ error: "Failed to update fabric: " + err.message });
     }
 };
 

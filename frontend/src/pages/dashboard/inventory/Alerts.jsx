@@ -178,7 +178,7 @@ const InventoryAlerts = () => {
                     <p><span className="font-medium">Status:</span> {getAlertTypeText(alert.type)}</p>
                     {(alert.type === 'low-stock' || alert.type === 'out-of-stock') && alert.restockDate && (
                       <p><span className="font-medium">Expected Restock:</span> 
-                        <span className="text-blue-600 font-semibold">{alert.restockDate}</span>
+                        <span className="text-blue-600 font-semibold">{new Date(alert.restockDate).toLocaleDateString()}</span>
                       </p>
                     )}
                   </div>

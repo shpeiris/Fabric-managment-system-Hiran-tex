@@ -1,49 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiCall } from '../../../utils/auth.js';
+import { apiCall, getUser } from '../../../utils/auth.js';
 import "./CustomerDashboard.css";
 
-// Import sample images (Assuming these exist or using fallbacks)
-// Since the user had absolute paths to C:\..., I will try to point to the assets folder relatively if possible.
-// Or I'll use placeholders if I can't verify them.
+// Import sample images
 import fabric1 from "../../../assets/Fabrics/lasecotton.png";
-import fabric2 from "../../../assets/Fabrics/cover-fabric.png";
-import fabric3 from "../../../assets/Fabrics/inventory01.png";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
     cartItems: 0,
     totalSpent: 0
   });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const userData = getUser();
+    setUser(userData);
     fetchDashboardData();
+
+    // Implement Live Update (Polling every 30 seconds)
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [fabricsRes, statsRes, ordersRes] = await Promise.all([
-        apiCall('http://localhost:5000/api/inventory/fabrics'),
-        apiCall('http://localhost:5000/api/customer/dashboard-stats'),
-        apiCall('http://localhost:5000/api/orders')
+      const [fabricsRes, statsRes, ordersRes, notificationsRes] = await Promise.all([
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/dashboard-stats`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/orders`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`)
       ]);
 
-      const [fabricsData, statsData, ordersData] = await Promise.all([
+      const [fabricsData, statsData, ordersData, notificationsData] = await Promise.all([
         fabricsRes.json(),
         statsRes.json(),
-        ordersRes.json()
+        ordersRes.json(),
+        notificationsRes.json()
       ]);
 
       if (fabricsRes.ok) {
         const fabricsList = fabricsData.fabrics || [];
-        const favoriteFabrics = fabricsList.slice(0, 3).map(fabric => ({
+        // Show unique materials to avoid duplication of variants
+        const uniqueFabrics = [...new Map(fabricsList.map(f => [f.name, f])).values()];
+        const favoriteFabrics = uniqueFabrics.slice(0, 4).map(fabric => ({
           id: `FAB${fabric.fabric_id.toString().padStart(3, '0')}`,
           fabric_id: fabric.fabric_id,
           name: fabric.name,
@@ -56,7 +66,10 @@ export default function Dashboard() {
       }
 
       if (statsRes.ok) {
-        setStats(statsData);
+        setStats({
+          ...statsData,
+          notifications: notificationsData.notifications || []
+        });
       }
 
       if (ordersRes.ok) {
@@ -70,134 +83,167 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="dashboard-container">
-      <h1 style={{ marginBottom: '10px' }}>Customer Dashboard</h1>
-      <p style={{ color: '#666', fontSize: '15px', marginBottom: '30px' }}>Welcome back! Here's your account overview.</p>
-
-      {/* Summary Cards */}
-      <div className="stats-grid">
-        <StatCard title="Total Orders" value={stats.totalOrders} icon="📦" />
-        <StatCard title="Pending Orders" value={stats.pendingOrders} icon="⏳" />
-        <StatCard title="Cart Items" value={stats.cartItems} icon="🛒" />
-        <StatCard title="Total Spent" value={`Rs. ${stats.totalSpent.toLocaleString()}`} icon="💰" />
-      </div>
-
-      {/* Quick Actions */}
-      <h3 style={{ marginBottom: '20px', opacity: 0.8 }}>Quick Actions</h3>
-      <div className="quick-actions-grid">
-        <button className="action-btn browse" onClick={() => navigate('/customer/browse')}>
-          <span>🧵</span> Browse Fabrics
-        </button>
-        <button className="action-btn cart" onClick={() => navigate('/customer/cart')}>
-          <span>🛒</span> View Cart
-        </button>
-        <button className="action-btn track" onClick={() => navigate('/customer/orders')}>
-          <span>📦</span> Track Orders
-        </button>
-      </div>
-
-      {/* Recent Orders */}
-      <h3 style={{ marginBottom: '20px', opacity: 0.8 }}>Recent Orders</h3>
-      <div className="orders-section">
-        <table className="orders-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Date</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length > 0 ? orders.map((order) => (
-              <tr key={order.order_id}>
-                <td style={{ color: '#001a66', fontWeight: 'bold' }}>#{order.order_id.toString().padStart(3, '0')}</td>
-                <td>{new Date(order.order_date).toLocaleDateString()}</td>
-                <td>{order.item_count} items</td>
-                <td style={{ fontWeight: '600' }}>Rs. {parseFloat(order.total_amount).toLocaleString()}</td>
-                <td>
-                  <span className={`status-badge ${order.order_status.toLowerCase().replace(' ', '-')}`}>
-                    {order.order_status}
-                  </span>
-                </td>
-                <td>
-                  <button
-                    style={{
-                      background: 'none',
-                      border: '1px solid #001a66',
-                      color: '#001a66',
-                      padding: '5px 10px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                    onClick={() => navigate(`/customer/orders/${order.order_id}`)}
-                  >
-                    View
-                  </button>
-                </td>
-              </tr>
-            )) : (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                  No recent orders found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Favorite Fabrics */}
-      <h3 style={{ marginBottom: '20px', opacity: 0.8 }}>Recent Fabrics</h3>
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-          Loading fabrics...
+    <div className="dashboard-wrapper">
+      <div className="dashboard-header-section">
+        <div className="welcome-text">
+          <h1>Hello, {user?.full_name?.split(' ')[0] || 'Customer'}! 👋</h1>
+          <p>Welcome back to Hiran Fabric Textile. Here's what's happening today.</p>
         </div>
-      ) : (
-        <div className="favorites-grid">
-          {favorites.map(fabric => (
-            <div key={fabric.id} className="fav-card">
-              <img
-                src={fabric.image}
-                alt={fabric.name}
-                className="fav-image"
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/300x160?text=No+Image'; }}
-              />
-              <div className="fav-details">
-                <h4 className="fav-name">{fabric.name}</h4>
-                <p className="fav-price">{fabric.price}</p>
-                {fabric.material_type && (
-                  <p style={{ fontSize: '12px', color: '#666', margin: '4px 0' }}>
-                    {fabric.material_type}
-                  </p>
-                )}
-                <button
-                  className="add-cart-btn"
-                  onClick={() => navigate(`/customer/fabric/${fabric.fabric_id}`)}
-                >
-                  View Details
-                </button>
-              </div>
+        <div className="header-date">
+          <span className="date-icon">📅</span>
+          <span>{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+        </div>
+      </div>
+
+      <div className="stats-overview">
+        <div className="stat-item active">
+          <div className="stat-label">Total Orders</div>
+          <div className="stat-value">{stats.totalOrders}</div>
+          <div className="stat-trend neutral">All time</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-label">Pending Orders</div>
+          <div className="stat-value">{stats.pendingOrders}</div>
+          <div className="stat-trend warning">In Progress</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-label">Cart Items</div>
+          <div className="stat-value">{stats.cartItems}</div>
+          <div className="stat-trend success">In Cart</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-label">Total Spent</div>
+          <div className="stat-value small">Rs. {stats.totalSpent.toLocaleString()}</div>
+          <div className="stat-trend success">Active Balance</div>
+        </div>
+      </div>
+
+      <div className="dashboard-main-grid">
+        <div className="main-left">
+          <section className="dashboard-card">
+            <div className="card-header">
+              <h3>Recent Orders</h3>
+              <button className="view-all-link" onClick={() => navigate('/customer/orders')}>View All</button>
             </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+            <div className="orders-table-container">
+              <table className="modern-table">
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.length > 0 ? orders.map((order) => (
+                    <tr key={order.order_id} onClick={() => navigate(`/customer/order-details/${order.order_id}`)} style={{ cursor: 'pointer' }}>
+                      <td><span className="order-num">#{order.order_id.toString().padStart(3, '0')}</span></td>
+                      <td>{new Date(order.order_date).toLocaleDateString()}</td>
+                      <td>
+                        <span className={`status-pill ${order.order_status.toLowerCase().replace(' ', '-')}`}>
+                          {order.order_status}
+                        </span>
+                      </td>
+                      <td className="amount">Rs. {parseFloat(order.total_amount).toLocaleString()}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="4" className="empty-state">No recent orders.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
 
-function StatCard({ title, value, icon }) {
-  return (
-    <div className="stat-card">
-      <div className="stat-info">
-        <h4>{title}</h4>
-        <h2>{value}</h2>
-      </div>
-      <div className="stat-icon">
-        {icon}
+          <section className="dashboard-card mt-24">
+            <div className="card-header">
+              <h3>Explore New Fabrics</h3>
+              <button className="view-all-link" onClick={() => navigate('/customer/browse')}>Browse Catalog</button>
+            </div>
+            <div className="fabrics-mini-grid">
+              {favorites.map(fabric => (
+                <div key={fabric.id} className="mini-fabric-card" onClick={() => navigate(`/customer/fabric/${fabric.fabric_id}`)}>
+                  <div className="mini-img-wrapper">
+                    <img 
+                      src={!fabric.image 
+                        ? fabric1 
+                        : (typeof fabric.image === 'string' && fabric.image.startsWith('uploads/') 
+                            ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/${fabric.image}` 
+                            : (typeof fabric.image === 'string' && fabric.image.startsWith('http') 
+                                ? fabric.image 
+                                : (typeof fabric.image === 'string' ? `/src/assets/Fabrics/${fabric.image}` : fabric1)))
+                      } 
+                      alt={fabric.name} 
+                      onError={(e) => { e.target.src = '/src/assets/Fabrics/fabric-collage.jpg'; }} 
+                    />
+                  </div>
+                  <div className="mini-info">
+                    <h4>{fabric.name}</h4>
+                    <p>{fabric.price}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="main-right">
+          <section className="dashboard-card">
+            <div className="card-header">
+              <h3>Notifications</h3>
+              <button 
+                className="refresh-btn" 
+                onClick={fetchDashboardData}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
+                title="Refresh notifications"
+              >
+                🔄
+              </button>
+            </div>
+            <div className="notifications-list" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              {stats.notifications && stats.notifications.length > 0 ? (
+                stats.notifications.map((notif) => {
+                  const isRejected = notif.message_content?.startsWith('[REJECTED]');
+                  const isPay = notif.confirmation_type?.startsWith('payment_');
+                  const message = notif.message_content?.replace('[REJECTED] ', '') || '';
+                  const accent = isRejected ? '#ef4444' : isPay ? '#10b981' : '#3b82f6';
+                  
+                  return (
+                    <div key={notif.confirmation_id} className="notification-item" style={{ 
+                      padding: '12px', 
+                      borderBottom: '1px solid #f3f4f6',
+                      cursor: 'pointer',
+                      borderLeft: `4px solid ${accent}`,
+                      marginBottom: '8px',
+                      background: '#fff'
+                    }} onClick={() => navigate(`/customer/order-details/${notif.order_id}`)}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontWeight: '600', fontSize: '13px', color: '#1f2937' }}>
+                          {isRejected ? '⚠️ REJECTED' : notif.confirmation_type.replace('_', ' ').toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#6b7280' }}>
+                          {new Date(notif.sent_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: '#4b5563', margin: 0, lineHeight: '1.4' }}>
+                        {message}
+                      </p>
+                      <div style={{ marginTop: '4px', fontSize: '11px', color: '#2563eb' }}>
+                        Order #{notif.order_id} • View Details →
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                  No new notifications.
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

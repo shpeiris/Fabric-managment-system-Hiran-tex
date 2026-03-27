@@ -2,12 +2,12 @@ import { pool } from "../config/db.js";
 
 const getCart = async (customerId) => {
   const query = `
-    SELECT c.cart_id, c.quantity, c.added_date, c.total_price,
+    SELECT c.cart_id, c.quantity, c.created_at, c.total_price,
            f.fabric_id, f.name as fabric_name, f.material_type, f.color, f.price_per_meter, f.stock_quantity as stock_available_quantity, f.image_url
     FROM cart c
     JOIN fabrics f ON c.fabric_id = f.fabric_id
     WHERE c.customer_id = $1
-    ORDER BY c.added_date DESC
+    ORDER BY c.created_at DESC
   `;
   const result = await pool.query(query, [customerId]);
   return result.rows;
@@ -101,4 +101,20 @@ const removeFromCart = async (customerId, cartId) => {
   return { message: "Item removed" };
 };
 
-export { getCart, addToCart, updateCartItem, removeFromCart };
+const getCartCount = async (customerId) => {
+  const query = `
+    SELECT COALESCE(SUM(quantity), 0) as count
+    FROM cart
+    WHERE customer_id = $1
+  `;
+  const result = await pool.query(query, [customerId]);
+  return { count: parseFloat(result.rows[0].count) };
+};
+
+const clearCart = async (customerId) => {
+  await pool.query("DELETE FROM cart WHERE customer_id = $1", [customerId]);
+  return { message: "Cart cleared" };
+};
+
+export { getCart, addToCart, updateCartItem, removeFromCart, getCartCount, clearCart };
+

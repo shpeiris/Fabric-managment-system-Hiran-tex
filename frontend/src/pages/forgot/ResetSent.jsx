@@ -7,17 +7,16 @@ export default function ResetSent() {
   const location = useLocation();
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
   const [canResend, setCanResend] = useState(false);
-  const email = location.state?.email || 'user@example.com';
-
+  const email = location.state?.email || localStorage.getItem('resetEmail');
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!location.state?.email) {
+    if (!email) {
       navigate("/forgot");
     }
-  }, [location.state, navigate]);
+  }, [email, navigate]);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -37,7 +36,7 @@ export default function ResetSent() {
   const handleResend = async () => {
     setError("");
     try {
-      const response = await fetch('http://localhost:5000/forgot-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -65,7 +64,7 @@ export default function ResetSent() {
     setError("");
 
     try {
-      const response = await fetch('http://localhost:5000/verify-otp', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })
@@ -76,6 +75,9 @@ export default function ResetSent() {
       if (!response.ok) {
         throw new Error(data.error || 'Invalid OTP');
       }
+
+      // Persist OTP for the next step
+      localStorage.setItem('resetOtp', otp);
 
       // Navigate to new password page and pass email and otp
       navigate('/new-password', { state: { email, otp } });
@@ -111,7 +113,7 @@ export default function ResetSent() {
 
           <p className="info-text" style={{ color: "#64748b", lineHeight: "1.6", marginBottom: "24px" }}>
             We've sent a 6-digit code to <strong>{email}</strong>.<br />
-            Check your <strong>backend terminal</strong> to find the code.
+            Please check your <strong>inbox</strong> (and spam folder) to find the code.
           </p>
 
           <form onSubmit={handleVerify}>

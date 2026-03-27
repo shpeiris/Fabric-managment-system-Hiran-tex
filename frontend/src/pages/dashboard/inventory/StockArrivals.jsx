@@ -11,6 +11,7 @@ const StockArrivals = () => {
   
   const [formData, setFormData] = useState({
     fabric_id: '',
+    color_fabric_id: '', // fabric_id of the specific color variant
     supplier_id: '',
     quantity: '',
     supply_unit_price: '',
@@ -28,9 +29,9 @@ const StockArrivals = () => {
     try {
       setLoading(true)
       const [arrivalsRes, fabricsRes, suppliersRes] = await Promise.all([
-        apiCall('http://localhost:5000/api/inventory/stock-arrivals'),
-        apiCall('http://localhost:5000/api/inventory/fabrics'),
-        apiCall('http://localhost:5000/api/inventory/suppliers')
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`),
+        apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/suppliers`)
       ])
 
       const [arrivalsData, fabricsData, suppliersData] = await Promise.all([
@@ -50,7 +51,15 @@ const StockArrivals = () => {
     }
   }
 
-  const totalValue = formData.quantity && formData.supply_unit_price ? 
+  // Get the selected fabric's name to show color variants
+  const selectedFabric = fabrics.find(f => f.fabric_id === parseInt(formData.fabric_id))
+  const colorVariants = selectedFabric
+    ? fabrics.filter(f => f.name === selectedFabric.name)
+    : []
+
+  const effectiveFabricId = formData.color_fabric_id || formData.fabric_id
+
+  const totalValue = formData.quantity && formData.supply_unit_price ?
     parseFloat(formData.quantity) * parseFloat(formData.supply_unit_price) : 0
 
   const filteredArrivals = arrivals.filter(arrival => {
@@ -79,10 +88,11 @@ const StockArrivals = () => {
 
     try {
       setSubmitting(true)
-      const response = await apiCall('http://localhost:5000/api/inventory/stock-arrivals', {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`, {
         method: 'POST',
         body: JSON.stringify({
           ...formData,
+          fabric_id: effectiveFabricId || formData.fabric_id,
           quantity: parseFloat(formData.quantity),
           supply_unit_price: parseFloat(formData.supply_unit_price),
           total_value: totalValue
@@ -96,6 +106,7 @@ const StockArrivals = () => {
         setShowAddForm(false)
         setFormData({
           fabric_id: '',
+          color_fabric_id: '',
           supplier_id: '',
           quantity: '',
           supply_unit_price: '',
@@ -211,6 +222,12 @@ const StockArrivals = () => {
                 <div>
                   <p className="text-gray-500">Fabric</p>
                   <p className="font-medium">{arrival.fabric_name}</p>
+                  {arrival.color && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                      <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: arrival.color, border: '1px solid #ddd', display: 'inline-block' }} />
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>{arrival.color.startsWith('#') ? 'Custom' : arrival.color}</span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-gray-500">Quantity</p>
@@ -269,21 +286,63 @@ const StockArrivals = () => {
                 {/* Basic Info */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Fabric</label>
-                    <select 
+                    <label className="block text-sm font-medium mb-1">Fabric Item *</label>
+                    <select
                       className="w-full border p-2 rounded"
                       value={formData.fabric_id}
-                      onChange={(e) => setFormData({ ...formData, fabric_id: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, fabric_id: e.target.value, color_fabric_id: '' })}
                       required
                     >
                       <option value="">Select Fabric</option>
-                      {fabrics.map(fabric => (
+                      {/* Show unique fabric names only */}
+                      {Array.from(new Map(fabrics.map(f => [f.name, f])).values()).map(fabric => (
                         <option key={fabric.fabric_id} value={fabric.fabric_id}>
                           {fabric.name} ({fabric.material_type})
                         </option>
                       ))}
                     </select>
                   </div>
+
+                  {/* Color variant picker — shown when a fabric is selected */}
+                  {colorVariants.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Color *</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '10px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc' }}>
+                        {colorVariants.map(v => {
+                          const isSelected = formData.color_fabric_id === String(v.fabric_id)
+                          return (
+                            <button
+                              key={v.fabric_id}
+                              type="button"
+                              title={`${v.color || 'Unknown'} — ${v.stock_quantity}m in stock`}
+                              onClick={() => setFormData(prev => ({ ...prev, color_fabric_id: String(v.fabric_id) }))}
+                              style={{
+                                width: '36px', height: '36px', borderRadius: '50%',
+                                backgroundColor: v.color || '#ccc',
+                                border: isSelected ? '3px solid #001a66' : '2px solid #ddd',
+                                cursor: 'pointer',
+                                boxShadow: isSelected ? '0 0 0 2px #bfdbfe' : 'none',
+                                transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                                transition: 'all 0.15s ease'
+                              }}
+                            />
+                          )
+                        })}
+                      </div>
+                      {formData.color_fabric_id && (() => {
+                        const cv = colorVariants.find(v => String(v.fabric_id) === formData.color_fabric_id)
+                        return cv ? (
+                          <p style={{ fontSize: '13px', marginTop: '6px', color: '#475569' }}>
+                            Selected: <strong>{cv.color?.startsWith('#') ? 'Custom Tone' : cv.color}</strong>
+                            {' '}— <span style={{ color: cv.stock_quantity > 0 ? '#1a7a4a' : '#c1121f', fontWeight: 600 }}>
+                              {cv.stock_quantity}m in stock
+                            </span>
+                          </p>
+                        ) : null
+                      })()}
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium mb-1">Supplier</label>
                     <select 

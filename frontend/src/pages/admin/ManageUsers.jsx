@@ -6,7 +6,7 @@ export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("ALL");
+  const [selectedTab, setSelectedTab] = useState("ADMIN");
   const [useDefaultPassword, setUseDefaultPassword] = useState(true);
   const [generatedPassword, setGeneratedPassword] = useState(null);
   const [newUser, setNewUser] = useState({
@@ -25,7 +25,7 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await apiCall("http://localhost:5000/admin/users");
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/admin/users`);
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || []);
@@ -68,7 +68,7 @@ export default function UserManagement() {
         ? { ...newUser, password: "" } // Send empty password to trigger default generation
         : newUser;
 
-      const response = await apiCall("http://localhost:5000/admin/users", {
+      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/admin/users`, {
         method: "POST",
         body: JSON.stringify(userData),
       });
@@ -111,7 +111,7 @@ export default function UserManagement() {
   const handleStatusUpdate = async (userId, newStatus) => {
     try {
       const response = await apiCall(
-        `http://localhost:5000/admin/users/${userId}/status`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/admin/users/${userId}/status`,
         {
           method: "PATCH",
           body: JSON.stringify({ status: newStatus }),
@@ -132,7 +132,7 @@ export default function UserManagement() {
   };
 
   const filteredUsers = users.filter((user) => {
-    if (selectedTab === "ALL") return true;
+    if (selectedTab === "ADMIN") return user.role === "ADMIN";
     return user.role === selectedTab;
   });
 
@@ -143,10 +143,6 @@ export default function UserManagement() {
     <div className="user-page">
       <div className="page-header">
         <h1>User Management</h1>
-        <p className="subtitle">
-          Manage user accounts and access roles within the system. Only
-          accessible to Admin users.
-        </p>
         <button className="add-btn" onClick={() => setShowAddForm(true)}>
           + Add User
         </button>
@@ -315,7 +311,7 @@ export default function UserManagement() {
         <div className="modal-overlay">
           <div className="modal-content success-modal">
             <div className="modal-header">
-              <h2>✓ User Created Successfully</h2>
+              <h2>User Created Successfully</h2>
             </div>
 
             <div className="password-display">
@@ -335,7 +331,7 @@ export default function UserManagement() {
             </div>
 
             <p className="warning-message">
-              ⚠️ Please save this password securely. It won't be shown again.
+              Please save this password securely. It won't be shown again.
             </p>
 
             <div className="modal-actions">
@@ -354,12 +350,6 @@ export default function UserManagement() {
         <h3 className="section-title">User List ({filteredUsers.length})</h3>
 
         <div className="tabs">
-          <button
-            className={selectedTab === "ALL" ? "active" : ""}
-            onClick={() => setSelectedTab("ALL")}
-          >
-            All Users
-          </button>
           <button
             className={selectedTab === "ADMIN" ? "active" : ""}
             onClick={() => setSelectedTab("ADMIN")}
@@ -393,7 +383,6 @@ export default function UserManagement() {
                 <th>Full Name</th>
                 <th>Email</th>
                 <th>Role</th>
-                <th>Status</th>
                 <th>Created</th>
                 <th>Actions</th>
               </tr>
@@ -431,13 +420,6 @@ const UserRow = ({ user, onStatusUpdate }) => {
       <td>
         <span className={`role-badge ${user.role.toLowerCase()}`}>
           {user.role.replace("_", " ")}
-        </span>
-      </td>
-      <td>
-        <span
-          className={`status-badge ${user.status ? user.status.toLowerCase() : "active"}`}
-        >
-          {user.status || "ACTIVE"}
         </span>
       </td>
       <td>{new Date(user.created_at).toLocaleDateString()}</td>

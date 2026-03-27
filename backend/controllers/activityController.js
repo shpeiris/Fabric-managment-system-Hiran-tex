@@ -8,11 +8,8 @@ const getRecentActivities = async (req, res) => {
       SELECT 
         al.log_id,
         al.action,
-        al.details,
-        al.actor_id,
+        al.action_type,
         al.actor_type,
-        al.ip_address,
-        al.user_agent,
         al.created_at,
         COALESCE(e.full_name, c.full_name, 'System') AS actor_name,
         COALESCE(e.email, c.email, 'system') AS actor_email,
@@ -22,8 +19,8 @@ const getRecentActivities = async (req, res) => {
           ELSE COALESCE(al.actor_type, 'SYSTEM')
         END AS actor_role
       FROM activity_logs al
-      LEFT JOIN employees e ON al.actor_type = 'EMPLOYEE' AND al.actor_id = e.employee_id
-      LEFT JOIN customers c ON al.actor_type = 'CUSTOMER' AND al.actor_id = c.customer_id
+      LEFT JOIN employees e ON al.employee_id = e.employee_id
+      LEFT JOIN customers c ON al.customer_id = c.customer_id
       ORDER BY al.created_at DESC
       LIMIT $1
     `;

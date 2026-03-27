@@ -284,7 +284,7 @@ const FabricCatalog = () => {
                     </td>
                     <td>
                       {fabric.status === "low-stock" ||
-                      fabric.status === "out-of-stock" ? (
+                        fabric.status === "out-of-stock" ? (
                         <span style={{ color: "#ef4444", fontWeight: "500" }}>
                           {fabric.reorderDate}
                         </span>
@@ -358,38 +358,32 @@ const FabricCatalog = () => {
                   <div className="card-footer">
                     {(fabric.status === "low-stock" ||
                       fabric.status === "out-of-stock") && (
-                      <div
-                        className="restock-info"
-                        style={{
-                          background:
-                            fabric.status === "out-of-stock"
-                              ? "#fee2e2"
-                              : "#fef3c7",
-                          color:
-                            fabric.status === "out-of-stock"
-                              ? "#dc2626"
-                              : "#d97706",
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          fontSize: "0.8rem",
-                          fontWeight: "600",
-                          marginBottom: "8px",
-                          textAlign: "center",
-                        }}
-                      >
-                        📅 Expected Restock: {fabric.reorderDate || "TBA"}
-                      </div>
-                    )}
+                        <div
+                          className="restock-info"
+                          style={{
+                            background:
+                              fabric.status === "out-of-stock"
+                                ? "#fee2e2"
+                                : "#fef3c7",
+                            color:
+                              fabric.status === "out-of-stock"
+                                ? "#dc2626"
+                                : "#d97706",
+                            padding: "6px 10px",
+                            borderRadius: "6px",
+                            fontSize: "0.8rem",
+                            fontWeight: "600",
+                            marginBottom: "8px",
+                            textAlign: "center",
+                          }}
+                        >
+                          📅 Expected Restock: {fabric.reorderDate ? new Date(fabric.reorderDate).toLocaleDateString() : "TBA"}
+                        </div>
+                      )}
                     <button
                       className={`btn-add ${fabric.status === "out-of-stock" ? "disabled" : ""} ${cartSuccess[fabric.fabric_id] ? "success" : ""}`}
-                      style={{
-                        marginLeft:
-                          fabric.status === "low-stock" ||
-                          fabric.status === "out-of-stock"
-                            ? "0"
-                            : "auto",
-                      }}
                       onClick={() => addToCart(fabric)}
+
                       disabled={
                         cartLoading[fabric.fabric_id] ||
                         fabric.status === "out-of-stock"
