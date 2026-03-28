@@ -1,5 +1,5 @@
 // Script to run a single migration file
-import { pool } from "../config/db.js";
+import { pool } from "../src/config/db.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";

@@ -1,4 +1,4 @@
-import { pool } from '../config/db.js';
+import { pool } from '../src/config/db.js';
 
 const refreshCatalog = async () => {
     const client = await pool.connect();

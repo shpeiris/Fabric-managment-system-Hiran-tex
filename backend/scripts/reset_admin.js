@@ -1,4 +1,4 @@
-import { pool } from "../config/db.js";
+import { pool } from "../src/config/db.js";
 import bcrypt from "bcryptjs";
 
 async function resetAdminPassword() {

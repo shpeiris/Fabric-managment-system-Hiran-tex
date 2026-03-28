@@ -1,4 +1,4 @@
-import { pool } from "../config/db.js";
+import { pool } from "../src/config/db.js";
 
 const updates = [
   { name: 'Satin Stripe Silver', image_url: 'satin_orange.jpg' }, // Mapping orange to silver for variety

@@ -62,7 +62,7 @@ app.use(
 app.use(express.json());
 
 // Serve static files from the uploads directory
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Session middleware (In-Memory for now, replacing DB storage)
 app.use(
