@@ -81,13 +81,25 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
+    // Basic validation
+    if (!formData.full_name || !formData.phone || !formData.address) {
+      setErrorMsg('Full name, phone, and address are required');
+      return;
+    }
+
+    const cleanPhone = formData.phone.replace(/[\s-]/g, "");
+    if (!/^\d{10}$/.test(cleanPhone)) {
+      setErrorMsg('Phone number must be exactly 10 digits');
+      return;
+    }
+
     setSaving(true);
     setErrorMsg('');
     setSuccessMsg('');
     try {
       const data = await customerService.updateProfile({
         full_name: formData.full_name,
-        phone: formData.phone,
+        phone: cleanPhone,
         address: formData.address,
       });
       

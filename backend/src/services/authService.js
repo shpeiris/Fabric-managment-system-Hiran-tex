@@ -63,7 +63,7 @@ const createUser = async (userData) => {
       full_name,
       email,
       hashedPassword,
-      phone || null,
+      phone,
       address,
     ]);
 

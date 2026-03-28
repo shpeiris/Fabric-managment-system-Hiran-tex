@@ -15,7 +15,7 @@ export const initDeliveryTypeModel = async () => {
 
   const deliveryCheck = await pool.query("SELECT COUNT(*) FROM delivery_types");
   if (parseInt(deliveryCheck.rows[0].count) === 0) {
-    console.log("🌱 Seeding delivery types...");
+    console.log("Seeding delivery types...");
     await pool.query(`
       INSERT INTO delivery_types (type_name, description, base_cost, estimated_days) VALUES
       ('Standard Delivery', '3-5 business days', 350.00, 5),

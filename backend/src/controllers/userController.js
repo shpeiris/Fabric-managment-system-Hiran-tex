@@ -29,6 +29,16 @@ const createUser = async (req, res) => {
       .json({ error: "NIC is required for staff accounts" });
   }
 
+  // 10-digit phone validation if provided
+  if (telephone) {
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(telephone)) {
+      return res
+        .status(400)
+        .json({ error: "Phone number must be exactly 10 digits" });
+    }
+  }
+
   // Map Roles for DB (Frontend Role -> DB Role)
   let dbRole = role;
   if (role === "INVENTORY_MANAGER") dbRole = "INVENTORY";

@@ -90,10 +90,18 @@ const register = async (req, res) => {
   const { full_name, email, phone, username, password, address, role } =
     req.body;
 
-  if (!full_name || !email || !password) {
+  if (!full_name || !email || !password || !phone || !address) {
     return res
       .status(400)
-      .json({ error: "Full name, email, and password are required" });
+      .json({ error: "Full name, email, password, phone, and address are required" });
+  }
+
+  // 10-digit phone validation
+  const phoneRegex = /^\d{10}$/;
+  if (!phoneRegex.test(phone)) {
+    return res
+      .status(400)
+      .json({ error: "Phone number must be exactly 10 digits" });
   }
 
   // RBAC Rule: Only CUSTOMER role can self-register
@@ -254,8 +262,16 @@ const updateProfile = async (req, res) => {
   const userId = req.user.id;
   const { full_name, phone, address } = req.body;
 
-  if (!full_name) {
-    return res.status(400).json({ error: "Full name is required" });
+  if (!full_name || !phone || !address) {
+    return res.status(400).json({ error: "Full name, phone, and address are required" });
+  }
+
+  // 10-digit phone validation
+  const phoneRegex = /^\d{10}$/;
+  if (!phoneRegex.test(phone)) {
+    return res
+      .status(400)
+      .json({ error: "Phone number must be exactly 10 digits" });
   }
 
   try {

@@ -15,7 +15,12 @@ const createUser = async (userData, creatorId) => {
       // Insert into Customers table
       sql =
         "INSERT INTO customers (full_name, email, password, tel, address) VALUES ($1, $2, $3, $4, $5) RETURNING customer_id as id, created_at";
-      params = [full_name, email, hashedPassword, telephone || null, "N/A"]; // Default address N/A for now as it's not in the form
+      
+      // Default address if missing from admin panel
+      const finalAddress = userData.address || "N/A - Admin Created";
+      const finalPhone = telephone || "0000000000"; // Default placeholder if not provided by admin
+      
+      params = [full_name, email, hashedPassword, finalPhone, finalAddress];
     } else {
       // Insert into Employees table
       sql =
