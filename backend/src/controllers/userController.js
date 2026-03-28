@@ -3,7 +3,7 @@ import * as authService from "../services/authService.js"; // reusing check logi
 import logActivity from "../middleware/activityLogger.js";
 
 const createUser = async (req, res) => {
-  const { full_name, email, telephone, nic, password, role } = req.body;
+  const { full_name, email, telephone, nic, password, role, address } = req.body;
 
   // Validation
   if (!full_name || !email || !role) {
@@ -41,8 +41,8 @@ const createUser = async (req, res) => {
 
   // Map Roles for DB (Frontend Role -> DB Role)
   let dbRole = role;
-  if (role === "INVENTORY_MANAGER") dbRole = "INVENTORY";
-  if (role === "SALESPERSON") dbRole = "SALES";
+  if (role === "INVENTORY_MANAGER") dbRole = "INVENTORY_MANAGER";
+  if (role === "SALESPERSON") dbRole = "SALESPERSON";
 
   // Generate default password if not provided
   let userPassword = password;
@@ -77,6 +77,7 @@ const createUser = async (req, res) => {
         nic,
         password: userPassword,
         role: dbRole,
+        address,
         frontendRole: role,
       },
       req.user.id,

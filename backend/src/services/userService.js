@@ -2,50 +2,50 @@ import { pool } from "../config/db.js";
 import bcrypt from "bcryptjs";
 
 const createUser = async (userData, creatorId) => {
-  const { full_name, email, telephone, nic, password, role, frontendRole } =
+  const { full_name, email, telephone, nic, password, role, frontendRole, address } =
     userData;
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  return new Promise((resolve, reject) => {
-    let sql;
-    let params;
-    let isCustomer = frontendRole === "CUSTOMER";
+  let sql;
+  let params;
+  let isCustomer = frontendRole === "CUSTOMER";
 
-    if (isCustomer) {
-      // Insert into Customers table
-      sql =
-        "INSERT INTO customers (full_name, email, password, tel, address) VALUES ($1, $2, $3, $4, $5) RETURNING customer_id as id, created_at";
-      
-      // Default address if missing from admin panel
-      const finalAddress = userData.address || "N/A - Admin Created";
-      const finalPhone = telephone || "0000000000"; // Default placeholder if not provided by admin
-      
-      params = [full_name, email, hashedPassword, finalPhone, finalAddress];
-    } else {
-      // Insert into Employees table
-      sql =
-        "INSERT INTO employees (full_name, email, password, nic, telephone, role, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING employee_id as id, created_at";
-      params = [
-        full_name,
-        email,
-        hashedPassword,
-        nic,
-        telephone || null,
-        role,
-        "ACTIVE",
-      ];
-    }
+  if (isCustomer) {
+    // Insert into Customers table
+    sql =
+      "INSERT INTO customers (full_name, email, password, tel, address) VALUES ($1, $2, $3, $4, $5) RETURNING customer_id as id, created_at";
+    
+    // Default address if missing from admin panel
+    const finalAddress = address || "N/A - Admin Created";
+    const finalPhone = telephone || "0000000000"; // Default placeholder if not provided by admin
+    
+    params = [full_name, email, hashedPassword, finalPhone, finalAddress];
+  } else {
+    // Insert into Employees table
+    sql =
+      "INSERT INTO employees (full_name, email, password, nic, telephone, role, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING employee_id as id, created_at";
+    params = [
+      full_name,
+      email,
+      hashedPassword,
+      nic,
+      telephone || null,
+      role,
+      "ACTIVE",
+    ];
+  }
 
-    pool.query(sql, params, (err, result) => {
-      if (err) return reject(err);
-      resolve({
-        id: result.rows[0].id,
-        ...userData,
-        role: frontendRole, // Return the frontend role for consistent UI
-        created_at: result.rows[0].created_at,
-      });
-    });
-  });
+  try {
+    const result = await pool.query(sql, params);
+    return {
+      id: result.rows[0].id,
+      ...userData,
+      role: frontendRole, // Return the frontend role for consistent UI
+      created_at: result.rows[0].created_at,
+    };
+  } catch (error) {
+    throw error;
+  }
 };
 
 const getAllUsers = async () => {
@@ -68,8 +68,8 @@ const getAllUsers = async () => {
         email, 
         telephone as phone, 
         CASE 
-          WHEN role = 'INVENTORY' THEN 'INVENTORY_MANAGER'
-          WHEN role = 'SALES' THEN 'SALESPERSON'
+          WHEN role = 'INVENTORY_MANAGER' THEN 'INVENTORY_MANAGER'
+          WHEN role = 'SALESPERSON' THEN 'SALESPERSON'
           ELSE role::text 
         END as role,
         status::text,

@@ -5,8 +5,10 @@ export const initActivityLogModel = async () => {
     CREATE TABLE IF NOT EXISTS activity_logs (
       log_id SERIAL PRIMARY KEY,
       employee_id INTEGER,
+      customer_id INTEGER,
       actor_id INTEGER,
       actor_type VARCHAR(50),
+      action_type VARCHAR(50),
       action VARCHAR(255) NOT NULL,
       details TEXT,
       ip_address VARCHAR(45),
