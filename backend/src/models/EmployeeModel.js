@@ -25,14 +25,14 @@ export const initEmployeeModel = async () => {
   `;
   await pool.query(query);
 
-  const employeeCheck = await pool.query("SELECT COUNT(*) FROM employees");
-  if (parseInt(employeeCheck.rows[0].count) === 0) {
-    console.log("🌱 Seeding default admin user...");
-    const hashedPassword = await bcrypt.hash("Admin@123", 10);
-    await pool.query(
-      "INSERT INTO employees (full_name, email, password, nic, role, status) VALUES ($1, $2, $3, $4, $5, $6)",
-      ["System Administrator", "admin@system.com", hashedPassword, "000000000V", "ADMIN", "ACTIVE"]
-    );
-    console.log("✅ Default admin seeded.");
-  }
+    const employeeCheck = await pool.query("SELECT COUNT(*) FROM employees");
+    if (parseInt(employeeCheck.rows[0].count) === 0) {
+      console.log("🌱 Seeding default admin user: Hiran Peiris...");
+      const hashedPassword = await bcrypt.hash("Admin@123", 10);
+      await pool.query(
+        "INSERT INTO employees (full_name, email, password, nic, telephone, role, status) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        ["Hiran Peiris", "admin@system.com", hashedPassword, "199825419515", "0711240086", "ADMIN", "ACTIVE"]
+      );
+      console.log("✅ Default admin seeded: admin@system.com / Admin@123");
+    }
 };

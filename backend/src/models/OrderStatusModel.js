@@ -14,7 +14,7 @@ export const initOrderStatusModel = async () => {
 
   const statusCheck = await pool.query("SELECT COUNT(*) FROM order_statuses");
   if (parseInt(statusCheck.rows[0].count) === 0) {
-    console.log("🌱 Seeding order statuses...");
+    console.log(" Seeding order statuses...");
     await pool.query(`
       INSERT INTO order_statuses (status_name, description, sort_order) VALUES
       ('PENDING', 'Waiting for payment/verification', 1),

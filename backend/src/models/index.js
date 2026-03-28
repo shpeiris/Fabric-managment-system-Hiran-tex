@@ -20,7 +20,7 @@ import { initFeedbackModel } from "./FeedbackModel.js";
 
 export const initModels = async () => {
   try {
-    console.log("⚙️  Initializing Database Singleton Models...");
+    console.log("Initializing Database Singleton Models...");
 
     // Sequence 1: Base Tables & Types
     await initEmployeeModel();
@@ -47,9 +47,9 @@ export const initModels = async () => {
     await initConfirmationLogModel();
     await initFeedbackModel();
 
-    console.log("✅ Database Models synchronized successfully.");
+    console.log(" Database Models synchronized successfully.");
   } catch (error) {
-    console.error("❌ Failed to synchronize database models:", error);
+    console.error("Failed to synchronize database models:", error);
     throw error;
   }
 };
