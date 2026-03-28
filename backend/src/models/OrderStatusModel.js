@@ -19,7 +19,6 @@ export const initOrderStatusModel = async () => {
       INSERT INTO order_statuses (status_name, description, sort_order) VALUES
       ('PENDING', 'Waiting for payment/verification', 1),
       ('PROCESSING', 'Order is being prepared', 2),
-      ('SHIPPED', 'Order is out for delivery', 3),
       ('DELIVERED', 'Customer received the items', 4),
       ('CANCELLED', 'Order has been terminated', 5);
     `);

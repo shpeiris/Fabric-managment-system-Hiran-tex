@@ -18,7 +18,6 @@ export const initPaymentMethodModel = async () => {
     await pool.query(`
       INSERT INTO payment_methods (method_name, description, requires_verification) VALUES
       ('Bank Transfer', 'Manual verification of bank slip required', true),
-      ('Cash on Delivery', 'Pay when receiving the package', false),
       ('Card Payment', 'Instant online payment', false);
     `);
   }
