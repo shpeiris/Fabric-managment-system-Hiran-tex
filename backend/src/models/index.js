@@ -7,7 +7,6 @@ import { initPaymentMethodModel } from "./PaymentMethodModel.js";
 import { initOrderStatusModel } from "./OrderStatusModel.js";
 import { initActivityLogModel } from "./ActivityLogModel.js";
 import { initFabricModel } from "./FabricModel.js";
-import { initCustomerContactModel } from "./CustomerContactModel.js";
 import { initStockArrivalModel } from "./StockArrivalModel.js";
 import { initOrderModel } from "./OrderModel.js";
 import { initCartModel } from "./CartModel.js";
@@ -34,7 +33,6 @@ export const initModels = async () => {
     await initFabricModel();
 
     // Sequence 2: Tables with Foreign Key Dependencies
-    await initCustomerContactModel();
     await initStockArrivalModel();
     await initOrderModel();
     await initCartModel();
