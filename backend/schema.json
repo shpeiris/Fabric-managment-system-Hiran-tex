@@ -1,0 +1,26 @@
+[
+  {
+    "column_name": "cart_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "user_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "fabric_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "quantity",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "total_price",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone"
+  }
+]
