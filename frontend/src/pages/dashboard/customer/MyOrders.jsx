@@ -51,14 +51,8 @@ const MyOrders = () => {
     }
   }
 
-  const handleViewDetails = async (orderId) => {
-    try {
-      const data = await orderService.getOrderById(orderId)
-      setSelectedOrder(data)
-      setShowModal(true)
-    } catch (err) {
-      alert("Failed to fetch order details.")
-    }
+  const handleViewDetails = (orderId) => {
+    navigate(`/customer/order-details/${orderId}`)
   }
 
   const handleReorder = async (items) => {
@@ -243,95 +237,6 @@ const MyOrders = () => {
         )}
       </div>
 
-      {showModal && selectedOrder && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
-            <div className="modal-header">
-              <h2>Order Details #{selectedOrder.order.order_id}</h2>
-              <span className={`order-status status-${selectedOrder.order.order_status.toLowerCase()}`}>
-                {selectedOrder.order.order_status}
-              </span>
-            </div>
-            
-            <div className="order-info-summary">
-              <div className="order-info-grid">
-                <div className="order-info-item">
-                  <span className="info-label">📅 Date Placed</span>
-                  <span className="info-value">{new Date(selectedOrder.order.order_date).toLocaleString()}</span>
-                </div>
-                <div className="order-info-item">
-                  <span className="info-label">🚚 Delivery Method</span>
-                  <span className="info-value">{selectedOrder.order.delivery_type?.replace('_', ' ')}</span>
-                </div>
-                <div className="order-info-item" style={{gridColumn: '1 / -1'}}>
-                  <span className="info-label">📍 Delivery Address</span>
-                  <span className="info-value">{selectedOrder.order.delivery_address || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Payment / Slip Status inside Details Modal */}
-            {selectedOrder.order.payment_status && (
-              <div style={{ marginTop: '1rem', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontWeight: '600', color: '#475569', fontSize: '14px' }}>Payment Status:</span>
-                  {selectedOrder.order.bank_slip_url ? (
-                    <span style={{ fontSize: '13px', background: '#d1fae5', color: '#065f46', padding: '4px 12px', borderRadius: '12px', fontWeight: '600' }}>
-                      ✅ Awaiting Verification
-                    </span>
-                  ) : selectedOrder.order.payment_status === 'PENDING' ? (
-                    <span style={{ fontSize: '13px', background: '#fef3c7', color: '#92400e', padding: '4px 12px', borderRadius: '12px', fontWeight: '600' }}>
-                      ⚠️ Bank Slip Required
-                    </span>
-                  ) : (
-                    <span style={{ fontSize: '13px', background: '#ede9fe', color: '#5b21b6', padding: '4px 12px', borderRadius: '12px', fontWeight: '600' }}>
-                      💳 {selectedOrder.order.payment_status}
-                    </span>
-                  )}
-                </div>
-                {!selectedOrder.order.bank_slip_url && selectedOrder.order.payment_status === 'PENDING' && (
-                  <button
-                    onClick={() => navigate(`/customer/order-details/${selectedOrder.order.order_id}`)}
-                    style={{ fontSize: '13px', background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
-                  >
-                    Upload Slip →
-                  </button>
-                )}
-              </div>
-            )}
-            
-            <div className="order-details-list">
-              {selectedOrder.items.map(item => (
-                <div key={item.order_item_id} className="detail-item">
-                  <div className="detail-item-info">
-                    <h4>{item.fabric_name}</h4>
-                    <p>{item.quantity}m x Rs. {parseFloat(item.unit_price).toFixed(2)}</p>
-                  </div>
-                  <div className="detail-item-price">
-                    Rs. {parseFloat(item.total_price).toFixed(2)}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="order-summary-total">
-              <span>Total Amount</span>
-              <span>Rs. {parseFloat(selectedOrder.order.total_amount).toFixed(2)}</span>
-            </div>
-            
-            <div className="modal-actions" style={{marginTop: '2rem', display: 'flex', gap: '1rem'}}>
-              <button 
-                className="btn-reorder" 
-                style={{width: '100%'}}
-                onClick={() => handleReorder(selectedOrder.items)}
-              >
-                Reorder All Items
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

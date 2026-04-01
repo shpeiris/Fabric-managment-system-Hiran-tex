@@ -426,6 +426,79 @@ export default function OrderDetails() {
               )}
             </div>
           </div>
+
+          {/* Timeline Tracker */}
+          <div style={{
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            padding: '25px',
+            marginTop: '20px'
+          }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>What happens next?</h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative' }}>
+              
+              {/* Step 1: Order Placed */}
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start', position: 'relative' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#22c55e', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, zIndex: 1 }}>✓</div>
+                <div style={{ position: 'absolute', top: '32px', left: '15px', bottom: '-20px', width: '2px', background: '#22c55e', zIndex: 0 }} />
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#1f2937' }}>Order Placed</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#6b7280' }}>Your order has been received</p>
+                </div>
+              </div>
+
+              {/* Step 2: Payment/Order Verification */}
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start', position: 'relative' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: (order.order_status !== 'PENDING' || order.payment_status === 'COMPLETED') ? '#22c55e' : '#f3f4f6', color: (order.order_status !== 'PENDING' || order.payment_status === 'COMPLETED') ? 'white' : '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, zIndex: 1 }}>
+                  {(order.order_status !== 'PENDING' || order.payment_status === 'COMPLETED') ? '✓' : '2'}
+                </div>
+                <div style={{ position: 'absolute', top: '32px', left: '15px', bottom: '-20px', width: '2px', background: (order.order_status !== 'PENDING' || order.payment_status === 'COMPLETED') ? '#22c55e' : '#e5e7eb', zIndex: 0 }} />
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: (order.order_status !== 'PENDING' || order.payment_status === 'COMPLETED') ? '#1f2937' : '#4b5563' }}>
+                    {order.payment_method === 'BANK_TRANSFER' ? 'Payment Verification' : 'Order Verification'}
+                  </h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#6b7280' }}>
+                    {order.payment_method === 'BANK_TRANSFER' 
+                      ? "We're verifying your payment slip" 
+                      : "We're verifying your order details"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3: Processing */}
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start', position: 'relative' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: (order.order_status === 'DELIVERED' || order.order_status === 'PROCESSING' || order.order_status === 'SHIPPED') ? '#22c55e' : '#f3f4f6', color: (order.order_status === 'DELIVERED' || order.order_status === 'PROCESSING' || order.order_status === 'SHIPPED') ? 'white' : '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, zIndex: 1 }}>
+                  {(order.order_status === 'DELIVERED' || order.order_status === 'PROCESSING' || order.order_status === 'SHIPPED') ? '✓' : '3'}
+                </div>
+                <div style={{ position: 'absolute', top: '32px', left: '15px', bottom: '-20px', width: '2px', background: (order.order_status === 'DELIVERED' || order.order_status === 'PROCESSING' || order.order_status === 'SHIPPED') ? '#22c55e' : '#e5e7eb', zIndex: 0 }} />
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: (order.order_status === 'DELIVERED' || order.order_status === 'PROCESSING' || order.order_status === 'SHIPPED') ? '#1f2937' : '#4b5563' }}>Processing</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#6b7280' }}>Your order is being prepared</p>
+                </div>
+              </div>
+
+              {/* Step 4: Delivery */}
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: order.order_status === 'DELIVERED' ? '#22c55e' : '#f3f4f6', color: order.order_status === 'DELIVERED' ? 'white' : '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, zIndex: 1 }}>
+                  {order.order_status === 'DELIVERED' ? '✓' : '4'}
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: order.order_status === 'DELIVERED' ? '#1f2937' : '#4b5563' }}>
+                    {order.delivery_type === 'STORE_PICKUP' ? 'Ready for Pickup' : 'Delivery'}
+                  </h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#6b7280' }}>
+                    {order.delivery_type === 'STORE_PICKUP' 
+                      ? 'You can collect your order' 
+                      : 'Your order will be delivered to your address'
+                    }
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
 
         {/* Right Column - Summary & Actions */}
