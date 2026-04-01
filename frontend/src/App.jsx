@@ -45,6 +45,7 @@ import OrderHistory from "./pages/customer/pages/OrderHistory"; // Left behind
 import Feedback from "./pages/customer/pages/Feedback"; // Left behind
 import FabricDetails from "./pages/dashboard/customer/FabricDetails";
 import Notifications from "./pages/dashboard/customer/Notifications";
+import CustomerInvoice from "./pages/customer/pages/CustomerInvoice";
 
 function App() {
   return (
@@ -118,6 +119,7 @@ function App() {
           <Route path="feedback" element={<Feedback />} />
           <Route path="fabric/:id" element={<FabricDetails />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="invoice/:id" element={<CustomerInvoice />} />
         </Route>
       </Routes>
     </BrowserRouter>

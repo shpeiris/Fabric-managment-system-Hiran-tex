@@ -3,10 +3,7 @@ import './OrderConfirmation.css';
 
 const OrderConfirmation = ({ orderId, orderData, totalAmount, navigate }) => {
   const handleGenerateInvoice = () => {
-    // This would typically download or open an invoice PDF
-    console.log('Generate invoice for order:', orderId);
-    // For now, we'll show an alert
-    alert('Invoice generation feature will be implemented soon!');
+    navigate(`/customer/invoice/${orderId}`);
   };
 
   const handleShareFeedback = () => {

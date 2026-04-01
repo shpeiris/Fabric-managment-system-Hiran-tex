@@ -540,7 +540,7 @@ export default function OrderDetails() {
           }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '15px' }}>Actions</h2>
             <button 
-              onClick={() => window.print()}
+              onClick={() => navigate(`/customer/invoice/${order.order_id}`)}
               style={{
                 background: 'transparent',
                 color: '#2563eb',
