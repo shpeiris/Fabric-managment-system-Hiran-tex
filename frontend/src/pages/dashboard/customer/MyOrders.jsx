@@ -271,6 +271,36 @@ const MyOrders = () => {
               </div>
             </div>
             
+            {/* Payment / Slip Status inside Details Modal */}
+            {selectedOrder.order.payment_status && (
+              <div style={{ marginTop: '1rem', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontWeight: '600', color: '#475569', fontSize: '14px' }}>Payment Status:</span>
+                  {selectedOrder.order.bank_slip_url ? (
+                    <span style={{ fontSize: '13px', background: '#d1fae5', color: '#065f46', padding: '4px 12px', borderRadius: '12px', fontWeight: '600' }}>
+                      ✅ Awaiting Verification
+                    </span>
+                  ) : selectedOrder.order.payment_status === 'PENDING' ? (
+                    <span style={{ fontSize: '13px', background: '#fef3c7', color: '#92400e', padding: '4px 12px', borderRadius: '12px', fontWeight: '600' }}>
+                      ⚠️ Bank Slip Required
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '13px', background: '#ede9fe', color: '#5b21b6', padding: '4px 12px', borderRadius: '12px', fontWeight: '600' }}>
+                      💳 {selectedOrder.order.payment_status}
+                    </span>
+                  )}
+                </div>
+                {!selectedOrder.order.bank_slip_url && selectedOrder.order.payment_status === 'PENDING' && (
+                  <button
+                    onClick={() => navigate(`/customer/order-details/${selectedOrder.order.order_id}`)}
+                    style={{ fontSize: '13px', background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    Upload Slip →
+                  </button>
+                )}
+              </div>
+            )}
+            
             <div className="order-details-list">
               {selectedOrder.items.map(item => (
                 <div key={item.order_item_id} className="detail-item">
