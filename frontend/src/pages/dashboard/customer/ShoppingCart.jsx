@@ -106,9 +106,7 @@ const ShoppingCart = () => {
     }, 0);
   };
 
-  const deliveryFee = cartItems.length > 0 ? 500 : 0;
   const subtotal = calculateSubtotal();
-  const total = subtotal + deliveryFee;
 
   const getImageSrc = (imageUrl) => {
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -263,13 +261,13 @@ const ShoppingCart = () => {
                   <span>Subtotal ({cartItems.length} items)</span>
                   <span>Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
-                <div className="summary-row">
-                  <span>Standard Delivery</span>
-                  <span>Rs. {deliveryFee.toLocaleString()}</span>
+                <div className="summary-row delivery-pending-row">
+                  <span>Delivery</span>
+                  <span className="delivery-pending-label">Calculated at checkout</span>
                 </div>
                 <div className="summary-row total">
                   <span>Grand Total</span>
-                  <span className="grand-total">Rs. {total.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <span className="grand-total">Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
               </div>
 

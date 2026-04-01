@@ -302,6 +302,21 @@
   font-size: 1.25rem;
 }
 
+.delivery-pending-row {
+  background: #f8fafc;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: -4px 0;
+}
+
+.delivery-pending-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  font-weight: 500;
+}
+
 .grand-total {
   font-size: 2rem;
   font-weight: 800;
