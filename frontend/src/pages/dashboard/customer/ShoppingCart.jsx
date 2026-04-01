@@ -261,10 +261,7 @@ const ShoppingCart = () => {
                   <span>Subtotal ({cartItems.length} items)</span>
                   <span>Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
-                <div className="summary-row delivery-pending-row">
-                  <span>Delivery</span>
-                  <span className="delivery-pending-label">Calculated at checkout</span>
-                </div>
+
                 <div className="summary-row total">
                   <span>Grand Total</span>
                   <span className="grand-total">Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
