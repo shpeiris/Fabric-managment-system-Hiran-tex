@@ -79,10 +79,10 @@ export default function CustomerInvoice() {
         {/* Header Ribbon */}
         <div className="invoice-header">
           <div className="brand-section">
-            <h1>FABRIC.LK</h1>
-            <p>123 Textile Avenue, Colombo 03</p>
-            <p>info@fabric.lk | +94 77 123 4567</p>
-            <p>VAT No: 450123984-V</p>
+            <h1>Hiran Fabric Textile</h1>
+            <p>Address: No 72, New Shopping Complex, Nittambuwa</p>
+            <p>Mobile: +94 77 112 4088</p>
+            <p>Email: hiranfabrictextile@gmail.com</p>
           </div>
           <div className="invoice-meta">
             <h2>INVOICE</h2>
@@ -114,7 +114,7 @@ export default function CustomerInvoice() {
           <thead>
             <tr>
               <th width="45%">Description</th>
-              <th className="center">Code</th>
+              <th className="center">Fabric ID</th>
               <th className="right">Unit Price</th>
               <th className="center">Qty (m)</th>
               <th className="right">Total</th>
@@ -155,7 +155,7 @@ export default function CustomerInvoice() {
 
         {/* Notice string */}
         <div className="invoice-footer">
-          <p>Thank you for shopping with Fabric Management System!</p>
+          <p>Thank you for shopping with Hiran Fabric Textile!</p>
           <p style={{fontSize: '12px', marginTop: '5px'}}>This is a computer-generated document. No signature is required.</p>
         </div>
 
