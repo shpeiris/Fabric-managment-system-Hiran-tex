@@ -88,8 +88,8 @@ export default function CustomerInvoice() {
           <div className="invoice-meta">
             <h2>INVOICE</h2>
             <div className="invoice-details">
-              <span><strong>Invoice #:</strong> INV-{new Date(order.order_date).getFullYear()}-{order.order_id.toString().padStart(4, '0')}</span>
-              <span><strong>Date Issued:</strong> {new Date(order.order_date).toLocaleDateString()}</span>
+              <span><strong>Invoice #:</strong> {order.invoice_id || `PENDING-${order.order_id}`}</span>
+              <span><strong>Date Issued:</strong> {order.invoice_date ? new Date(order.invoice_date).toLocaleDateString() : 'N/A'}</span>
               <span><strong>Order Ref:</strong> {order.order_id}</span>
               <span><strong>Payment:</strong> {order.payment_method?.replace('_', ' ') || 'Cash on Delivery'}</span>
             </div>

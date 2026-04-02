@@ -214,16 +214,33 @@ const getPendingPayments = async () => {
 const verifyOrder = async (orderId, action, verifiedBy, verifierId) => {
     try {
         const newStatus = action === 'approve' ? 'PROCESSING' : 'CANCELLED';
+        let updateQuery = "";
+        let queryParams = [];
 
-        // Update order with verification info
-        const updateQuery = `
-            UPDATE orders 
-            SET order_status = $1, verified_at = NOW(), verified_by = $2
-            WHERE order_id = $3
-            RETURNING *
-        `;
+        if (action === 'approve') {
+            const now = new Date();
+            const year = now.getFullYear();
+            const invoiceId = `INV-${year}-${orderId.toString().padStart(4, '0')}`;
+            
+            updateQuery = `
+                UPDATE orders 
+                SET order_status = $1, verified_at = NOW(), verified_by = $2,
+                    invoice_id = $4, invoice_date = NOW()
+                WHERE order_id = $3
+                RETURNING *
+            `;
+            queryParams = [newStatus, verifierId, orderId, invoiceId];
+        } else {
+            updateQuery = `
+                UPDATE orders 
+                SET order_status = $1, verified_at = NOW(), verified_by = $2
+                WHERE order_id = $3
+                RETURNING *
+            `;
+            queryParams = [newStatus, verifierId, orderId];
+        }
 
-        const result = await pool.query(updateQuery, [newStatus, verifierId, orderId]);
+        const result = await pool.query(updateQuery, queryParams);
 
         // Log the verification activity
         const activityQuery = `
