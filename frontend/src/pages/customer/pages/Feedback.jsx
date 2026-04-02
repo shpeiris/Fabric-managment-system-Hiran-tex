@@ -4,12 +4,9 @@ import customerService from '../../../services/customerService.js';
 
 
 export default function Feedback() {
-  const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState({
-    orderExperience: 0,
     fabricQuality: 0,
     delivery: 0,
-    customerService: 0,
     comments: ''
   });
   const [submitting, setSubmitting] = useState(false);
@@ -18,8 +15,8 @@ export default function Feedback() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (rating === 0) {
-      setError('Please select an overall rating before submitting.');
+    if (feedback.fabricQuality === 0 && feedback.delivery === 0 && !feedback.comments) {
+      setError('Please provide at least one rating or a comment before submitting.');
       return;
     }
     setError('');
@@ -27,11 +24,8 @@ export default function Feedback() {
 
     try {
       await customerService.submitFeedback({
-        overall_rating: rating,
-        order_experience: feedback.orderExperience || null,
         fabric_quality: feedback.fabricQuality || null,
         delivery: feedback.delivery || null,
-        customer_service: feedback.customerService || null,
         comments: feedback.comments || null
       });
       setSubmitted(true);
@@ -61,10 +55,9 @@ export default function Feedback() {
       <div style={{ textAlign: 'center', padding: '80px 20px' }}>
         <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎉</div>
         <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1f2937', marginBottom: '12px' }}>Thank You for Your Feedback!</h2>
-        <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '8px' }}>Your review helps us serve you better.</p>
-        <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '30px' }}>Overall Rating: {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}</p>
+        <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '30px' }}>Your review helps us serve you better.</p>
         <button
-          onClick={() => { setSubmitted(false); setRating(0); setFeedback({ orderExperience: 0, fabricQuality: 0, delivery: 0, customerService: 0, comments: '' }); }}
+          onClick={() => { setSubmitted(false); setFeedback({ fabricQuality: 0, delivery: 0, comments: '' }); }}
           style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '500' }}
         >
           Submit Another Review
@@ -89,35 +82,10 @@ export default function Feedback() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Overall Rating */}
-            <div style={{ marginBottom: '30px', paddingBottom: '30px', borderBottom: '1px solid #e5e7eb' }}>
-              <label style={{ display: 'block', fontSize: '16px', color: '#1f2937', marginBottom: '15px', fontWeight: '600' }}>
-                Overall Experience *
-              </label>
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} type="button" onClick={() => setRating(star)}
-                    style={{ background: 'none', border: 'none', fontSize: '40px', cursor: 'pointer', color: star <= rating ? '#fbbf24' : '#e5e7eb', transition: 'color 0.15s' }}>
-                    ★
-                  </button>
-                ))}
-              </div>
-              <p style={{ fontSize: '13px', color: '#6b7280', minHeight: '18px' }}>
-                {rating === 0 && 'Select a rating'}
-                {rating === 1 && 'Poor'}
-                {rating === 2 && 'Fair'}
-                {rating === 3 && 'Good'}
-                {rating === 4 && 'Very Good'}
-                {rating === 5 && 'Excellent! 🌟'}
-              </p>
-            </div>
-
             {/* Detailed Ratings */}
             <div style={{ marginBottom: '30px' }}>
-              <RatingStars value={feedback.orderExperience} onChange={(val) => setFeedback({ ...feedback, orderExperience: val })} label="Order Experience" />
               <RatingStars value={feedback.fabricQuality} onChange={(val) => setFeedback({ ...feedback, fabricQuality: val })} label="Fabric Quality" />
               <RatingStars value={feedback.delivery} onChange={(val) => setFeedback({ ...feedback, delivery: val })} label="Delivery Service" />
-              <RatingStars value={feedback.customerService} onChange={(val) => setFeedback({ ...feedback, customerService: val })} label="Customer Service" />
             </div>
 
             {/* Comments */}

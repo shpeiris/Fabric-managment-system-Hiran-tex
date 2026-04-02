@@ -53,6 +53,7 @@ export default function CustomerInvoice() {
     return 500; // Default
   }
   const deliveryFee = getDeliveryFee(order.delivery_type)
+  const tax = 0 // Synchronized with OrderDetails.jsx logic
 
   return (
     <div className="invoice-wrapper">
@@ -144,6 +145,10 @@ export default function CustomerInvoice() {
               <tr>
                 <td>Delivery Fee</td>
                 <td className="amount">Rs. {deliveryFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+              <tr>
+                <td>Tax</td>
+                <td className="amount">Rs. {tax.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
               </tr>
               <tr className="total-row">
                 <td>Grand Total</td>

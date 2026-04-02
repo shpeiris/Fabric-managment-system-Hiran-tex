@@ -40,7 +40,6 @@ const getSalesDashboardStats = async () => {
                    p.payment_id,
                    p.payment_method,
                    p.bank_slip_url,
-                   fb.overall_rating as feedback_rating,
                    fb.comments as feedback_comments,
                    (
                        SELECT JSON_AGG(

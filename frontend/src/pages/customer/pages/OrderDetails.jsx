@@ -19,10 +19,8 @@ export default function OrderDetails() {
   const [feedback, setFeedback] = useState(null)
   const [submittingFeedback, setSubmittingFeedback] = useState(false)
   const [newFeedback, setNewFeedback] = useState({
-    overall_rating: 0,
     fabric_quality: 0,
     delivery: 0,
-    customer_service: 0,
     comments: ''
   })
   
@@ -136,16 +134,11 @@ export default function OrderDetails() {
     try {
       setSubmittingFeedback(true)
       
-      // Calculate overall_rating as average of quality and delivery for legacy DB field
-      const overall = Math.round((newFeedback.fabric_quality + newFeedback.delivery) / 2)
-      
       // Prepare clean feedback data for the API
       const feedbackPayload = {
         order_id: id,
-        overall_rating: overall,
         fabric_quality: newFeedback.fabric_quality,
         delivery: newFeedback.delivery,
-        customer_service: newFeedback.customer_service || null,
         comments: newFeedback.comments || null
       }
 

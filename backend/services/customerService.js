@@ -63,11 +63,8 @@ export const submitOrderFeedback = async (feedbackData) => {
     const { 
         customerId, 
         orderId, 
-        overall_rating, 
-        order_experience, 
         fabric_quality, 
         delivery, 
-        customer_service, 
         comments 
     } = feedbackData;
 
@@ -81,25 +78,19 @@ export const submitOrderFeedback = async (feedbackData) => {
         INSERT INTO feedback (
             customer_id, 
             order_id, 
-            overall_rating, 
-            order_experience, 
             fabric_quality, 
             delivery, 
-            customer_service, 
             comments
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *
     `;
 
     const result = await pool.query(query, [
         customerId, 
         orderId ? parseInt(orderId) : null, 
-        parseInt(overall_rating), 
-        normalizeRating(order_experience), 
         normalizeRating(fabric_quality),
         normalizeRating(delivery), 
-        normalizeRating(customer_service), 
         comments || null
     ]);
 
@@ -109,8 +100,8 @@ export const submitOrderFeedback = async (feedbackData) => {
         VALUES ($1, 'CUSTOMER', $2, $3)
     `;
     const actionDesc = orderId 
-        ? `Customer submitted feedback for Order #${orderId} (Rating: ${overall_rating}/5)`
-        : `Customer submitted general feedback (Rating: ${overall_rating}/5)`;
+        ? `Customer submitted feedback for Order #${orderId}`
+        : `Customer submitted general feedback`;
     
     try {
         await pool.query(activityQuery, [customerId, 'FEEDBACK_SUBMITTED', actionDesc]);

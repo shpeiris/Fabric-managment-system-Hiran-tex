@@ -29,10 +29,8 @@ const getOrderById = async (orderId, userId = null) => {
                p.payment_id,
                p.amount as paid_amount,
                f.feedback_id,
-               f.overall_rating,
                f.fabric_quality,
                f.delivery,
-               f.customer_service,
                f.comments as feedback_comments,
                f.created_at as feedback_date
         FROM orders o
@@ -74,7 +72,6 @@ const getOrders = async (filters) => {
              ELSE o.customer_name 
            END as customer_name,
            p.payment_id, p.payment_status, p.payment_method, p.bank_slip_url,
-           fb.overall_rating as feedback_rating,
            fb.comments as feedback_comments
     FROM orders o
     LEFT JOIN payments p ON o.order_id = p.order_id

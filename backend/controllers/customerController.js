@@ -12,22 +12,15 @@ export const getDashboardStats = async (req, res) => {
 };
 
 export const submitFeedback = async (req, res) => {
-    const { order_id, overall_rating, order_experience, fabric_quality, delivery, customer_service, comments } = req.body;
+    const { order_id, fabric_quality, delivery, comments } = req.body;
     const customerId = req.user.id;
-
-    if (!overall_rating || overall_rating < 1 || overall_rating > 5) {
-        return res.status(400).json({ error: 'Overall rating is required (1-5)' });
-    }
 
     try {
         await customerService.submitOrderFeedback({
             customerId,
             orderId: order_id,
-            overall_rating,
-            order_experience,
             fabric_quality,
             delivery,
-            customer_service,
             comments
         });
 
