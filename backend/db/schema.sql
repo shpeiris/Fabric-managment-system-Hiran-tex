@@ -60,7 +60,8 @@ CREATE TABLE fabrics (
     price_per_meter DECIMAL(10, 2) NOT NULL,
     stock_quantity DECIMAL(10, 2) DEFAULT 0,
     stock_available_quantity DECIMAL(10, 2) DEFAULT 0,
-    reorder_level DECIMAL(10, 2) DEFAULT 50,
+    restock_level DECIMAL(10, 2) DEFAULT 50,
+
     image_url TEXT,
     width VARCHAR(50),
     restock_date DATE,
@@ -194,7 +195,8 @@ INSERT INTO suppliers (name, contact_person, contact_number, email, address) VAL
 ('Global Fabrics Ltd', 'Michael Chen', '0117654321', 'info@globalfabrics.lk', 'Free Trade Zone, Katunayake');
 
 -- Seed Sample Fabrics
-INSERT INTO fabrics (name, material_type, color, design, price_per_meter, stock_quantity, reorder_level, image_url, restock_date) VALUES
+INSERT INTO fabrics (name, material_type, color, design, price_per_meter, stock_quantity, restock_level, image_url, restock_date) VALUES
+
 ('Premium Egyptian Cotton', 'Cotton', 'White', 'Plain', 450.00, 500, 100, 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400', NULL),
 ('Royal Blue Silk', 'Silk', 'Blue', 'Satin', 1250.00, 150, 40, 'https://images.unsplash.com/photo-1597484662317-c87d32cf25b8?w=400', NULL),
 ('Venetian Linen Beige', 'Linen', 'Beige', 'Textured', 850.00, 0, 50, 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400', '2026-02-15'),

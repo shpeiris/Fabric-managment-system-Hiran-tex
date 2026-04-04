@@ -93,7 +93,7 @@ const refreshCatalog = async () => {
 
         for (const f of fabrics) {
             await client.query(
-                `INSERT INTO fabrics (name, material_type, color, design, price_per_meter, stock_quantity, stock_available_quantity, reorder_level, image_url, width) 
+                `INSERT INTO fabrics (name, material_type, color, design, price_per_meter, stock_quantity, stock_available_quantity, restock_level, image_url, width) 
                  VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9)`,
                 [f.name, f.material_type, f.color, f.design, f.price, f.stock, f.reorder, f.image, f.width]
             );

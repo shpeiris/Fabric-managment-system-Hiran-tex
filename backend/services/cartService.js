@@ -24,7 +24,7 @@ const addToCart = async (customerId, fabricId, quantity) => {
     throw new Error("Fabric not found");
 
   const fabric = fabricResult.rows[0];
-  if (fabric.stock_available_quantity < quantity)
+  if (parseFloat(fabric.stock_available_quantity) < quantity)
     throw new Error("Insufficient stock");
 
   const totalPrice = fabric.price_per_meter * quantity;
@@ -37,7 +37,7 @@ const addToCart = async (customerId, fabricId, quantity) => {
 
   if (cartResult.rows.length > 0) {
     // Update
-    const newQuantity = cartResult.rows[0].quantity + quantity;
+    const newQuantity = parseFloat(cartResult.rows[0].quantity) + quantity;
     const newTotalPrice = fabric.price_per_meter * newQuantity;
 
     const updateResult = await pool.query(
