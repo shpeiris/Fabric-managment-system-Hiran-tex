@@ -68,10 +68,11 @@ const SalesSidebar = () => {
       <div style={{
         padding: '25px 20px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)'
-      }}>
+        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)',
+        cursor: 'pointer'
+      }} onClick={() => navigate('/')}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px', color: '#7cff00' }}>Hiran Fabrics</span>
+          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px', color: '#7cff00' }}>🏠Hiran Fabric Textile</span>
         </div>
       </div>
 
