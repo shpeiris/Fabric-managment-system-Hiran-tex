@@ -122,9 +122,7 @@ export default function Profile() {
     ? formData.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
 
-  const memberSince = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    : 'N/A';
+
 
   return (
     <div>
@@ -155,10 +153,7 @@ export default function Profile() {
 
           <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginTop: '20px' }}>
             <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', marginBottom: '16px' }}>Account Stats</h3>
-            <div style={{ marginBottom: '12px' }}>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '2px' }}>Member Since</p>
-              <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{memberSince}</p>
-            </div>
+
             <div style={{ marginBottom: '12px' }}>
               <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '2px' }}>Total Orders</p>
               <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{stats.totalOrders || 0} orders</p>

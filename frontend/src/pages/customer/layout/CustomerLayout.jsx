@@ -52,8 +52,8 @@ export default function CustomerLayout() {
     <div className="customer-container">
       {/* Sidebar */}
       <aside className="customer-sidebar">
-        <div className="sidebar-header">
-          <span className="sidebar-title">Hiran Fabrics</span>
+        <div className="sidebar-header" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
+          <span className="sidebar-title">🏠Hiran Fabric Textile</span>
         </div>
 
         <nav className="sidebar-nav">
