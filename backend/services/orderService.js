@@ -167,7 +167,7 @@ const createOrder = async (orderData) => {
         }
 
         // Clear cart
-        await pool.query("DELETE FROM cart WHERE user_id = $1", [customer_id]);
+        await pool.query("DELETE FROM cart WHERE customer_id = $1", [customer_id]);
 
         await pool.query('COMMIT');
         return { order_id: orderId };

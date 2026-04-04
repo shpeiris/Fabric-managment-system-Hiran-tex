@@ -15,7 +15,7 @@ export const getCustomerDashboardStats = async (customerId) => {
             WHERE customer_id = $1 AND order_status IN ('PENDING', 'PROCESSING')
         `,
         cartItems: `
-            SELECT COUNT(*) as total FROM cart WHERE user_id = $1
+            SELECT COUNT(*) as total FROM cart WHERE customer_id = $1
         `,
         totalSpent: `
             SELECT SUM(total_amount) as total FROM orders 

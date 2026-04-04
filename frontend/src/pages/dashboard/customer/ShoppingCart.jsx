@@ -145,147 +145,174 @@ const ShoppingCart = () => {
   }
 
   return (
-    <div className="shopping-cart-container">
-      <div className="cart-header">
-        <div className="cart-header-title">
-          <ShoppingBag size={32} color="#001a66" />
-          <h1>My Cart</h1>
-          <span className="cart-count-badge">{cartItems.length}</span>
-        </div>
-        {cartItems.length > 0 && (
-          <button onClick={clearCart} className="btn-clear-cart">
-            <Trash2 size={16} /> Clear Cart
-          </button>
-        )}
-      </div>
-
-      {cartItems.length === 0 ? (
-        <div className="cart-empty-state">
-          <div className="empty-icon-box">
-            <ShoppingBag size={48} />
+    <div className="shopping-cart-wrapper">
+      <div className="cart-container-inner">
+        <div className="cart-header-section">
+          <div className="cart-title-block">
+            <ShoppingBag className="title-icon" size={32} />
+            <div>
+              <h1>Shopping Collection</h1>
+              <p>You have {cartItems.length} premium individual {cartItems.length === 1 ? 'fabric' : 'fabrics'} in your selection.</p>
+            </div>
           </div>
-          <h2>Your cart is empty</h2>
-          <p>Looks like you haven't added any premium fabrics to your collection yet.</p>
-          <button
-            onClick={() => navigate("/customer/browse")}
-            className="btn-primary-lg"
-            style={{ width: 'auto' }}
-          >
-            Start Shopping <ChevronRight size={18} />
-          </button>
+          {cartItems.length > 0 && (
+            <button onClick={clearCart} className="btn-ghost-danger">
+              <Trash2 size={16} /> Reset Selection
+            </button>
+          )}
         </div>
-      ) : (
-        <div className="cart-main-layout">
-          <div className="cart-items-list">
-            {cartItems.map((item) => (
-              <div key={item.cart_id} className="cart-item-card">
-                {updating === item.cart_id && (
-                  <div className="updating-overlay">
-                    <Loader2 className="spinner-sm" />
-                  </div>
-                )}
-                <div className="item-image-container">
-                  <img
-                    src={getImageSrc(item.image_url)}
-                    alt={item.fabric_name}
-                    onError={(e) => { e.target.src = "/src/assets/Fabrics/fabric-collage.jpg"; }}
-                  />
-                </div>
 
-                <div className="item-details">
-                  <span className="item-brand">{item.material_type}</span>
-                  <h3 className="item-name">{item.fabric_name}</h3>
-                  <div className="item-meta">
-                    <div className="meta-item">
-                      <strong>Color:</strong> {item.color}
-                    </div>
-                    <div className="meta-item">
-                      <strong>SKU:</strong> FAB{item.fabric_id.toString().padStart(3, "0")}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="item-controls">
-                  <div className="item-price-info">
-                    <span className="unit-price">Rs. {parseFloat(item.price_per_meter).toLocaleString()}/m</span>
-                    <span className="total-price">Rs. {(item.quantity * item.price_per_meter).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-                  </div>
-
-                  <div className="actions-row">
-                    <div className="quantity-selector">
-                      <button
-                        onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) - 1)}
-                        disabled={updating || parseFloat(item.quantity) <= 1}
-                        className="qty-btn"
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          if (val > 0) updateQuantity(item.cart_id, val);
-                        }}
-                        className="qty-input"
-                        disabled={updating}
-                      />
-                      <button
-                        onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 1)}
-                        disabled={updating}
-                        className="qty-btn"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => removeItem(item.cart_id)}
-                      disabled={updating}
-                      className="btn-remove"
-                      title="Remove item"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {cartItems.length === 0 ? (
+          <div className="cart-empty-state-card">
+            <div className="empty-illustration">
+               <ShoppingBag size={64} className="floating-bag" />
+            </div>
+            <h2>Your collection is empty</h2>
+            <p>Start exploring our premium fabric catalog to find your next masterpiece.</p>
+            <button
+              onClick={() => navigate("/customer/browse")}
+              className="btn-premium-action"
+            >
+              Explore Catalog <ChevronRight size={18} />
+            </button>
           </div>
+        ) : (
+          <div className="cart-responsive-grid">
+            {/* Left side: Items */}
+            <div className="cart-items-column">
+              {cartItems.map((item) => (
+                <div key={item.cart_id} className="premium-cart-item">
+                  {updating === item.cart_id && (
+                    <div className="item-loading-overlay">
+                      <Loader2 className="spinner-animate" />
+                    </div>
+                  )}
+                  <div className="item-image-box">
+                    <img
+                      src={getImageSrc(item.image_url)}
+                      alt={item.fabric_name}
+                      onError={(e) => { e.target.src = "/src/assets/Fabrics/fabric-collage.jpg"; }}
+                    />
+                  </div>
 
-          <div className="summary-section">
-            <div className="summary-container">
-              <h2>Order Summary</h2>
-              <div className="summary-rows">
-                <div className="summary-row">
-                  <span>Subtotal ({cartItems.length} items)</span>
-                  <span>Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <div className="item-info-box">
+                    <div className="item-identity">
+                      <span className="fabric-category">{item.material_type}</span>
+                      <h3 className="fabric-name">{item.fabric_name}</h3>
+                      <div className="fabric-specs">
+                        <span><strong>Color:</strong> {item.color}</span>
+                        <span className="spec-divider">|</span>
+                        <span><strong>SKU:</strong> FAB{item.fabric_id.toString().padStart(3, "0")}</span>
+                      </div>
+                    </div>
+
+                    <div className="item-financials">
+                      <div className="price-tag">
+                        <span className="unit-label">Price per meter</span>
+                        <span className="price-value">Rs. {parseFloat(item.price_per_meter).toLocaleString()}</span>
+                      </div>
+                      <div className="item-total-block">
+                        <span className="total-label">Subtotal</span>
+                        <span className="total-value-main">Rs. {(item.quantity * item.price_per_meter).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                      </div>
+                    </div>
+
+                    <div className="item-interaction-row">
+                      <div className="premium-qty-selector">
+                        <button
+                          onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) - 0.5)}
+                          disabled={updating || parseFloat(item.quantity) <= 0.5}
+                          className="qty-action-btn"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <div className="qty-display">
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (val > 0) updateQuantity(item.cart_id, val);
+                            }}
+                            className="qty-numeric-input"
+                            disabled={updating}
+                          />
+                          <span className="qty-unit">m</span>
+                        </div>
+                        <button
+                          onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 0.5)}
+                          disabled={updating}
+                          className="qty-action-btn"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                      
+                      <button
+                        onClick={() => removeItem(item.cart_id)}
+                        disabled={updating}
+                        className="btn-trash-circular"
+                        title="Remove from collection"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Right side: Summary */}
+            <div className="cart-summary-column">
+              <div className="sticky-summary-card">
+                <h3>Order Insight</h3>
+                <div className="summary-detail-list">
+                  <div className="detail-row">
+                    <span className="detail-label">Quantity ({cartItems.length} styles)</span>
+                    <span className="detail-value">Total {cartItems.reduce((acc, i) => acc + parseFloat(i.quantity), 0).toFixed(1)}m</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Ex-Factory Subtotal</span>
+                    <span className="detail-value">Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  </div>
+                  <div className="detail-row info">
+                    <span className="detail-label">Delivery & Taxes</span>
+                    <span className="detail-value highlight">Calculated at Checkout</span>
+                  </div>
+                  
+                  <div className="total-separator"></div>
+                  
+                  <div className="grand-total-row">
+                    <span className="grand-label">Estimated Total</span>
+                    <span className="grand-value">Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  </div>
                 </div>
 
-                <div className="summary-row total">
-                  <span>Grand Total</span>
-                  <span className="grand-total">Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <div className="action-stack">
+                  <button
+                    onClick={() => navigate("/customer/checkout")}
+                    className="btn-checkout-primary"
+                  >
+                    Proceed to Verification <ChevronRight size={20} />
+                  </button>
+                  <button
+                    onClick={() => navigate("/customer/browse")}
+                    className="btn-link-return"
+                  >
+                    <ArrowLeft size={16} /> Add More Fabrics
+                  </button>
                 </div>
-              </div>
-
-              <div className="checkout-actions">
-                <button
-                  onClick={() => navigate("/customer/checkout")}
-                  className="btn-primary-lg"
-                >
-                  Proceed to Checkout <ChevronRight size={20} />
-                </button>
-                <button
-                  onClick={() => navigate("/customer/browse")}
-                  className="btn-secondary-lg"
-                >
-                  <ArrowLeft size={16} /> Continue Shopping
-                </button>
+                
+                <div className="secure-checkout-badge">
+                  <span className="badge-icon">🔒</span>
+                  <span>Secure Checkout & Encrypted Connection</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

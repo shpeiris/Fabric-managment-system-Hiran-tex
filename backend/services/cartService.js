@@ -2,12 +2,12 @@ import { pool } from "../config/db.js";
 
 const getCart = async (customerId) => {
   const query = `
-    SELECT c.cart_id, c.quantity, c.created_at, c.total_price,
-           f.fabric_id, f.name as fabric_name, f.material_type, f.color, f.price_per_meter, f.stock_quantity as stock_available_quantity, f.image_url
+    SELECT c.cart_id, c.quantity, c.added_date, c.total_price,
+           f.fabric_id, f.name as fabric_name, f.material_type, f.color, f.price_per_meter, f.stock_available_quantity, f.image_url
     FROM cart c
     JOIN fabrics f ON c.fabric_id = f.fabric_id
-    WHERE c.user_id = $1
-    ORDER BY c.created_at DESC
+    WHERE c.customer_id = $1
+    ORDER BY c.added_date DESC
   `;
   const result = await pool.query(query, [customerId]);
   return result.rows;
@@ -16,7 +16,7 @@ const getCart = async (customerId) => {
 const addToCart = async (customerId, fabricId, quantity) => {
   // Check fabric
   const fabricResult = await pool.query(
-    "SELECT price_per_meter, stock_quantity FROM fabrics WHERE fabric_id = $1",
+    "SELECT price_per_meter, stock_available_quantity FROM fabrics WHERE fabric_id = $1",
     [fabricId]
   );
 
@@ -24,14 +24,14 @@ const addToCart = async (customerId, fabricId, quantity) => {
     throw new Error("Fabric not found");
 
   const fabric = fabricResult.rows[0];
-  if (fabric.stock_quantity < quantity)
+  if (fabric.stock_available_quantity < quantity)
     throw new Error("Insufficient stock");
 
   const totalPrice = fabric.price_per_meter * quantity;
 
   // Check existing cart item
   const cartResult = await pool.query(
-    "SELECT cart_id, quantity FROM cart WHERE user_id = $1 AND fabric_id = $2",
+    "SELECT cart_id, quantity FROM cart WHERE customer_id = $1 AND fabric_id = $2",
     [customerId, fabricId]
   );
 
@@ -51,7 +51,7 @@ const addToCart = async (customerId, fabricId, quantity) => {
   } else {
     // Insert
     const insertResult = await pool.query(
-      "INSERT INTO cart (user_id, fabric_id, quantity, total_price) VALUES ($1, $2, $3, $4) RETURNING cart_id",
+      "INSERT INTO cart (customer_id, fabric_id, quantity, total_price) VALUES ($1, $2, $3, $4) RETURNING cart_id",
       [customerId, fabricId, quantity, totalPrice]
     );
     return {
@@ -63,7 +63,7 @@ const addToCart = async (customerId, fabricId, quantity) => {
 
 const updateCartItem = async (customerId, cartId, quantity) => {
   const cartCheck = await pool.query(
-    "SELECT c.fabric_id FROM cart c WHERE c.cart_id = $1 AND c.user_id = $2",
+    "SELECT c.fabric_id FROM cart c WHERE c.cart_id = $1 AND c.customer_id = $2",
     [cartId, customerId]
   );
 
@@ -91,7 +91,7 @@ const updateCartItem = async (customerId, cartId, quantity) => {
 
 const removeFromCart = async (customerId, cartId) => {
   const result = await pool.query(
-    "DELETE FROM cart WHERE cart_id = $1 AND user_id = $2",
+    "DELETE FROM cart WHERE cart_id = $1 AND customer_id = $2",
     [cartId, customerId]
   );
 
@@ -105,14 +105,14 @@ const getCartCount = async (customerId) => {
   const query = `
     SELECT COALESCE(SUM(quantity), 0) as count
     FROM cart
-    WHERE user_id = $1
+    WHERE customer_id = $1
   `;
   const result = await pool.query(query, [customerId]);
   return { count: parseFloat(result.rows[0].count) };
 };
 
 const clearCart = async (customerId) => {
-  await pool.query("DELETE FROM cart WHERE user_id = $1", [customerId]);
+  await pool.query("DELETE FROM cart WHERE customer_id = $1", [customerId]);
   return { message: "Cart cleared" };
 };
 
