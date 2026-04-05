@@ -88,10 +88,10 @@ export default function Login() {
     <div className="login-page">
       {/* Header - Matching other pages */}
       <header className="top-bar">
-        <div className="sidebar-header">
+        <Link to="/" className="sidebar-header" style={{ textDecoration: 'none' }}>
           <span className="sidebar-logo-icon">🏠</span>
-          <span className="sidebar-title">Hiran Fabrics</span>
-        </div>
+          <span className="sidebar-title">Hiran Fabric Textile</span>
+        </Link>
       </header>
 
       {/* Login Card */}

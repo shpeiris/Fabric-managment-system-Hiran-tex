@@ -15,11 +15,11 @@ export default function PasswordResetSuccess() {
   return (
     <div className="auth-page">
       <header className="auth-header">
-        <div className="header-content">
+        <Link to="/" className="header-content" style={{ textDecoration: 'none' }}>
           <span className="home-icon">🏠</span>
-          <h1>Hiran Fabric Textile</h1>
-          <p>Password Successfully Reset</p>
-        </div>
+          <h1 style={{ color: 'inherit' }}>Hiran Fabric Textile</h1>
+          <p style={{ color: 'inherit' }}>Password Successfully Reset</p>
+        </Link>
       </header>
 
       <div className="auth-container">
