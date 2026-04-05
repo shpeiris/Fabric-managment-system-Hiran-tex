@@ -2,12 +2,12 @@ import { pool } from "../config/db.js";
 
 const getCart = async (customerId) => {
   const query = `
-    SELECT c.cart_id, c.quantity, c.created_at, c.total_price,
+    SELECT c.cart_id, c.quantity, c.added_date, c.total_price,
            f.fabric_id, f.name as fabric_name, f.material_type, f.color, f.price_per_meter, f.stock_quantity as stock_available_quantity, f.image_url
     FROM cart c
     JOIN fabrics f ON c.fabric_id = f.fabric_id
     WHERE c.customer_id = $1
-    ORDER BY c.created_at DESC
+    ORDER BY c.added_date DESC
   `;
   const result = await pool.query(query, [customerId]);
   return result.rows;
