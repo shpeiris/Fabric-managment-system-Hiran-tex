@@ -8,3 +8,4 @@ export { default as paymentService } from "./paymentService.js";
 export { default as activityService } from "./activityService.js";
 export { default as supplierService } from "./supplierService.js";
 export { default as customerService } from "./customerService.js";
+export { catalogService } from "./catalogService.js";

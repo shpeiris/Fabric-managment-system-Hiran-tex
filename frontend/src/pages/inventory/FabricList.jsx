@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiCall } from "../../utils/auth.js";
 import "./FabricManagement.css";
+import { catalogService } from "../../services";
 
 const FABRIC_COLORS = [
   { name: 'Espresso', hex: '#1a1515' },

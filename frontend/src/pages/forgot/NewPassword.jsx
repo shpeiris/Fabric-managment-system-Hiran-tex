@@ -101,11 +101,11 @@ export default function NewPassword() {
   return (
     <div className="auth-page">
       <header className="auth-header">
-        <div className="header-content">
+        <Link to="/" className="header-content" style={{ textDecoration: 'none' }}>
           <span className="home-icon">🏠</span>
-          <h1>Hiran Fabric Textile</h1>
-          <p>Create New Password</p>
-        </div>
+          <h1 style={{ color: 'inherit' }}>Hiran Fabric Textile</h1>
+          <p style={{ color: 'inherit' }}>Create New Password</p>
+        </Link>
       </header>
 
       <div className="auth-container">

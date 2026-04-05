@@ -19,7 +19,8 @@ const BrowseFabrics = () => {
     const fetchFabrics = async () => {
         try {
             setLoading(true);
-            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics`);
+            // Use plain fetch (no auth) so unauthenticated customers can browse freely
+            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics`);
             const data = await response.json();
 
             if (response.ok) {
@@ -210,8 +211,20 @@ const BrowseFabrics = () => {
                 ))}
             </div>
 
-            {groupedFabrics.length === 0 && !loading && (
-                <div className="no-results">No fabrics found matching your criteria.</div>
+            {groupedFabrics.length === 0 && !loading && !error && (
+                <div className="no-results-card">
+                    <div className="no-results-icon">🔍</div>
+                    <h3>No Fabrics Found</h3>
+                    <p>We couldn't find any fabrics matching your criteria.</p>
+                    {(searchTerm || selectedCategory !== 'All') && (
+                        <button 
+                            className="btn-clear-filters" 
+                            onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}
+                        >
+                            Clear Filters
+                        </button>
+                    )}
+                </div>
             )}
         </div>
     );

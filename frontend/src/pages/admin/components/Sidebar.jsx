@@ -21,15 +21,17 @@ export default function Sidebar({ onLogout }) {
     >
       {/* Header */}
       <div style={{ padding: "30px 20px", borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}>
-        <h3 style={{ 
-          margin: 0, 
-          fontSize: "18px", 
-          fontWeight: "700", 
-          color: "#7cff00",
-          letterSpacing: "0.5px"
-        }}>
-          Hiran Fabrics
-        </h3>
+        <Link to="/" style={{ textDecoration: "none" }}>
+          <h3 style={{ 
+            margin: 0, 
+            fontSize: "18px", 
+            fontWeight: "700", 
+            color: "#7cff00",
+            letterSpacing: "0.5px"
+          }}>
+            🏠Hiran Fabric Textile
+          </h3>
+        </Link>
       </div>
 
       {/* Navigation */}

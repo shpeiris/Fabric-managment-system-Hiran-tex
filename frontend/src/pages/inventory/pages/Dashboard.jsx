@@ -60,7 +60,6 @@ export default function InventoryDashboard() {
       {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon">💰</div>
           <div className="stat-info">
             <h4>Total Stock Value</h4>
             <h2>Rs. {stats.totalStockValue.toLocaleString()}</h2>
@@ -68,7 +67,6 @@ export default function InventoryDashboard() {
         </div>
 
         <div className="stat-card alert">
-          <div className="stat-icon">⚠️</div>
           <div className="stat-info">
             <h4>Low Stock Items</h4>
             <h2>{stats.lowStockItems}</h2>
@@ -76,7 +74,6 @@ export default function InventoryDashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">📦</div>
           <div className="stat-info">
             <h4>Total Fabrics</h4>
             <h2>{stats.totalFabrics}</h2>
@@ -84,7 +81,6 @@ export default function InventoryDashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">📥</div>
           <div className="stat-info">
             <h4>Recent Arrivals</h4>
             <h2>{stats.recentArrivals}</h2>
@@ -94,7 +90,7 @@ export default function InventoryDashboard() {
 
       {/* Low Stock Alerts */}
       <div className="section">
-        <h3>⚠️ Low Stock Alerts</h3>
+        <h3>Low Stock Alerts</h3>
         <div className="table-container">
           <table className="data-table">
             <thead>
@@ -127,7 +123,7 @@ export default function InventoryDashboard() {
               ) : (
                 <tr>
                   <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
-                    ✅ All fabrics have adequate stock
+                    All fabrics have adequate stock
                   </td>
                 </tr>
               )}
@@ -138,7 +134,7 @@ export default function InventoryDashboard() {
 
       {/* Recent Stock Arrivals */}
       <div className="section">
-        <h3>📥 Recent Stock Arrivals</h3>
+        <h3>Recent Stock Arrivals</h3>
         <div className="table-container">
           <table className="data-table">
             <thead>

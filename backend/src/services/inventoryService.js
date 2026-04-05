@@ -69,15 +69,25 @@ const addFabric = async (fabricData) => {
     restock_date || null
   ]);
 
+  const newFabricId = result.rows[0].fabric_id;
+
   // Sync available quantity if that column exists (best-effort)
   try {
     await pool.query(
       "UPDATE fabrics SET stock_available_quantity = stock_quantity WHERE fabric_id = $1",
-      [result.rows[0].fabric_id]
+      [newFabricId]
     );
   } catch (_) { /* column may not exist */ }
 
-  return { fabric_id: result.rows[0].fabric_id, ...fabricData };
+  // Automatically add to main catalog (catalog_id 1)
+  try {
+    await pool.query(
+      "INSERT INTO catalog_items (catalog_id, fabric_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+      [1, newFabricId]
+    );
+  } catch (_) { /* Best effort */ }
+
+  return { fabric_id: newFabricId, ...fabricData };
 };
 
 const updateFabric = async (id, fabricData) => {
