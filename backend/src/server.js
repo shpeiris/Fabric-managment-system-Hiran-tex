@@ -26,6 +26,7 @@ import reportRoutes from "./routes/reportRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
+import catalogRoutes from "./routes/catalogRoutes.js";
 
 // Middleware configuration
 app.use(
@@ -92,6 +93,7 @@ app.use("/", reportRoutes);
 app.use("/", productRoutes);
 app.use("/", activityRoutes);
 app.use("/", customerRoutes);
+app.use("/", catalogRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiCall } from "../../utils/auth.js";
 import "./FabricManagement.css";
+import { catalogService } from "../../services";
 
 const FABRIC_COLORS = [
   { name: 'Espresso', hex: '#1a1515' },
@@ -39,6 +40,7 @@ export default function FabricManagement() {
   const [variantQuantities, setVariantQuantities] = useState({}); // { '#hex': quantity_string }
   const [variantRestockDates, setVariantRestockDates] = useState({}); // { '#hex': 'YYYY-MM-DD' }
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [catalogFabricIds, setCatalogFabricIds] = useState([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -56,7 +58,17 @@ export default function FabricManagement() {
 
   useEffect(() => {
     fetchFabrics();
+    fetchCatalogStatus();
   }, []);
+
+  const fetchCatalogStatus = async () => {
+    try {
+      const data = await catalogService.getCatalogStatus();
+      setCatalogFabricIds(data.fabricIds || []);
+    } catch (err) {
+      console.error('Error fetching catalog status:', err);
+    }
+  };
 
   const fetchFabrics = async () => {
     try {
@@ -171,6 +183,22 @@ export default function FabricManagement() {
     setShowModal(true);
   };
 
+  const toggleCatalog = async (fabricId) => {
+    const isInCatalog = catalogFabricIds.includes(fabricId);
+    try {
+      if (isInCatalog) {
+        await catalogService.removeFromCatalog(fabricId);
+        setCatalogFabricIds(prev => prev.filter(id => id !== fabricId));
+      } else {
+        await catalogService.addToCatalog(fabricId);
+        setCatalogFabricIds(prev => [...prev, fabricId]);
+      }
+    } catch (err) {
+      console.error('Error toggling catalog status:', err);
+      alert('Failed to update catalog status');
+    }
+  };
+
   const handleDelete = async (fabricId) => {
     if (!confirm('Are you sure you want to delete this fabric?')) return;
 
@@ -270,6 +298,7 @@ export default function FabricManagement() {
               <th>Price/m</th>
               <th>Stock</th>
               <th>Status</th>
+              <th>Catalog</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -322,6 +351,28 @@ export default function FabricManagement() {
                         <span style={{ marginRight: '5px' }}>{icon}</span>
                         {label}
                       </span>
+                    );
+                  })()}
+                </td>
+                <td>
+                  {(() => {
+                    const isInCatalog = (catalogFabricIds || []).includes(fabric.fabric_id);
+                    return (
+                      <div className="catalog-control" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <span className={`status-badge ${isInCatalog ? 'ok' : 'low'}`} style={{ fontSize: '10px', padding: '2px 6px', width: '100%', textAlign: 'center' }}>
+                          {isInCatalog ? '✓ Public' : '○ Private'}
+                        </span>
+                        <button 
+                          className={isInCatalog ? "btn-delete" : "btn-save"} 
+                          style={{ padding: '4px 8px', fontSize: '10px', width: '100%', minWidth: '70px' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCatalog(fabric.fabric_id);
+                          }}
+                        >
+                          {isInCatalog ? 'Unpublish' : 'Publish'}
+                        </button>
+                      </div>
                     );
                   })()}
                 </td>
