@@ -13,12 +13,12 @@ export default function StockArrivals() {
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    fabric_id: "",
     supplier_id: "",
-    quantity: "",
     supply_unit_price: "",
     arrival_date: new Date().toISOString().split('T')[0]
   });
+  const [colorQuantities, setColorQuantities] = useState({});
+  const [selectedVariants, setSelectedVariants] = useState([]);
 
   const [fabricSearch, setFabricSearch] = useState("");
   const [supplierSearch, setSupplierSearch] = useState("");
@@ -26,22 +26,36 @@ export default function StockArrivals() {
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
 
   // Calculate total value automatically
-  const totalValue = formData.quantity && formData.supply_unit_price ?
-    parseFloat(formData.quantity) * parseFloat(formData.supply_unit_price) : 0;
+  const totalQuantity = Object.values(colorQuantities).reduce((sum, q) => sum + (parseFloat(q) || 0), 0);
+  const totalValue = totalQuantity && formData.supply_unit_price ?
+    totalQuantity * parseFloat(formData.supply_unit_price) : 0;
+
+  // Group fabrics by name for dropdown
+  const uniqueFabrics = Object.values(fabrics.reduce((acc, f) => {
+    if (!acc[f.name]) acc[f.name] = { ...f, variants: [f] };
+    else acc[f.name].variants.push(f);
+    return acc;
+  }, {}));
 
   useEffect(() => {
     fetchInitialData();
-    
+  }, []);
+
+  useEffect(() => {
     // Check for incoming fabric state from Alerts
-    if (location.state && location.state.fabric_id) {
-      setFormData(prev => ({ ...prev, fabric_id: location.state.fabric_id }));
-      setFabricSearch(`${location.state.fabric_name} (${location.state.material_type || ''})`);
-      setShowModal(true);
+    if (location.state && location.state.fabric_id && fabrics.length > 0) {
+      const match = fabrics.find(f => f.fabric_id === location.state.fabric_id);
+      if (match) {
+         setFabricSearch(`${match.name} (${match.material_type || ''})`);
+         const variants = fabrics.filter(f => f.name === match.name);
+         setSelectedVariants(variants);
+         setShowModal(true);
+      }
       
       // Clear location state to prevent modal reopening on refresh
       window.history.replaceState({}, document.title);
     }
-  }, [location]);
+  }, [location, fabrics]);
 
   const fetchInitialData = async () => {
     try {
@@ -74,43 +88,65 @@ export default function StockArrivals() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleQuantityChange = (fabricId, value) => {
+    setColorQuantities(prev => ({ ...prev, [fabricId]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.fabric_id || !formData.supplier_id || !formData.quantity || !formData.supply_unit_price) {
-      alert("Please fill in all required fields");
+    const itemsToSubmit = Object.entries(colorQuantities)
+      .filter(([id, qty]) => parseFloat(qty) > 0)
+      .map(([id, qty]) => ({ fabric_id: id, quantity: parseFloat(qty) }));
+
+    if (itemsToSubmit.length === 0) {
+      alert("Please enter a quantity greater than 0 for at least one fabric color.");
+      return;
+    }
+    if (!formData.supplier_id) {
+      alert("Please select a Supplier from the dropdown suggestions.");
+      return;
+    }
+    if (!formData.supply_unit_price) {
+      alert("Please enter a Unit Price.");
       return;
     }
 
     try {
       setSubmitting(true);
-      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`, {
-        method: 'POST',
-        body: JSON.stringify({
-          ...formData,
-          quantity: parseFloat(formData.quantity),
-          supply_unit_price: parseFloat(formData.supply_unit_price),
-          total_value: totalValue
-        })
+      
+      const promises = itemsToSubmit.map(item => {
+        const itemTotalValue = item.quantity * parseFloat(formData.supply_unit_price);
+        return apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`, {
+            method: 'POST',
+            body: JSON.stringify({
+              ...formData,
+              fabric_id: item.fabric_id,
+              quantity: item.quantity,
+              supply_unit_price: parseFloat(formData.supply_unit_price),
+              total_value: itemTotalValue
+            })
+        });
       });
 
-      const data = await response.json();
+      const responses = await Promise.all(promises);
+      const allOk = responses.every(r => r.ok);
 
-        if (response.ok) {
-            alert("Stock arrival recorded successfully!");
+      if (allOk) {
+            alert("Stock arrivals recorded successfully!");
             setShowModal(false);
             setFormData({
-                fabric_id: "",
                 supplier_id: "",
-                quantity: "",
                 supply_unit_price: "",
                 arrival_date: new Date().toISOString().split('T')[0]
             });
+            setColorQuantities({});
+            setSelectedVariants([]);
             setFabricSearch("");
             setSupplierSearch("");
             fetchInitialData(); // Refresh list
         } else {
-        alert(data.error || "Failed to record arrival");
-      }
+            alert("Some arrivals failed to record. Please check the list.");
+        }
     } catch (err) {
       console.error('Error recording arrival:', err);
       alert("An error occurred. Please try again.");
@@ -186,7 +222,6 @@ export default function StockArrivals() {
               <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "11px", letterSpacing: "1px" }}>Quantity</th>
               <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "11px", letterSpacing: "1px" }}>Total Value</th>
               <th style={{ textAlign: "left", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "11px", letterSpacing: "1px" }}>Received By</th>
-              <th style={{ textAlign: "right", padding: "16px", color: "#475569", fontWeight: "700", textTransform: "uppercase", fontSize: "11px", letterSpacing: "1px" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -214,14 +249,11 @@ export default function StockArrivals() {
                   <td style={{ padding: "16px", color: "#64748b" }}>
                     {arrival.received_by_name || "System/Admin"}
                   </td>
-                  <td style={{ padding: "16px", textAlign: "right" }}>
-                    <button style={{ background: "transparent", border: "1px solid #e2e8f0", color: "#64748b", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: "600" }}>Details</button>
-                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="8" style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+                <td colSpan="7" style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
                   No recent stock arrivals found.
                 </td>
               </tr>
@@ -254,7 +286,7 @@ export default function StockArrivals() {
             <form onSubmit={handleSubmit}>
               <div style={{ display: "grid", gap: "20px" }}>
                 <div style={{ position: "relative" }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Fabric Item *</label>
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Fabric Group Selection *</label>
                   <input
                     type="text"
                     value={fabricSearch}
@@ -263,29 +295,60 @@ export default function StockArrivals() {
                       setShowFabricDropdown(true);
                     }}
                     onFocus={() => setShowFabricDropdown(true)}
-                    required
+                    placeholder="Search by name or material..."
+                    required={selectedVariants.length === 0}
                     style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
                   />
                   {showFabricDropdown && fabricSearch && (
                     <div className="search-results-dropdown">
-                      {fabrics
+                      {uniqueFabrics
                         .filter(f => f.name.toLowerCase().includes(fabricSearch.toLowerCase()) || f.material_type.toLowerCase().includes(fabricSearch.toLowerCase()))
                         .map(f => (
                           <div 
                             key={f.fabric_id} 
                             className="search-item"
                             onClick={() => {
-                              setFormData({...formData, fabric_id: f.fabric_id});
+                              setSelectedVariants(f.variants);
+                              setColorQuantities({});
                               setFabricSearch(`${f.name} (${f.material_type})`);
                               setShowFabricDropdown(false);
                             }}
                           >
-                            {f.name} ({f.material_type})
+                            {f.name} ({f.material_type}) — {f.variants.length} color(s)
                           </div>
                         ))}
                     </div>
                   )}
                 </div>
+
+                {selectedVariants.length > 0 && (
+                  <div style={{ padding: "15px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                    <label style={{ display: "block", marginBottom: "12px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Enter Quantities for Colors (m)</label>
+                    <div style={{ display: "grid", gap: "10px" }}>
+                      {selectedVariants.map(variant => (
+                        <div key={variant.fabric_id} style={{ display: "flex", alignItems: "center", gap: "15px", padding: "8px", background: "white", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                          <span 
+                            style={{ 
+                              display: "inline-block", width: "24px", height: "24px", borderRadius: "50%", 
+                              backgroundColor: variant.color || '#ccc', border: "1px solid rgba(0,0,0,0.1)" 
+                            }} 
+                            title={variant.color}
+                          ></span>
+                          <span style={{ fontWeight: "600", color: "#1e293b", flex: 1 }}>{variant.color} (SKU: FAB{variant.fabric_id.toString().padStart(3, '0')})</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Qty..."
+                            value={colorQuantities[variant.fabric_id] || ""}
+                            onChange={(e) => handleQuantityChange(variant.fabric_id, e.target.value)}
+                            style={{ width: "90px", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", outline: "none", textAlign: "right" }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div style={{ position: "relative" }}>
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Supplier *</label>
@@ -323,19 +386,6 @@ export default function StockArrivals() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
                   <div>
-                    <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Quantity (m) *</label>
-                    <input
-                      type="number"
-                      name="quantity"
-                      step="0.01"
-                      required
-                      placeholder="e.g. 50.0"
-                      value={formData.quantity}
-                      onChange={handleInputChange}
-                      style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
-                    />
-                  </div>
-                  <div>
                     <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Unit Price (Rs) *</label>
                     <input
                       type="number"
@@ -348,17 +398,16 @@ export default function StockArrivals() {
                       style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Arrival Date</label>
-                  <input
-                    type="date"
-                    name="arrival_date"
-                    value={formData.arrival_date}
-                    onChange={handleInputChange}
-                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
-                  />
+                  <div>
+                    <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Arrival Date</label>
+                    <input
+                      type="date"
+                      name="arrival_date"
+                      value={formData.arrival_date}
+                      onChange={handleInputChange}
+                      style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
+                    />
+                  </div>
                 </div>
 
                 {/* Total Value Display */}

@@ -298,7 +298,6 @@ export default function FabricManagement() {
               <th>Price/m</th>
               <th>Stock</th>
               <th>Status</th>
-              <th>Catalog</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -351,28 +350,6 @@ export default function FabricManagement() {
                         <span style={{ marginRight: '5px' }}>{icon}</span>
                         {label}
                       </span>
-                    );
-                  })()}
-                </td>
-                <td>
-                  {(() => {
-                    const isInCatalog = (catalogFabricIds || []).includes(fabric.fabric_id);
-                    return (
-                      <div className="catalog-control" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                        <span className={`status-badge ${isInCatalog ? 'ok' : 'low'}`} style={{ fontSize: '10px', padding: '2px 6px', width: '100%', textAlign: 'center' }}>
-                          {isInCatalog ? '✓ Public' : '○ Private'}
-                        </span>
-                        <button 
-                          className={isInCatalog ? "btn-delete" : "btn-save"} 
-                          style={{ padding: '4px 8px', fontSize: '10px', width: '100%', minWidth: '70px' }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleCatalog(fabric.fabric_id);
-                          }}
-                        >
-                          {isInCatalog ? 'Unpublish' : 'Publish'}
-                        </button>
-                      </div>
                     );
                   })()}
                 </td>
