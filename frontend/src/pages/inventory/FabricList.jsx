@@ -40,7 +40,6 @@ export default function FabricManagement() {
   const [variantQuantities, setVariantQuantities] = useState({}); // { '#hex': quantity_string }
   const [variantRestockDates, setVariantRestockDates] = useState({}); // { '#hex': 'YYYY-MM-DD' }
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [catalogFabricIds, setCatalogFabricIds] = useState([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -58,17 +57,7 @@ export default function FabricManagement() {
 
   useEffect(() => {
     fetchFabrics();
-    fetchCatalogStatus();
   }, []);
-
-  const fetchCatalogStatus = async () => {
-    try {
-      const data = await catalogService.getCatalogStatus();
-      setCatalogFabricIds(data.fabricIds || []);
-    } catch (err) {
-      console.error('Error fetching catalog status:', err);
-    }
-  };
 
   const fetchFabrics = async () => {
     try {
@@ -181,22 +170,6 @@ export default function FabricManagement() {
     setSelectedColors([fabric.color]);
     setImageSource(fabric.image_url?.startsWith('uploads/') ? 'upload' : 'select');
     setShowModal(true);
-  };
-
-  const toggleCatalog = async (fabricId) => {
-    const isInCatalog = catalogFabricIds.includes(fabricId);
-    try {
-      if (isInCatalog) {
-        await catalogService.removeFromCatalog(fabricId);
-        setCatalogFabricIds(prev => prev.filter(id => id !== fabricId));
-      } else {
-        await catalogService.addToCatalog(fabricId);
-        setCatalogFabricIds(prev => [...prev, fabricId]);
-      }
-    } catch (err) {
-      console.error('Error toggling catalog status:', err);
-      alert('Failed to update catalog status');
-    }
   };
 
   const handleDelete = async (fabricId) => {
