@@ -22,7 +22,8 @@ const FabricDetails = () => {
     const fetchFabricDetails = async () => {
         try {
             setLoading(true);
-            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics/${id}`);
+            // Use plain fetch (no auth) — public catalog endpoint
+            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics/${id}`);
             const data = await response.json();
 
             if (response.ok) {
@@ -46,7 +47,8 @@ const FabricDetails = () => {
 
     const fetchVariants = async (name) => {
         try {
-            const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics?search=${encodeURIComponent(name)}`);
+            // Use plain fetch (no auth) — public catalog endpoint
+            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fabrics?search=${encodeURIComponent(name)}`);
             const data = await response.json();
             if (response.ok) {
                 // Filter to ensure exact name match and include current fabric
