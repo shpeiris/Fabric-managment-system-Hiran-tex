@@ -68,8 +68,8 @@ const getAllUsers = async () => {
         email, 
         telephone as phone, 
         CASE 
-          WHEN role = 'INVENTORY_MANAGER' THEN 'INVENTORY_MANAGER'
-          WHEN role = 'SALESPERSON' THEN 'SALESPERSON'
+          WHEN role = 'INVENTORY' OR role = 'INVENTORY_MANAGER' THEN 'INVENTORY_MANAGER'
+          WHEN role = 'SALES' OR role = 'SALESPERSON' THEN 'SALESPERSON'
           ELSE role::text 
         END as role,
         status::text,

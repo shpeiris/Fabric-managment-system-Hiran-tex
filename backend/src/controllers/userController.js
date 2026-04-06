@@ -39,10 +39,10 @@ const createUser = async (req, res) => {
     }
   }
 
-  // Map Roles for DB (Frontend Role -> DB Role)
-  let dbRole = role;
-  if (role === "INVENTORY_MANAGER") dbRole = "INVENTORY_MANAGER";
-  if (role === "SALESPERSON") dbRole = "SALESPERSON";
+  // Map Roles for DB (Ensuring compatibility with both ENUM and legacy VARCHAR schemas)
+  let dbRole = role.toUpperCase();
+  if (dbRole === "INVENTORY_MANAGER") dbRole = "INVENTORY_MANAGER"; // Match ENUM in EmployeeModel.js
+  if (dbRole === "SALESPERSON") dbRole = "SALESPERSON"; // Match ENUM in EmployeeModel.js
 
   // Generate default password if not provided
   let userPassword = password;
@@ -93,7 +93,10 @@ const createUser = async (req, res) => {
 
     const response = {
       message: `${role.toUpperCase()} account created successfully`,
-      user: newUser,
+      user: {
+        ...newUser,
+        role: role // Ensure frontend role is returned for immediate UI updates
+      },
     };
 
     // Include generated password if default was used
