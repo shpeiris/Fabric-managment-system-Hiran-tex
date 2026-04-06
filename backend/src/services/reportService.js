@@ -48,7 +48,7 @@ const getInventoryReport = async () => {
                 SUM(stock_available_quantity) as total_meters 
             FROM fabrics
         `,
-        allFabrics: "SELECT name, material_type, width, stock_available_quantity, price_per_meter, (price_per_meter * stock_available_quantity) as value FROM fabrics ORDER BY name ASC",
+        allFabrics: "SELECT fabric_id, name, material_type, width, stock_available_quantity, price_per_meter, (price_per_meter * stock_available_quantity) as value FROM fabrics ORDER BY name ASC",
         materialDistribution: "SELECT material_type, COUNT(*) as count, SUM(stock_available_quantity) as total_meters FROM fabrics GROUP BY material_type"
     };
 

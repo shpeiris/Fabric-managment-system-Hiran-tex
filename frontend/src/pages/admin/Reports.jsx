@@ -158,6 +158,7 @@ export default function Reports() {
           <table className="report-table">
             <thead>
               <tr>
+                <th>ID</th>
                 <th>Fabric Name</th>
                 <th>Material</th>
                 <th>Width</th>
@@ -170,6 +171,7 @@ export default function Reports() {
               {inventoryReport.allFabrics.length > 0 ? (
                 inventoryReport.allFabrics.map((item, idx) => (
                   <tr key={idx}>
+                    <td>#{item.fabric_id}</td>
                     <td>{item.name}</td>
                     <td>{item.material_type}</td>
                     <td>{item.width || '—'}</td>
@@ -179,7 +181,7 @@ export default function Reports() {
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="5">No fabrics in system.</td></tr>
+                <tr><td colSpan="7">No fabrics in system.</td></tr>
               )}
             </tbody>
           </table>
