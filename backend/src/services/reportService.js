@@ -27,41 +27,20 @@ const getSalesReport = async (startDate, endDate) => {
             ORDER BY date DESC 
             LIMIT 30
         `,
-        topFabrics: `
-            SELECT f.name, SUM(oi.quantity) as quantity_sold, SUM(oi.quantity * f.price_per_meter) as revenue
-            FROM order_items oi
-            JOIN fabrics f ON oi.fabric_id = f.fabric_id
-            JOIN orders o ON oi.order_id = o.order_id
-            ${dateFilter.replace('WHERE', 'AND').replace('order_status', 'o.order_status').replace('order_date', 'o.order_date').replace('AND', 'WHERE')}
-            GROUP BY f.fabric_id, f.name
-            ORDER BY quantity_sold DESC
-            LIMIT 5
-        `,
-        recentOrders: `
+        monthlyOrders: `
             SELECT o.order_id, u.full_name as customer_name, o.total_amount, o.order_status, o.order_date
             FROM orders o
             JOIN users u ON o.customer_id = u.id
-            ${dateFilter.replace('WHERE', 'AND').replace('order_status', 'o.order_status').replace('order_date', 'o.order_date').replace('AND', 'WHERE')}
+            WHERE o.order_status != 'CANCELLED' 
+            AND o.order_date >= DATE_TRUNC('month', CURRENT_DATE)
             ORDER BY o.order_date DESC
-            LIMIT 10
-        `,
-        materialSales: `
-            SELECT f.material_type, SUM(oi.quantity) as meters_sold, SUM(oi.quantity * f.price_per_meter) as revenue
-            FROM order_items oi
-            JOIN fabrics f ON oi.fabric_id = f.fabric_id
-            JOIN orders o ON oi.order_id = o.order_id
-            ${dateFilter.replace('WHERE', 'AND').replace('order_status', 'o.order_status').replace('order_date', 'o.order_date').replace('AND', 'WHERE')}
-            GROUP BY f.material_type
-            ORDER BY revenue DESC
         `
     };
 
-    const [summary, dailySales, topFabrics, recentOrders, materialSales] = await Promise.all([
+    const [summary, dailySales, monthlyOrders] = await Promise.all([
         pool.query(queries.summary, params),
         pool.query(queries.dailySales, params),
-        pool.query(queries.topFabrics, params),
-        pool.query(queries.recentOrders, params),
-        pool.query(queries.materialSales, params)
+        pool.query(queries.monthlyOrders, params)
     ]);
 
     return {
@@ -72,9 +51,7 @@ const getSalesReport = async (startDate, endDate) => {
             uniqueCustomers: parseInt(summary.rows[0]?.unique_customers || 0)
         },
         dailySales: dailySales.rows,
-        topFabrics: topFabrics.rows,
-        recentOrders: recentOrders.rows,
-        materialSales: materialSales.rows
+        monthlyOrders: monthlyOrders.rows
     };
 };
 

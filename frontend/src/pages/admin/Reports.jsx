@@ -81,94 +81,36 @@ export default function Reports() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '30px', margin: '30px 0' }}>
-            <div className="report-box">
-              <h3>Daily Performance</h3>
-              <div className="table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Orders</th>
-                      <th>Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salesReport.dailySales?.length > 0 ? (
-                      salesReport.dailySales.map((row, idx) => (
-                        <tr key={idx}>
-                          <td style={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString()}</td>
-                          <td>{row.order_count}</td>
-                          <td>Rs. {Number(row.total_sales).toFixed(2)}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr><td colSpan="3">No records.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="report-box">
-              <h3>Best Sellers</h3>
-              <div className="table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Fabric</th>
-                      <th>Sold</th>
-                      <th>Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salesReport.topFabrics?.length > 0 ? (
-                      salesReport.topFabrics.map((item, idx) => (
-                        <tr key={idx}>
-                          <td>{item.name}</td>
-                          <td>{item.quantity_sold}m</td>
-                          <td>Rs. {Number(item.revenue).toLocaleString()}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr><td colSpan="3">No data.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="report-box">
-              <h3>Sales by Material</h3>
-              <div className="table-container">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>Material</th>
-                      <th>Meters</th>
-                      <th>Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salesReport.materialSales?.length > 0 ? (
-                      salesReport.materialSales.map((m, idx) => (
-                        <tr key={idx}>
-                          <td>{m.material_type || 'Other'}</td>
-                          <td>{m.meters_sold}m</td>
-                          <td>Rs. {Number(m.revenue).toLocaleString()}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr><td colSpan="3">No data.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          <div className="report-box" style={{ margin: '30px 0' }}>
+            <h3>Daily Sales Performance</h3>
+            <div className="table-container">
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Orders</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salesReport.dailySales?.length > 0 ? (
+                    salesReport.dailySales.map((row, idx) => (
+                      <tr key={idx}>
+                        <td style={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString()}</td>
+                        <td>{row.order_count}</td>
+                        <td>Rs. {Number(row.total_sales).toFixed(2)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="3">No sales metrics recorded.</td></tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
           <div className="report-box" style={{ marginBottom: '40px' }}>
-            <h3>Recent Transactions</h3>
+            <h3>Monthly Transactions</h3>
             <div className="table-container">
               <table className="report-table">
                 <thead>
@@ -181,8 +123,8 @@ export default function Reports() {
                   </tr>
                 </thead>
                 <tbody>
-                  {salesReport.recentOrders?.length > 0 ? (
-                    salesReport.recentOrders.map((o, idx) => (
+                  {salesReport.monthlyOrders?.length > 0 ? (
+                    salesReport.monthlyOrders.map((o, idx) => (
                       <tr key={idx}>
                         <td style={{ fontWeight: 600 }}>#{o.order_id}</td>
                         <td>{o.customer_name}</td>
@@ -203,7 +145,7 @@ export default function Reports() {
                       </tr>
                     ))
                   ) : (
-                    <tr><td colSpan="5">No recent orders.</td></tr>
+                    <tr><td colSpan="5">No transactions this month.</td></tr>
                   )}
                 </tbody>
               </table>
