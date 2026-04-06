@@ -42,7 +42,9 @@ const login = async (req, res) => {
     const redirectPaths = {
       ADMIN: "/admin/dashboard",
       INVENTORY: "/inventory/dashboard",
+      INVENTORY_MANAGER: "/inventory/dashboard",
       SALES: "/sales/dashboard",
+      SALESPERSON: "/sales/dashboard",
       CUSTOMER: "/customer/dashboard",
     };
 

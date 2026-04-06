@@ -1,6 +1,6 @@
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { getUser, removeUser, apiCall } from '../../../utils/auth.js';
+import { getUser, removeUser, apiCall, ROLES } from '../../../utils/auth.js';
 
 const SalesSidebar = () => {
   const navigate = useNavigate();
@@ -111,6 +111,28 @@ const SalesSidebar = () => {
             )}
           </NavLink>
         ))}
+
+        {user?.role === ROLES?.ADMIN && (
+          <div style={{ marginTop: '30px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
+            <NavLink
+              to="/admin/dashboard"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '14px 25px',
+                color: '#2563eb',
+                background: 'rgba(37, 99, 235, 0.1)',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: '700',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}
+            >
+              ⬅ Back to Admin Center
+            </NavLink>
+          </div>
+        )}
       </nav>
 
       {/* Footer with User Info and Logout */}

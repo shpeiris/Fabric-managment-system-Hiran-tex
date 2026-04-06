@@ -24,22 +24,22 @@
 }
 
 .add-btn {
-  background: #7cff00;
-  color: #001a66;
+  background: #2563eb;
+  color: white;
   border: none;
   padding: 12px 25px;
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(124, 255, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
   transition: all 0.3s ease;
   font-size: 14px;
 }
 
 .add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(124, 255, 0, 0.4);
-  background: #6ee600;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+  background: #1d4ed8;
 }
 
 /* Tabs */
@@ -65,10 +65,10 @@
 }
 
 .tabs button.active {
-  background: #7cff00;
-  color: #001a66;
-  border-color: #7cff00;
-  box-shadow: 0 4px 10px rgba(124, 255, 0, 0.2);
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
 /* Users Section */
@@ -84,7 +84,7 @@
   color: #001a66;
   margin-bottom: 20px;
   font-size: 18px;
-  border-left: 4px solid #7cff00;
+  border-left: 4px solid #2563eb;
   padding-left: 15px;
 }
 
@@ -172,8 +172,8 @@
 }
 
 .role-badge.customer {
-  background: rgba(124, 255, 0, 0.15);
-  color: #5bbd00;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
 }
 
 .status-badge {

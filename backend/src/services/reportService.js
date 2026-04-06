@@ -1,37 +1,64 @@
 import { pool } from '../config/db.js';
 
 const getSalesReport = async (startDate, endDate) => {
-    let query = `
-        SELECT DATE(order_date) as date, SUM(total_amount) as total_sales, COUNT(*) as order_count
-        FROM orders 
-        WHERE order_status != 'CANCELLED'
-    `;
+    let dateFilter = "WHERE order_status != 'CANCELLED'";
     const params = [];
 
     if (startDate && endDate) {
-        query += " AND order_date BETWEEN $1 AND $2";
+        dateFilter += " AND order_date BETWEEN $1 AND $2";
         params.push(startDate, endDate);
     }
 
-    query += " GROUP BY DATE(order_date) ORDER BY date DESC LIMIT 30";
+    const queries = {
+        summary: `
+            SELECT 
+                COALESCE(SUM(total_amount), 0) as total_revenue, 
+                COUNT(*) as total_orders, 
+                COALESCE(AVG(total_amount), 0) as avg_order_value,
+                COUNT(DISTINCT customer_id) as unique_customers
+            FROM orders 
+            ${dateFilter}
+        `,
+        dailySales: `
+            SELECT DATE(order_date) as date, SUM(total_amount) as total_sales, COUNT(*) as order_count
+            FROM orders 
+            ${dateFilter}
+            GROUP BY DATE(order_date) 
+            ORDER BY date DESC 
+            LIMIT 30
+        `,
+        monthlyOrders: `
+            SELECT o.order_id, u.full_name as customer_name, o.total_amount, o.order_status, o.order_date
+            FROM orders o
+            JOIN users u ON o.customer_id = u.id
+            WHERE o.order_status != 'CANCELLED' 
+            AND o.order_date >= DATE_TRUNC('month', CURRENT_DATE)
+            ORDER BY o.order_date DESC
+        `
+    };
 
-    const customerCountQuery = "SELECT COUNT(DISTINCT customer_id) as active_customers FROM orders";
-
-    const [salesResult, customerResult] = await Promise.all([
-        pool.query(query, params),
-        pool.query(customerCountQuery)
+    const [summary, dailySales, monthlyOrders] = await Promise.all([
+        pool.query(queries.summary, params),
+        pool.query(queries.dailySales, params),
+        pool.query(queries.monthlyOrders, params)
     ]);
 
     return {
-        dailySales: salesResult.rows,
-        activeCustomers: parseInt(customerResult.rows[0]?.active_customers || 0)
+        summary: {
+            totalRevenue: parseFloat(summary.rows[0]?.total_revenue || 0),
+            totalOrders: parseInt(summary.rows[0]?.total_orders || 0),
+            avgOrderValue: parseFloat(summary.rows[0]?.avg_order_value || 0),
+            uniqueCustomers: parseInt(summary.rows[0]?.unique_customers || 0)
+        },
+        dailySales: dailySales.rows,
+        monthlyOrders: monthlyOrders.rows
     };
 };
 
 const getInventoryReport = async () => {
     const queries = {
-        lowStock: "SELECT name, stock_available_quantity, restock_level, restock_date FROM fabrics WHERE stock_available_quantity <= restock_level",
-        totalValue: "SELECT SUM(price_per_meter * stock_available_quantity) as total_inventory_value FROM fabrics",
+        lowStock: "SELECT * FROM fabrics WHERE stock_available_quantity <= restock_level ORDER BY stock_available_quantity ASC",
+        totalValue: "SELECT SUM(stock_available_quantity * price_per_meter) as total_inventory_value FROM fabrics",
         topSelling: `
             SELECT f.name, SUM(oi.quantity) as total_sold
             FROM order_items oi
@@ -42,23 +69,43 @@ const getInventoryReport = async () => {
         `,
         stats: `
             SELECT 
-                COUNT(*) as total_items, 
-                SUM(CASE WHEN stock_available_quantity <= restock_level AND stock_available_quantity > 0 THEN 1 ELSE 0 END) as low_stock_count, 
-                SUM(CASE WHEN stock_available_quantity = 0 THEN 1 ELSE 0 END) as out_of_stock_count, 
+                COUNT(*) as total_items,
+                COUNT(CASE WHEN stock_available_quantity <= restock_level AND stock_available_quantity > 0 THEN 1 END) as low_stock_count,
+                COUNT(CASE WHEN stock_available_quantity = 0 THEN 1 END) as out_of_stock_count,
                 SUM(stock_available_quantity) as total_meters 
             FROM fabrics
         `,
-        allFabrics: "SELECT name, material_type, width, stock_available_quantity, price_per_meter, (price_per_meter * stock_available_quantity) as value FROM fabrics ORDER BY name ASC",
-        materialDistribution: "SELECT material_type, COUNT(*) as count, SUM(stock_available_quantity) as total_meters FROM fabrics GROUP BY material_type"
+        allFabrics: `
+            SELECT 
+                f.fabric_id, f.name, f.material_type, f.width, f.stock_available_quantity, f.price_per_meter, 
+                (f.price_per_meter * f.stock_available_quantity) as value,
+                s.name as supplier_name
+            FROM fabrics f
+            LEFT JOIN (
+                SELECT DISTINCT ON (fabric_id) fabric_id, supplier_id 
+                FROM stock_arrivals 
+                ORDER BY fabric_id, arrival_date DESC
+            ) latest_arrival ON f.fabric_id = latest_arrival.fabric_id
+            LEFT JOIN suppliers s ON latest_arrival.supplier_id = s.supplier_id
+            ORDER BY f.name ASC
+        `,
+        recentArrivals: `
+            SELECT sa.*, f.name as fabric_name, f.material_type, f.color, f.design, s.name as supplier_name, e.full_name as received_by_name
+            FROM stock_arrivals sa
+            JOIN fabrics f ON sa.fabric_id = f.fabric_id
+            JOIN suppliers s ON sa.supplier_id = s.supplier_id
+            LEFT JOIN employees e ON sa.received_by = e.employee_id
+            ORDER BY sa.arrival_date DESC
+        `
     };
 
-    const [lowStock, totalValue, topSelling, stats, allFabrics, materialDistribution] = await Promise.all([
+    const [lowStock, totalValue, topSelling, stats, allFabrics, recentArrivals] = await Promise.all([
         pool.query(queries.lowStock),
         pool.query(queries.totalValue),
         pool.query(queries.topSelling),
         pool.query(queries.stats),
         pool.query(queries.allFabrics),
-        pool.query(queries.materialDistribution)
+        pool.query(queries.recentArrivals)
     ]);
 
     return {
@@ -70,7 +117,7 @@ const getInventoryReport = async () => {
         outOfStockCount: parseInt(stats.rows[0]?.out_of_stock_count || 0),
         totalMeters: parseFloat(stats.rows[0]?.total_meters || 0),
         allFabrics: allFabrics.rows,
-        materialDistribution: materialDistribution.rows
+        recentArrivals: recentArrivals.rows
     };
 };
 

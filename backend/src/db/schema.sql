@@ -193,45 +193,8 @@ INSERT INTO suppliers (name, contact_person, contact_number, email, address) VAL
 ('Classic Textiles', 'Sarah Jenkins', '0112345678', 'sarah@classictextiles.com', 'No. 45, Main St, Colombo 03'),
 ('Global Fabrics Ltd', 'Michael Chen', '0117654321', 'info@globalfabrics.lk', 'Free Trade Zone, Katunayake');
 
--- Seed Sample Fabrics
-INSERT INTO fabrics (name, material_type, color, design, price_per_meter, stock_quantity, reorder_level, image_url, restock_date) VALUES
-('Premium Egyptian Cotton', 'Cotton', 'White', 'Plain', 450.00, 500, 100, 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400', NULL),
-('Royal Blue Silk', 'Silk', 'Blue', 'Satin', 1250.00, 150, 40, 'https://images.unsplash.com/photo-1597484662317-c87d32cf25b8?w=400', NULL),
-('Venetian Linen Beige', 'Linen', 'Beige', 'Textured', 850.00, 0, 50, 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400', '2026-02-15'),
-('Heavyweight Denim', 'Denim', 'Dark Indigo', 'Twill', 650.00, 25, 50, 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400', '2026-02-10'),
-('Merino Wool Charcoal', 'Wool', 'Charcoal', 'Herringbone', 1850.00, 80, 20, 'https://images.unsplash.com/photo-1544441893-675973e31985?w=400', NULL),
-('Floral Viscose', 'Synthetic', 'Pink', 'Floral', 320.00, 400, 100, 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400', NULL),
-('Crushed Velvet Red', 'Synthetic', 'Crimson', 'Crushed', 980.00, 10, 30, 'https://images.unsplash.com/photo-1571513722275-4b41940f54b8?w=400', '2026-02-05'),
-('Chiffon Pastel', 'Silk', 'Lavender', 'Sheer', 420.00, 200, 50, 'https://images.unsplash.com/photo-1583091930067-2dd95c372131?w=400', NULL),
-('Soft Plaid Flannel', 'Cotton', 'Red/Black', 'Plaid', 350.00, 150, 40, 'https://images.unsplash.com/photo-1525904097878-94fb15835963?w=400', NULL),
-('Stretch Gabardine', 'Synthetic', 'Black', 'Solid', 550.00, 300, 60, 'https://images.unsplash.com/photo-1524510109189-4ba14001ba1d?w=400', NULL),
-('Vintage Suede Brown', 'Leather', 'Brown', 'Matte', 2100.00, 5, 10, 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400', '2026-03-01'),
-('Organza Shimmer', 'Silk', 'Gold', 'Sheer Shimmer', 1500.00, 0, 15, 'https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?w=400', '2026-02-28');
-
 -- Seed Initial Admin User (Password: 123456)
 INSERT INTO employees (full_name, email, password, nic, role, status) VALUES 
-('System Admin', 'admin@system.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '000000000V', 'ADMIN', 'ACTIVE'),
-('Sales Manager', 'sales@system.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '111111111V', 'SALES', 'ACTIVE');
+('System Admin', 'admin@system.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '000000000V', 'ADMIN', 'ACTIVE');
 
--- Seed Sample Customer (Password: 123456)
-INSERT INTO customers (full_name, email, password, tel, address) VALUES
-('Test Customer', 'customer@test.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '0712345678', '123, Main Street, Colombo'),
-('Jane Smith', 'jane@example.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '0771234567', '456, Galle Road, Colombo 03');
-
--- Seed Sample Orders for testing
-INSERT INTO orders (customer_id, order_status, total_amount, delivery_address, customer_name, phone_number) VALUES
-(1, 'PENDING', 1250.00, '123, Main Street, Colombo', 'Test Customer', '0712345678'),
-(2, 'PROCESSING', 850.00, '456, Galle Road, Colombo 03', 'Jane Smith', '0771234567'),
-(1, 'PENDING', 650.00, '123, Main Street, Colombo', 'Test Customer', '0712345678');
-
--- Seed Sample Order Items
-INSERT INTO order_items (order_id, fabric_id, quantity, unit_price, total_price) VALUES
-(1, 2, 1.0, 1250.00, 1250.00),
-(2, 3, 1.0, 850.00, 850.00),
-(3, 4, 1.0, 650.00, 650.00);
-
--- Seed Sample Payments
-INSERT INTO payments (order_id, amount, payment_method, payment_status) VALUES
-(1, 1250.00, 'Bank Transfer', 'PENDING'),
-(2, 850.00, 'Credit Card', 'COMPLETED'),
-(3, 650.00, 'Cash', 'PENDING');
+-- End of Schema

@@ -18,6 +18,7 @@ export default function UserManagement() {
     role: "CUSTOMER",
   });
   const [errors, setErrors] = useState({});
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -29,9 +30,14 @@ export default function UserManagement() {
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || []);
+        setFetchError(null);
+      } else {
+        const errorData = await response.json();
+        setFetchError(errorData.error || "Failed to fetch users");
       }
     } catch (error) {
       console.error("Error fetching users:", error);
+      setFetchError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -389,10 +395,16 @@ export default function UserManagement() {
             </thead>
 
             <tbody>
-              {filteredUsers.length === 0 ? (
+              {fetchError ? (
+                <tr>
+                  <td colSpan="6" className="no-data error-text">
+                    {fetchError}
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="no-data">
-                    No users found for the selected filter
+                    No users found for the selected filter ({selectedTab.replace("_", " ")})
                   </td>
                 </tr>
               ) : (
