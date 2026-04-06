@@ -17,6 +17,11 @@ export default function Sidebar({ onLogout }) {
     { name: 'Reports and Analytics', path: '/admin/reports' }
   ];
 
+  const moduleItems = [
+    { name: 'Sales Dashboard', path: '/sales/dashboard' },
+    { name: 'Inventory Dashboard', path: '/inventory/dashboard' }
+  ];
+
   return (
     <aside style={{
       width: '260px',
@@ -40,7 +45,30 @@ export default function Sidebar({ onLogout }) {
 
       {/* Navigation Menu */}
       <nav style={{ flex: 1, padding: '20px 0', overflowY: 'auto' }}>
+        <div style={{ padding: '0 25px 10px', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Admin Center</div>
         {menuItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: '14px 25px',
+              color: isActive ? '#7cff00' : 'rgba(255, 255, 255, 0.7)',
+              textDecoration: 'none',
+              fontSize: '15px',
+              fontWeight: '500',
+              transition: 'all 0.3s ease',
+              borderLeft: isActive ? '4px solid #7cff00' : '4px solid transparent',
+              background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent'
+            })}
+          >
+            {item.name}
+          </NavLink>
+        ))}
+
+        <div style={{ padding: '25px 25px 10px', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Management Modules</div>
+        {moduleItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
