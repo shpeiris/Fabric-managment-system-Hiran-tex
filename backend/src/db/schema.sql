@@ -210,8 +210,7 @@ INSERT INTO fabrics (name, material_type, color, design, price_per_meter, stock_
 
 -- Seed Initial Admin User (Password: 123456)
 INSERT INTO employees (full_name, email, password, nic, role, status) VALUES 
-('System Admin', 'admin@system.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '000000000V', 'ADMIN', 'ACTIVE'),
-('Sales Manager', 'sales@system.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '111111111V', 'SALES', 'ACTIVE');
+('System Admin', 'admin@system.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '000000000V', 'ADMIN', 'ACTIVE');
 
 -- Seed Sample Orders for testing
 INSERT INTO orders (customer_id, order_status, total_amount, delivery_address, customer_name, phone_number) VALUES
