@@ -32,10 +32,10 @@
 }
 
 .report-tabs button.active {
-  background: #7cff00;
-  color: #001a66;
-  border-color: #7cff00;
-  box-shadow: 0 4px 10px rgba(124, 255, 0, 0.2);
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
 .note {
@@ -95,7 +95,7 @@
   background: white;
   padding: 25px;
   border-radius: 12px;
-  border-left: 4px solid #7cff00;
+  border-left: 4px solid #2563eb;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
@@ -126,7 +126,7 @@
   font-size: 16px;
   color: #001a66;
   margin-bottom: 20px;
-  border-left: 4px solid #7cff00;
+  border-left: 4px solid #2563eb;
   padding-left: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;

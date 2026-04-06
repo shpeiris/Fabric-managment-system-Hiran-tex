@@ -1,10 +1,9 @@
-/* Admin Layout - Premium Dark Theme */
+/* Admin Layout - Standard Theme */
 .admin-container {
     display: flex;
     min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: rgb(1, 3, 60);
-    /* Deep dark blue background */
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8fafc;
 }
 
 /* Sidebar Styling */
@@ -56,10 +55,9 @@
 
 .nav-item:hover,
 .nav-item.active {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #7cff00;
-    /* Neon green accent */
-    border-left-color: #7cff00;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-left-color: #ffffff;
 }
 
 
@@ -161,7 +159,7 @@
 .user-avatar {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #001a66, #0033cc);
+    background: #001a66;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -169,8 +167,7 @@
     justify-content: center;
     font-weight: bold;
     font-size: 16px;
-    border: 2px solid #7cff00;
-    /* Neon green border */
+    border: none;
 }
 
 /* Page Content Wrapper */
@@ -178,9 +175,7 @@
     flex: 1;
     padding: 30px;
     overflow-y: auto;
-    background-color: #f0f2f5;
-    background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-color: #f8fafc;
 }
 
 /* Scrollbar Styling */

@@ -11,7 +11,7 @@ export default function Sidebar({ onLogout }) {
     <div
       style={{
         width: "240px",
-        background: "#0a1f44",
+        background: "#001a66",
         color: "white",
         padding: "0",
         display: "flex",
@@ -26,7 +26,7 @@ export default function Sidebar({ onLogout }) {
             margin: 0, 
             fontSize: "18px", 
             fontWeight: "700", 
-            color: "#7cff00",
+            color: "#ffffff",
             letterSpacing: "0.5px"
           }}>
             🏠Hiran Fabric Textile
@@ -42,8 +42,8 @@ export default function Sidebar({ onLogout }) {
               to="/admin/dashboard" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/dashboard") ? "rgba(124, 255, 0, 0.1)" : "transparent",
-                borderLeft: isActive("/admin/dashboard") ? "4px solid #7cff00" : "4px solid transparent"
+                background: isActive("/admin/dashboard") ? "rgba(255, 255, 255, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/dashboard") ? "4px solid #ffffff" : "4px solid transparent"
               }}
             >
               Dashboard
@@ -54,8 +54,8 @@ export default function Sidebar({ onLogout }) {
               to="/admin/users" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/users") ? "rgba(124, 255, 0, 0.1)" : "transparent",
-                borderLeft: isActive("/admin/users") ? "4px solid #7cff00" : "4px solid transparent"
+                background: isActive("/admin/users") ? "rgba(255, 255, 255, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/users") ? "4px solid #ffffff" : "4px solid transparent"
               }}
             >
               User Management
@@ -66,8 +66,8 @@ export default function Sidebar({ onLogout }) {
               to="/admin/suppliers" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/suppliers") ? "rgba(124, 255, 0, 0.1)" : "transparent",
-                borderLeft: isActive("/admin/suppliers") ? "4px solid #7cff00" : "4px solid transparent"
+                background: isActive("/admin/suppliers") ? "rgba(255, 255, 255, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/suppliers") ? "4px solid #ffffff" : "4px solid transparent"
               }}
             >
               Supplier Management
@@ -78,8 +78,8 @@ export default function Sidebar({ onLogout }) {
               to="/admin/reports" 
               style={{
                 ...linkStyle,
-                background: isActive("/admin/reports") ? "rgba(124, 255, 0, 0.1)" : "transparent",
-                borderLeft: isActive("/admin/reports") ? "4px solid #7cff00" : "4px solid transparent"
+                background: isActive("/admin/reports") ? "rgba(255, 255, 255, 0.1)" : "transparent",
+                borderLeft: isActive("/admin/reports") ? "4px solid #ffffff" : "4px solid transparent"
               }}
             >
               Reports and Analytics
