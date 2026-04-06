@@ -75,17 +75,40 @@ const getInventoryReport = async () => {
                 SUM(stock_available_quantity) as total_meters 
             FROM fabrics
         `,
-        allFabrics: "SELECT fabric_id, name, material_type, width, stock_available_quantity, price_per_meter, (price_per_meter * stock_available_quantity) as value FROM fabrics ORDER BY name ASC",
-        materialDistribution: "SELECT material_type, COUNT(*) as count, SUM(stock_available_quantity) as total_meters FROM fabrics GROUP BY material_type"
+        allFabrics: `
+            SELECT 
+                f.fabric_id, f.name, f.material_type, f.width, f.stock_available_quantity, f.price_per_meter, 
+                (f.price_per_meter * f.stock_available_quantity) as value,
+                s.name as supplier_name
+            FROM fabrics f
+            LEFT JOIN (
+                SELECT DISTINCT ON (fabric_id) fabric_id, supplier_id 
+                FROM stock_arrivals 
+                ORDER BY fabric_id, arrival_date DESC
+            ) latest_arrival ON f.fabric_id = latest_arrival.fabric_id
+            LEFT JOIN suppliers s ON latest_arrival.supplier_id = s.supplier_id
+            ORDER BY f.name ASC
+        `,
+        materialDistribution: "SELECT material_type, COUNT(*) as count, SUM(stock_available_quantity) as total_meters FROM fabrics GROUP BY material_type",
+        recentArrivals: `
+            SELECT sa.*, f.name as fabric_name, f.material_type, s.name as supplier_name, u.full_name as received_by_name
+            FROM stock_arrivals sa
+            JOIN fabrics f ON sa.fabric_id = f.fabric_id
+            JOIN suppliers s ON sa.supplier_id = s.supplier_id
+            LEFT JOIN users u ON sa.received_by = u.id
+            ORDER BY sa.arrival_date DESC
+            LIMIT 10
+        `
     };
 
-    const [lowStock, totalValue, topSelling, stats, allFabrics, materialDistribution] = await Promise.all([
+    const [lowStock, totalValue, topSelling, stats, allFabrics, materialDistribution, recentArrivals] = await Promise.all([
         pool.query(queries.lowStock),
         pool.query(queries.totalValue),
         pool.query(queries.topSelling),
         pool.query(queries.stats),
         pool.query(queries.allFabrics),
-        pool.query(queries.materialDistribution)
+        pool.query(queries.materialDistribution),
+        pool.query(queries.recentArrivals)
     ]);
 
     return {
@@ -97,7 +120,8 @@ const getInventoryReport = async () => {
         outOfStockCount: parseInt(stats.rows[0]?.out_of_stock_count || 0),
         totalMeters: parseFloat(stats.rows[0]?.total_meters || 0),
         allFabrics: allFabrics.rows,
-        materialDistribution: materialDistribution.rows
+        materialDistribution: materialDistribution.rows,
+        recentArrivals: recentArrivals.rows
     };
 };
 

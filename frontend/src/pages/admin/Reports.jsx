@@ -224,6 +224,52 @@ export default function Reports() {
             </div>
           </div>
 
+          <div className="report-box" style={{ marginBottom: '30px' }}>
+            <h3>Recent Stock Arrivals</h3>
+            <div className="table-container">
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Arrival ID</th>
+                    <th>Date</th>
+                    <th>Fabric</th>
+                    <th>Supplier</th>
+                    <th>Quantity</th>
+                    <th>Total Value</th>
+                    <th>Received By</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventoryReport.recentArrivals?.length > 0 ? (
+                    inventoryReport.recentArrivals.map((arrival) => (
+                      <tr key={arrival.arrival_id}>
+                        <td style={{ fontWeight: 600 }}>#ARV-{arrival.arrival_id.toString().padStart(3, '0')}</td>
+                        <td>{new Date(arrival.arrival_date).toLocaleDateString()}</td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{arrival.fabric_name}</div>
+                          <div style={{ fontSize: '11px', color: '#666' }}>{arrival.material_type}</div>
+                        </td>
+                        <td>{arrival.supplier_name}</td>
+                        <td>
+                          <div>{arrival.quantity} m</div>
+                          <div style={{ fontSize: '11px', color: '#666' }}>Rs. {Number(arrival.supply_unit_price).toFixed(2)}/m</div>
+                        </td>
+                        <td style={{ fontWeight: 700, color: '#059669' }}>
+                          Rs. {Number(arrival.total_value).toLocaleString()}
+                        </td>
+                        <td style={{ fontSize: '12px', color: '#666' }}>
+                          {arrival.received_by_name || "System/Admin"}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="7">No recent stock arrivals found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <h3>Fabric Inventory Overview</h3>
           <table className="report-table">
             <thead>
@@ -231,6 +277,7 @@ export default function Reports() {
                 <th>ID</th>
                 <th>Fabric Name</th>
                 <th>Material</th>
+                <th>Supplier</th>
                 <th>Width</th>
                 <th>Stock (m)</th>
                 <th>Price /m</th>
@@ -244,6 +291,9 @@ export default function Reports() {
                     <td>#{item.fabric_id}</td>
                     <td>{item.name}</td>
                     <td>{item.material_type}</td>
+                    <td style={{ fontStyle: item.supplier_name ? 'normal' : 'italic', color: item.supplier_name ? 'inherit' : '#999' }}>
+                      {item.supplier_name || 'No Supplier'}
+                    </td>
                     <td>{item.width || '—'}</td>
                     <td>{item.stock_available_quantity}</td>
                     <td>Rs. {Number(item.price_per_meter).toFixed(2)}</td>
@@ -251,7 +301,7 @@ export default function Reports() {
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="7">No fabrics in system.</td></tr>
+                <tr><td colSpan="8">No fabrics in system.</td></tr>
               )}
             </tbody>
           </table>
