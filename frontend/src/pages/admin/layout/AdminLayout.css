@@ -107,6 +107,7 @@
     padding: 0 30px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     z-index: 100;
+    flex-shrink: 0; /* Prevent header from resizing unexpectedly */
 }
 
 .header-search {
@@ -176,6 +177,7 @@
     padding: 30px;
     overflow-y: auto;
     background-color: #f8fafc;
+    scrollbar-gutter: stable; /* Fix 'page movement' / shift when scrollbar appears */
 }
 
 /* Scrollbar Styling */
