@@ -247,7 +247,9 @@ export default function Reports() {
                         <td>{new Date(arrival.arrival_date).toLocaleDateString()}</td>
                         <td>
                           <div style={{ fontWeight: 600 }}>{arrival.fabric_name}</div>
-                          <div style={{ fontSize: '11px', color: '#666' }}>{arrival.material_type}</div>
+                          <div style={{ fontSize: '11px', color: '#666' }}>
+                            {arrival.material_type} — {arrival.color || 'No Color'} ({arrival.design || 'Plain'})
+                          </div>
                         </td>
                         <td>{arrival.supplier_name}</td>
                         <td>

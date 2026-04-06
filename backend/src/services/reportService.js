@@ -91,13 +91,12 @@ const getInventoryReport = async () => {
         `,
         materialDistribution: "SELECT material_type, COUNT(*) as count, SUM(stock_available_quantity) as total_meters FROM fabrics GROUP BY material_type",
         recentArrivals: `
-            SELECT sa.*, f.name as fabric_name, f.material_type, s.name as supplier_name, u.full_name as received_by_name
+            SELECT sa.*, f.name as fabric_name, f.material_type, f.color, f.design, s.name as supplier_name, e.full_name as received_by_name
             FROM stock_arrivals sa
             JOIN fabrics f ON sa.fabric_id = f.fabric_id
             JOIN suppliers s ON sa.supplier_id = s.supplier_id
-            LEFT JOIN users u ON sa.received_by = u.id
+            LEFT JOIN employees e ON sa.received_by = e.employee_id
             ORDER BY sa.arrival_date DESC
-            LIMIT 10
         `
     };
 
