@@ -213,11 +213,6 @@ INSERT INTO employees (full_name, email, password, nic, role, status) VALUES
 ('System Admin', 'admin@system.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '000000000V', 'ADMIN', 'ACTIVE'),
 ('Sales Manager', 'sales@system.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '111111111V', 'SALES', 'ACTIVE');
 
--- Seed Sample Customer (Password: 123456)
-INSERT INTO customers (full_name, email, password, tel, address) VALUES
-('Test Customer', 'customer@test.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '0712345678', '123, Main Street, Colombo'),
-('Jane Smith', 'jane@example.com', '$2a$10$3W0vfQGCn/Y2UVxr3nw6e.RV7l501cMRcqR9GDm5bAVtQH59wdflm', '0771234567', '456, Galle Road, Colombo 03');
-
 -- Seed Sample Orders for testing
 INSERT INTO orders (customer_id, order_status, total_amount, delivery_address, customer_name, phone_number) VALUES
 (1, 'PENDING', 1250.00, '123, Main Street, Colombo', 'Test Customer', '0712345678'),
