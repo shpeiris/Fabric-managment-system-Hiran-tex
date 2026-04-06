@@ -57,8 +57,8 @@ const getSalesReport = async (startDate, endDate) => {
 
 const getInventoryReport = async () => {
     const queries = {
-        lowStock: "SELECT name, stock_available_quantity, restock_level, restock_date FROM fabrics WHERE stock_available_quantity <= restock_level",
-        totalValue: "SELECT SUM(price_per_meter * stock_available_quantity) as total_inventory_value FROM fabrics",
+        lowStock: "SELECT * FROM fabrics WHERE stock_available_quantity <= restock_level ORDER BY stock_available_quantity ASC",
+        totalValue: "SELECT SUM(stock_available_quantity * price_per_meter) as total_inventory_value FROM fabrics",
         topSelling: `
             SELECT f.name, SUM(oi.quantity) as total_sold
             FROM order_items oi
@@ -69,9 +69,9 @@ const getInventoryReport = async () => {
         `,
         stats: `
             SELECT 
-                COUNT(*) as total_items, 
-                SUM(CASE WHEN stock_available_quantity <= restock_level AND stock_available_quantity > 0 THEN 1 ELSE 0 END) as low_stock_count, 
-                SUM(CASE WHEN stock_available_quantity = 0 THEN 1 ELSE 0 END) as out_of_stock_count, 
+                COUNT(*) as total_items,
+                COUNT(CASE WHEN stock_available_quantity <= restock_level AND stock_available_quantity > 0 THEN 1 END) as low_stock_count,
+                COUNT(CASE WHEN stock_available_quantity = 0 THEN 1 END) as out_of_stock_count,
                 SUM(stock_available_quantity) as total_meters 
             FROM fabrics
         `,
@@ -89,7 +89,6 @@ const getInventoryReport = async () => {
             LEFT JOIN suppliers s ON latest_arrival.supplier_id = s.supplier_id
             ORDER BY f.name ASC
         `,
-        materialDistribution: "SELECT material_type, COUNT(*) as count, SUM(stock_available_quantity) as total_meters FROM fabrics GROUP BY material_type",
         recentArrivals: `
             SELECT sa.*, f.name as fabric_name, f.material_type, f.color, f.design, s.name as supplier_name, e.full_name as received_by_name
             FROM stock_arrivals sa
@@ -100,13 +99,12 @@ const getInventoryReport = async () => {
         `
     };
 
-    const [lowStock, totalValue, topSelling, stats, allFabrics, materialDistribution, recentArrivals] = await Promise.all([
+    const [lowStock, totalValue, topSelling, stats, allFabrics, recentArrivals] = await Promise.all([
         pool.query(queries.lowStock),
         pool.query(queries.totalValue),
         pool.query(queries.topSelling),
         pool.query(queries.stats),
         pool.query(queries.allFabrics),
-        pool.query(queries.materialDistribution),
         pool.query(queries.recentArrivals)
     ]);
 
@@ -119,7 +117,6 @@ const getInventoryReport = async () => {
         outOfStockCount: parseInt(stats.rows[0]?.out_of_stock_count || 0),
         totalMeters: parseFloat(stats.rows[0]?.total_meters || 0),
         allFabrics: allFabrics.rows,
-        materialDistribution: materialDistribution.rows,
         recentArrivals: recentArrivals.rows
     };
 };

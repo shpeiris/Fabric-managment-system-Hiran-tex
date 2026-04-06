@@ -174,54 +174,30 @@ export default function Reports() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', margin: '30px 0' }}>
-            <div className="report-box">
-              <h3>Material Distribution</h3>
-              <table className="report-table">
-                <thead>
-                  <tr>
-                    <th>Material Type</th>
-                    <th>Count</th>
-                    <th>Total Meters</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryReport.materialDistribution.map((m, idx) => (
+          <div className="report-box" style={{ margin: '30px 0' }}>
+            <h3>Low Stock Alert</h3>
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Fabric Name</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventoryReport.lowStock.length > 0 ? (
+                  inventoryReport.lowStock.slice(0, 5).map((item, idx) => (
                     <tr key={idx}>
-                      <td>{m.material_type || 'Unspecified'}</td>
-                      <td>{m.count}</td>
-                      <td>{Number(m.total_meters).toLocaleString()} m</td>
+                      <td>{item.name}</td>
+                      <td>{item.stock_available_quantity}</td>
+                      <td className="low">{item.stock_available_quantity === 0 ? 'Out of Stock' : 'Low Stock'}</td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="report-box">
-              <h3>Low Stock Alert</h3>
-              <table className="report-table">
-                <thead>
-                  <tr>
-                    <th>Fabric Name</th>
-                    <th>Stock</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryReport.lowStock.length > 0 ? (
-                    inventoryReport.lowStock.slice(0, 5).map((item, idx) => (
-                      <tr key={idx}>
-                        <td>{item.name}</td>
-                        <td>{item.stock_available_quantity}</td>
-                        <td className="low">{item.stock_available_quantity === 0 ? 'Out of Stock' : 'Low Stock'}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="3">All stock levels OK.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr><td colSpan="3">All stock levels OK.</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div className="report-box" style={{ marginBottom: '30px' }}>
