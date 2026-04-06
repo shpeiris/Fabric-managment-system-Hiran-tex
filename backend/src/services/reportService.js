@@ -1,30 +1,80 @@
 import { pool } from '../config/db.js';
 
 const getSalesReport = async (startDate, endDate) => {
-    let query = `
-        SELECT DATE(order_date) as date, SUM(total_amount) as total_sales, COUNT(*) as order_count
-        FROM orders 
-        WHERE order_status != 'CANCELLED'
-    `;
+    let dateFilter = "WHERE order_status != 'CANCELLED'";
     const params = [];
 
     if (startDate && endDate) {
-        query += " AND order_date BETWEEN $1 AND $2";
+        dateFilter += " AND order_date BETWEEN $1 AND $2";
         params.push(startDate, endDate);
     }
 
-    query += " GROUP BY DATE(order_date) ORDER BY date DESC LIMIT 30";
+    const queries = {
+        summary: `
+            SELECT 
+                COALESCE(SUM(total_amount), 0) as total_revenue, 
+                COUNT(*) as total_orders, 
+                COALESCE(AVG(total_amount), 0) as avg_order_value,
+                COUNT(DISTINCT customer_id) as unique_customers
+            FROM orders 
+            ${dateFilter}
+        `,
+        dailySales: `
+            SELECT DATE(order_date) as date, SUM(total_amount) as total_sales, COUNT(*) as order_count
+            FROM orders 
+            ${dateFilter}
+            GROUP BY DATE(order_date) 
+            ORDER BY date DESC 
+            LIMIT 30
+        `,
+        topFabrics: `
+            SELECT f.name, SUM(oi.quantity) as quantity_sold, SUM(oi.quantity * f.price_per_meter) as revenue
+            FROM order_items oi
+            JOIN fabrics f ON oi.fabric_id = f.fabric_id
+            JOIN orders o ON oi.order_id = o.order_id
+            ${dateFilter.replace('WHERE', 'AND').replace('order_status', 'o.order_status').replace('order_date', 'o.order_date').replace('AND', 'WHERE')}
+            GROUP BY f.fabric_id, f.name
+            ORDER BY quantity_sold DESC
+            LIMIT 5
+        `,
+        recentOrders: `
+            SELECT o.order_id, u.full_name as customer_name, o.total_amount, o.order_status, o.order_date
+            FROM orders o
+            JOIN users u ON o.customer_id = u.id
+            ${dateFilter.replace('WHERE', 'AND').replace('order_status', 'o.order_status').replace('order_date', 'o.order_date').replace('AND', 'WHERE')}
+            ORDER BY o.order_date DESC
+            LIMIT 10
+        `,
+        materialSales: `
+            SELECT f.material_type, SUM(oi.quantity) as meters_sold, SUM(oi.quantity * f.price_per_meter) as revenue
+            FROM order_items oi
+            JOIN fabrics f ON oi.fabric_id = f.fabric_id
+            JOIN orders o ON oi.order_id = o.order_id
+            ${dateFilter.replace('WHERE', 'AND').replace('order_status', 'o.order_status').replace('order_date', 'o.order_date').replace('AND', 'WHERE')}
+            GROUP BY f.material_type
+            ORDER BY revenue DESC
+        `
+    };
 
-    const customerCountQuery = "SELECT COUNT(DISTINCT customer_id) as active_customers FROM orders";
-
-    const [salesResult, customerResult] = await Promise.all([
-        pool.query(query, params),
-        pool.query(customerCountQuery)
+    const [summary, dailySales, topFabrics, recentOrders, materialSales] = await Promise.all([
+        pool.query(queries.summary, params),
+        pool.query(queries.dailySales, params),
+        pool.query(queries.topFabrics, params),
+        pool.query(queries.recentOrders, params),
+        pool.query(queries.materialSales, params)
     ]);
 
     return {
-        dailySales: salesResult.rows,
-        activeCustomers: parseInt(customerResult.rows[0]?.active_customers || 0)
+        summary: {
+            totalRevenue: parseFloat(summary.rows[0]?.total_revenue || 0),
+            totalOrders: parseInt(summary.rows[0]?.total_orders || 0),
+            avgOrderValue: parseFloat(summary.rows[0]?.avg_order_value || 0),
+            uniqueCustomers: parseInt(summary.rows[0]?.unique_customers || 0)
+        },
+        dailySales: dailySales.rows,
+        topFabrics: topFabrics.rows,
+        recentOrders: recentOrders.rows,
+        materialSales: materialSales.rows
     };
 };
 

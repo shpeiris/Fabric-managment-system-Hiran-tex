@@ -18,7 +18,7 @@ export default function Reports() {
       setLoading(true);
       const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/sales`);
       const data = await res.json();
-      if (res.ok) setSalesReport(data.report || []);
+      if (res.ok) setSalesReport(data);
     } catch (err) {
       console.error("Error fetching sales report:", err);
     } finally {
@@ -56,31 +56,159 @@ export default function Reports() {
       {loading && <p>Loading report data...</p>}
 
       {/* SALES REPORT */}
-      {activeTab === "sales" && !loading && (
+      {activeTab === "sales" && !loading && salesReport && (
         <>
-          <p className="note">Sales performance by date (Last 30 days).</p>
-          <table className="report-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Orders Count</th>
-                <th>Total Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {salesReport.length > 0 ? (
-                salesReport.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>{new Date(row.date).toLocaleDateString()}</td>
-                    <td>{row.order_count}</td>
-                    <td>Rs. {Number(row.total_sales).toFixed(2)}</td>
+          <p className="note">Comprehensive sales overview and recent performance.</p>
+
+          {salesReport.summary && (
+            <div className="inventory-summary">
+              <div className="summary-card">
+                <h3>Total Revenue</h3>
+                <p>Rs. {salesReport.summary.totalRevenue.toLocaleString()}</p>
+              </div>
+              <div className="summary-card">
+                <h3>Total Orders</h3>
+                <p>{salesReport.summary.totalOrders}</p>
+              </div>
+              <div className="summary-card">
+                <h3>Unique Customers</h3>
+                <p>{salesReport.summary.uniqueCustomers}</p>
+              </div>
+              <div className="summary-card">
+                <h3>Avg. Order Value</h3>
+                <p>Rs. {Number(salesReport.summary.avgOrderValue).toFixed(2)}</p>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '30px', margin: '30px 0' }}>
+            <div className="report-box">
+              <h3>Daily Performance</h3>
+              <div className="table-container">
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Orders</th>
+                      <th>Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {salesReport.dailySales?.length > 0 ? (
+                      salesReport.dailySales.map((row, idx) => (
+                        <tr key={idx}>
+                          <td style={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString()}</td>
+                          <td>{row.order_count}</td>
+                          <td>Rs. {Number(row.total_sales).toFixed(2)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="3">No records.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="report-box">
+              <h3>Best Sellers</h3>
+              <div className="table-container">
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Fabric</th>
+                      <th>Sold</th>
+                      <th>Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {salesReport.topFabrics?.length > 0 ? (
+                      salesReport.topFabrics.map((item, idx) => (
+                        <tr key={idx}>
+                          <td>{item.name}</td>
+                          <td>{item.quantity_sold}m</td>
+                          <td>Rs. {Number(item.revenue).toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="3">No data.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="report-box">
+              <h3>Sales by Material</h3>
+              <div className="table-container">
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Material</th>
+                      <th>Meters</th>
+                      <th>Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {salesReport.materialSales?.length > 0 ? (
+                      salesReport.materialSales.map((m, idx) => (
+                        <tr key={idx}>
+                          <td>{m.material_type || 'Other'}</td>
+                          <td>{m.meters_sold}m</td>
+                          <td>Rs. {Number(m.revenue).toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="3">No data.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="report-box" style={{ marginBottom: '40px' }}>
+            <h3>Recent Transactions</h3>
+            <div className="table-container">
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
                   </tr>
-                ))
-              ) : (
-                <tr><td colSpan="3">No sales data available.</td></tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {salesReport.recentOrders?.length > 0 ? (
+                    salesReport.recentOrders.map((o, idx) => (
+                      <tr key={idx}>
+                        <td style={{ fontWeight: 600 }}>#{o.order_id}</td>
+                        <td>{o.customer_name}</td>
+                        <td>{new Date(o.order_date).toLocaleDateString()}</td>
+                        <td>Rs. {Number(o.total_amount).toLocaleString()}</td>
+                        <td>
+                          <span style={{ 
+                            fontSize: '11px', 
+                            padding: '4px 8px', 
+                            borderRadius: '4px',
+                            fontWeight: 'bold',
+                            background: o.order_status === 'COMPLETED' ? '#e8f5e9' : '#fff3e0',
+                            color: o.order_status === 'COMPLETED' ? '#2e7d32' : '#ef6c00'
+                          }}>
+                            {o.order_status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="5">No recent orders.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </>
       )}
 
