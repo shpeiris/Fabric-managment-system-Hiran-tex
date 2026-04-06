@@ -1,122 +1,139 @@
-import { Link, useLocation } from "react-router-dom";
+import { NavLink, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { getUser } from '../../../utils/auth.js';
 
 export default function Sidebar({ onLogout }) {
-  const location = useLocation();
+  const [user, setUser] = useState(null);
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  useEffect(() => {
+    const userData = getUser();
+    setUser(userData);
+  }, []);
+
+  const menuItems = [
+    { name: 'Dashboard', path: '/admin/dashboard' },
+    { name: 'User Management', path: '/admin/users' },
+    { name: 'Supplier Management', path: '/admin/suppliers' },
+    { name: 'Reports and Analytics', path: '/admin/reports' }
+  ];
 
   return (
-    <div
-      style={{
-        width: "240px",
-        background: "#001a66",
-        color: "white",
-        padding: "0",
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh"
-      }}
-    >
+    <aside style={{
+      width: '260px',
+      minHeight: '100vh',
+      background: '#001a66',
+      color: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      boxShadow: '4px 0 15px rgba(0, 0, 0, 0.3)'
+    }}>
       {/* Header */}
-      <div style={{ padding: "30px 20px", borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}>
-        <Link to="/" style={{ textDecoration: "none" }}>
-          <h3 style={{ 
-            margin: 0, 
-            fontSize: "18px", 
-            fontWeight: "700", 
-            color: "#ffffff",
-            letterSpacing: "0.5px"
-          }}>
-            🏠Hiran Fabric Textile
-          </h3>
+      <div style={{
+        padding: '25px 20px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)'
+      }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '0.5px', color: '#ffffff' }}>🏠Hiran Fabric Textile</span>
         </Link>
       </div>
 
-      {/* Navigation */}
-      <div style={{ flex: 1, padding: "20px 0" }}>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>
-            <Link 
-              to="/admin/dashboard" 
-              style={{
-                ...linkStyle,
-                background: isActive("/admin/dashboard") ? "rgba(255, 255, 255, 0.1)" : "transparent",
-                borderLeft: isActive("/admin/dashboard") ? "4px solid #ffffff" : "4px solid transparent"
-              }}
-            >
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/admin/users" 
-              style={{
-                ...linkStyle,
-                background: isActive("/admin/users") ? "rgba(255, 255, 255, 0.1)" : "transparent",
-                borderLeft: isActive("/admin/users") ? "4px solid #ffffff" : "4px solid transparent"
-              }}
-            >
-              User Management
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/admin/suppliers" 
-              style={{
-                ...linkStyle,
-                background: isActive("/admin/suppliers") ? "rgba(255, 255, 255, 0.1)" : "transparent",
-                borderLeft: isActive("/admin/suppliers") ? "4px solid #ffffff" : "4px solid transparent"
-              }}
-            >
-              Supplier Management
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/admin/reports" 
-              style={{
-                ...linkStyle,
-                background: isActive("/admin/reports") ? "rgba(255, 255, 255, 0.1)" : "transparent",
-                borderLeft: isActive("/admin/reports") ? "4px solid #ffffff" : "4px solid transparent"
-              }}
-            >
-              Reports and Analytics
-            </Link>
-          </li>
-        </ul>
-      </div>
-      {/* Footer */}
-      <div style={{ padding: "20px", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
-        <button 
+      {/* Navigation Menu */}
+      <nav style={{ flex: 1, padding: '20px 0', overflowY: 'auto' }}>
+        {menuItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: '14px 25px',
+              color: isActive ? '#7cff00' : 'rgba(255, 255, 255, 0.7)',
+              textDecoration: 'none',
+              fontSize: '15px',
+              fontWeight: '500',
+              transition: 'all 0.3s ease',
+              borderLeft: isActive ? '4px solid #7cff00' : '4px solid transparent',
+              background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent'
+            })}
+          >
+            {item.name}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Footer with User Info and Logout */}
+      <div style={{
+        padding: '20px',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        {/* User Profile */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '15px',
+          padding: '10px',
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '8px'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            background: '#2563eb',
+            color: 'white',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '16px'
+          }}>
+            {(user?.full_name || 'A').charAt(0)}
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {user?.full_name || 'Administrator'}
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)' }}>
+              {user?.role || 'ADMIN'}
+            </div>
+          </div>
+        </div>
+
+        {/* Logout Button */}
+        <button
           onClick={onLogout}
           style={{
-            width: "100%",
-            padding: "12px",
-            background: "rgba(255, 255, 255, 0.05)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            color: "white",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "600",
-            transition: "all 0.3s ease"
+            width: '100%',
+            padding: '12px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            color: 'white',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            fontWeight: '600',
+            fontSize: '14px',
+            transition: 'all 0.3s ease'
           }}
-          onMouseOver={(e) => e.target.style.background = "rgba(255, 0, 0, 0.2)"}
-          onMouseOut={(e) => e.target.style.background = "rgba(255, 255, 255, 0.05)"}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'rgba(255, 0, 0, 0.2)';
+            e.target.style.borderColor = 'rgba(255, 0, 0, 0.3)';
+            e.target.style.color = '#ffcccc';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            e.target.style.color = 'white';
+          }}
         >
           Logout
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
-
-const linkStyle = {
-  display: "block",
-  color: "white",
-  padding: "12px 20px",
-  textDecoration: "none",
-  fontSize: "14px",
-  transition: "all 0.2s ease"
-};
