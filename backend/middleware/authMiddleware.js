@@ -49,7 +49,7 @@ const hasRole = (roles) => {
 const isAdmin = hasRole("ADMIN");
 
 // Inventory manager or admin middleware
-const isInventoryManager = hasRole(["INVENTORY_MANAGER", "ADMIN"]);
+const isInventoryManager = hasRole(["INVENTORY_MANAGER", "INVENTORY", "ADMIN"]);
 
 // Salesperson or admin middleware
 const isSalesperson = hasRole(["SALESPERSON", "SALES", "ADMIN"]);

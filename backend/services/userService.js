@@ -20,13 +20,18 @@ const createUser = async (userData, creatorId) => {
       // Insert into Employees table
       sql =
         "INSERT INTO employees (full_name, email, password, nic, telephone, role, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING employee_id as id, created_at";
+      // Map Roles for DB (Ensuring compatibility with database ENUM/CHECK constraints)
+      let dbRole = role;
+      if (role === "INVENTORY_MANAGER") dbRole = "INVENTORY";
+      if (role === "SALESPERSON") dbRole = "SALES";
+
       params = [
         full_name,
         email,
         hashedPassword,
         nic,
         telephone || null,
-        role,
+        dbRole,
         "ACTIVE",
       ];
     }

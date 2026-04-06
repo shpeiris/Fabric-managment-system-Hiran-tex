@@ -178,7 +178,8 @@
     flex: 1;
     padding: 30px;
     overflow-y: auto;
-    background-color: #f0f2f5;
+    background-color: #f8fafc;
+    scrollbar-gutter: stable; /* Fix 'page movement' / shift when scrollbar appears */
     background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
     background-size: 20px 20px;
 }

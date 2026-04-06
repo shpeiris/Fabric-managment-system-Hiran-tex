@@ -72,8 +72,8 @@ export default function Dashboard() {
     <div className="dashboard-container">
       <div className="dash-header">
         <div>
-          <h1 style={{ marginBottom: "4px", fontSize: '28px' }}>Admin Overview</h1>
-          <p style={{ color: "#6c757d", fontSize: "14px", margin: 0 }}>
+          <h1 className="dash-title">Admin Overview</h1>
+          <p className="dash-subtitle">
             {new Date().toLocaleDateString("en-LK", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
         </div>
@@ -140,8 +140,8 @@ export default function Dashboard() {
           </div>
 
           {/* ── Order Status Breakdown ── */}
-          <div style={{ marginBottom: '20px', marginTop: '40px' }}>
-            <h2 className="section-title" style={{ margin: 0 }}>Fulfillment Pipeline</h2>
+          <div className="dash-section-header">
+            <h2 className="section-title">Fulfillment Pipeline</h2>
           </div>
           <div className="order-status-grid">
             <StatusPill label="Pending"    count={stats?.orders?.pending}    color="#f4a261" />
@@ -153,8 +153,8 @@ export default function Dashboard() {
           {/* ── Low Stock Alerts ── */}
           {stats?.lowStockFabrics?.length > 0 && (
             <>
-              <div style={{ marginBottom: '20px', marginTop: '40px' }}>
-                <h2 className="section-title" style={{ margin: 0, color: "#c1121f" }}>
+              <div className="dash-section-header">
+                <h2 className="section-title critical">
                   Critical Inventory Alerts
                 </h2>
               </div>
@@ -192,8 +192,8 @@ export default function Dashboard() {
       )}
 
       {/* ── Recent System Activities ── */}
-      <div style={{ marginBottom: '20px', marginTop: '40px' }}>
-        <h2 className="section-title" style={{ margin: 0 }}>Audit Trail / System Logs</h2>
+      <div className="dash-section-header">
+        <h2 className="section-title">Audit Trail / System Logs</h2>
       </div>
       <div className="activity-section">
         <table className="activity-table">
