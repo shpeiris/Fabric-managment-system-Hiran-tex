@@ -187,7 +187,7 @@ export default function Dashboard() {
 
       {/* ── Recent System Activities ── */}
       <div className="dash-section-header">
-        <h2 className="section-title">Audit Trail / System Logs</h2>
+        <h2 className="section-title">Activity Logs</h2>
       </div>
       <div className="activity-section">
         <table className="activity-table">
