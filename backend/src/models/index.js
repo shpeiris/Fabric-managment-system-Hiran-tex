@@ -18,6 +18,7 @@ import { initConfirmationLogModel } from "./ConfirmationLogModel.js";
 import { initFeedbackModel } from "./FeedbackModel.js";
 import { initCatalogModel } from "./CatalogModel.js";
 import { initCatalogItemModel } from "./CatalogItemModel.js";
+import { initHomePageModel } from "./HomePageModel.js";
 import { pool } from "../config/db.js";
 
 export const initModels = async () => {
@@ -34,6 +35,7 @@ export const initModels = async () => {
     await initOrderStatusModel();
     await initActivityLogModel();
     await initFabricModel();
+    await initHomePageModel();
 
     // Sequence 2: Tables with Foreign Key Dependencies
     await initStockArrivalModel();

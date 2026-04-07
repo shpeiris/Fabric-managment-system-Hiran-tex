@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiCall } from "../../utils/auth.js";
 import "./Dashboard.css";
 import { activityService } from "../../services";
@@ -21,6 +22,9 @@ export default function Dashboard() {
   const [activityError, setActivityError]     = useState("");
   const [activityLoading, setActivityLoading] = useState(true);
 
+  // For real-time relative counter
+  const [, setTick] = useState(0);
+
   useEffect(() => {
     fetchStats();
     fetchActivities();
@@ -29,7 +33,14 @@ export default function Dashboard() {
       fetchStats(true); 
     }, REFRESH_INTERVAL_MS);
 
-    return () => clearInterval(interval);
+    const clock = setInterval(() => {
+      setTick(t => t + 1);
+    }, 1000);
+
+    return () => {
+        clearInterval(interval);
+        clearInterval(clock);
+    };
   }, []);
 
   const fetchStats = async (silent = false) => {
@@ -80,9 +91,16 @@ export default function Dashboard() {
         <div className="dash-refresh">
           {lastUpdated && (
             <span className="last-updated">
-              Last sync: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Last sync: {formatTimeAgo(lastUpdated)}
             </span>
           )}
+          <Link 
+            to="/admin/manage-home" 
+            className="refresh-btn" 
+            style={{ background: '#28a745', color: 'white', textDecoration: 'none' }}
+          >
+            Manage Home
+          </Link>
           <button
             className="refresh-btn"
             onClick={() => { fetchStats(); fetchActivities(); }}
@@ -110,44 +128,38 @@ export default function Dashboard() {
               title="Operational Staff"
               value={fmt(stats?.employees?.active)}
               sub={`${fmt(stats?.employees?.total)} total employees`}
-              color="#001a66"
+              color="#28a745"
             />
             <StatCard
-              title="Client Base"
+              title="Number of Customers"
               value={fmt(stats?.customers?.total)}
               sub="Direct customers"
-              color="#0066cc"
-            />
-            <StatCard
-              title="Sales Volume"
-              value={fmt(stats?.orders?.total)}
-              sub={`${fmt(stats?.orders?.pending)} pending action`}
-              color="#7b2d8b"
+              color="#28a745"
             />
             <StatCard
               title="Total Revenue"
               value={fmtCurrency(stats?.revenue?.total)}
               sub="Completed transactions"
-              color="#1a7a4a"
+              color="#28a745"
             />
             <StatCard
               title="Inventory Risk"
               value={fmt(stats?.lowStockFabrics?.length)}
-              sub="Items below threshold"
-              color="#c1121f"
+              sub="low stock"
+              color="#28a745"
               alert={stats?.lowStockFabrics?.length > 0}
             />
           </div>
 
           {/* ── Order Status Breakdown ── */}
           <div className="dash-section-header">
-            <h2 className="section-title">Fulfillment Pipeline</h2>
+            <h2 className="section-title">Order Status</h2>
           </div>
           <div className="order-status-grid">
-            <StatusPill label="Pending"    count={stats?.orders?.pending}    color="#f4a261" />
-            <StatusPill label="Processing" count={stats?.orders?.processing} color="#457b9d" />
-            <StatusPill label="Delivered"  count={stats?.orders?.delivered}  color="#2a9d8f" />
-            <StatusPill label="Cancelled"  count={stats?.orders?.cancelled}  color="#e63946" />
+            <StatusPill label="Pending"    count={stats?.orders?.pending}    color="#28a745" />
+            <StatusPill label="Processing" count={stats?.orders?.processing} color="#28a745" />
+            <StatusPill label="Delivered"  count={stats?.orders?.delivered}  color="#28a745" />
+            <StatusPill label="Cancelled"  count={stats?.orders?.cancelled}  color="#28a745" />
           </div>
 
           {/* ── Low Stock Alerts ── */}
@@ -193,7 +205,7 @@ export default function Dashboard() {
 
       {/* ── Recent System Activities ── */}
       <div className="dash-section-header">
-        <h2 className="section-title">Audit Trail / System Logs</h2>
+        <h2 className="section-title">Activity Logs</h2>
       </div>
       <div className="activity-section">
         <table className="activity-table">
@@ -244,7 +256,7 @@ export default function Dashboard() {
 
 function StatCard({ title, value, sub, color, alert }) {
   return (
-    <div className="stat-card shadow-premium" style={{ borderLeft: `5px solid ${color}` }}>
+    <div className="stat-card shadow-premium" style={{ border: `2px solid ${color}` }}>
       <div className="stat-info">
         <h4 className="stat-title">{title}</h4>
         <h2 className="stat-value" style={{ color }}>{value}</h2>
@@ -257,19 +269,20 @@ function StatCard({ title, value, sub, color, alert }) {
 
 function StatusPill({ label, count, color }) {
   return (
-    <div className="status-pill shadow-premium" style={{ borderTop: `4px solid ${color}` }}>
+    <div className="status-pill shadow-premium" style={{ border: `2px solid ${color}` }}>
       <span className="status-pill-count" style={{ color }}>{count ?? 0}</span>
       <span className="status-pill-label">{label}</span>
     </div>
   );
 }
 
-/* ── Helpers ── */
 const formatTimeAgo = (timestamp) => {
-  if (!timestamp) return "Present";
+  if (!timestamp) return "Waiting...";
   const diffMs = Date.now() - new Date(timestamp).getTime();
-  const mins  = Math.floor(diffMs / 60000);
-  if (mins < 1) return "Just now";
+  const seconds = Math.floor(diffMs / 1000);
+  
+  if (seconds < 60) return `${seconds}s ago`;
+  const mins  = Math.floor(seconds / 60);
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;

@@ -11,6 +11,7 @@ import DashboardRedirect from "./components/DashboardRedirect";
 import AdminLayout from "./pages/admin/layout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import UserManagement from "./pages/admin/ManageUsers";
+import ManageHome from "./pages/admin/ManageHome";
 // Unifying: using the functional version from inventory for both roles
 import Reports from "./pages/admin/Reports";
 
@@ -68,6 +69,7 @@ function App() {
         }>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="manage-home" element={<ManageHome />} />
           <Route path="fabrics" element={<FabricList />} />
           <Route path="suppliers" element={<InventorySuppliers />} />
           <Route path="reports" element={<Reports />} />
