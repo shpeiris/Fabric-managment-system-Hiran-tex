@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiCall } from "../../utils/auth.js";
 import "./Dashboard.css";
 import { activityService } from "../../services";
@@ -93,6 +94,13 @@ export default function Dashboard() {
               Last sync: {formatTimeAgo(lastUpdated)}
             </span>
           )}
+          <Link 
+            to="/admin/manage-home" 
+            className="refresh-btn" 
+            style={{ background: '#28a745', color: 'white', textDecoration: 'none' }}
+          >
+            Manage Home
+          </Link>
           <button
             className="refresh-btn"
             onClick={() => { fetchStats(); fetchActivities(); }}
