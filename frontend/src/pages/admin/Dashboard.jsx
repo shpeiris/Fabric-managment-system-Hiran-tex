@@ -21,6 +21,9 @@ export default function Dashboard() {
   const [activityError, setActivityError]     = useState("");
   const [activityLoading, setActivityLoading] = useState(true);
 
+  // For real-time relative counter
+  const [, setTick] = useState(0);
+
   useEffect(() => {
     fetchStats();
     fetchActivities();
@@ -29,7 +32,14 @@ export default function Dashboard() {
       fetchStats(true); 
     }, REFRESH_INTERVAL_MS);
 
-    return () => clearInterval(interval);
+    const clock = setInterval(() => {
+      setTick(t => t + 1);
+    }, 1000);
+
+    return () => {
+        clearInterval(interval);
+        clearInterval(clock);
+    };
   }, []);
 
   const fetchStats = async (silent = false) => {
@@ -80,7 +90,7 @@ export default function Dashboard() {
         <div className="dash-refresh">
           {lastUpdated && (
             <span className="last-updated">
-              Last sync: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Last sync: {formatTimeAgo(lastUpdated)}
             </span>
           )}
           <button
@@ -258,12 +268,13 @@ function StatusPill({ label, count, color }) {
   );
 }
 
-/* ── Helpers ── */
 const formatTimeAgo = (timestamp) => {
-  if (!timestamp) return "Present";
+  if (!timestamp) return "Waiting...";
   const diffMs = Date.now() - new Date(timestamp).getTime();
-  const mins  = Math.floor(diffMs / 60000);
-  if (mins < 1) return "Just now";
+  const seconds = Math.floor(diffMs / 1000);
+  
+  if (seconds < 60) return `${seconds}s ago`;
+  const mins  = Math.floor(seconds / 60);
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
