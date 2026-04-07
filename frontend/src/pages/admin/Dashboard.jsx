@@ -113,15 +113,9 @@ export default function Dashboard() {
               color="#28a745"
             />
             <StatCard
-              title="Client Base"
+              title="Number of Customers"
               value={fmt(stats?.customers?.total)}
-              sub="number of customers"
-              color="#28a745"
-            />
-            <StatCard
-              title="Sales Volume"
-              value={fmt(stats?.orders?.total)}
-              sub={`${fmt(stats?.orders?.pending)} pending action`}
+              sub="Direct customers"
               color="#28a745"
             />
             <StatCard
@@ -133,7 +127,7 @@ export default function Dashboard() {
             <StatCard
               title="Inventory Risk"
               value={fmt(stats?.lowStockFabrics?.length)}
-              sub="Items below threshold"
+              sub="low stock"
               color="#28a745"
               alert={stats?.lowStockFabrics?.length > 0}
             />
