@@ -135,7 +135,7 @@ export default function Dashboard() {
 
           {/* ── Order Status Breakdown ── */}
           <div className="dash-section-header">
-            <h2 className="section-title">Fulfillment Pipeline</h2>
+            <h2 className="section-title">Order Status</h2>
           </div>
           <div className="order-status-grid">
             <StatusPill label="Pending"    count={stats?.orders?.pending}    color="#28a745" />
