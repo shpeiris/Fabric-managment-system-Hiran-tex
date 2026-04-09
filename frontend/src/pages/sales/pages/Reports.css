@@ -67,11 +67,6 @@
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 26, 102, 0.05);
     border: 1px solid rgba(226, 232, 240, 0.8);
-    transition: transform 0.3s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
 }
 
 .stat-card.highlight {
