@@ -104,14 +104,10 @@ export default function Reports() {
 
   return (
     <div className="reports-page">
-      <div className="reports-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <h1>Report Center</h1>
-          </div>
-          <p className="subtitle" style={{ marginBottom: 0 }}>Comprehensive analytics for your business operations</p>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <h1>Report Center</h1>
       </div>
+      <p className="subtitle">Comprehensive analytics for your business operations</p>
 
       {/* Tab Switcher */}
       <div className="report-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #e2e8f0', paddingBottom: '15px' }}>

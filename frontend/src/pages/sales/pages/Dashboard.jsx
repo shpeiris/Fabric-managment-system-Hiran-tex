@@ -441,7 +441,7 @@ export default function SalesDashboard() {
       </div>
 
       {/* Recent Feedback Section */}
-      <div className="recent-feedback-section" style={{ marginTop: '30px', background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+      <div className="quick-actions" style={{ marginTop: '30px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #f3f4f6', paddingBottom: '15px' }}>
           <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '8px' }}>
             <TrendingUp size={20} color="#d97706" />

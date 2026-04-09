@@ -132,9 +132,8 @@ const PaymentQueue = () => {
 
     return (
         <div className="payment-queue-page">
-            <div className="queue-header">
-                <div className="header-title">
-                    <CreditCard size={28} color="#001a66" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <h1>Payment Processing Queue</h1>
                 </div>
                 <div className="header-actions">
@@ -144,6 +143,7 @@ const PaymentQueue = () => {
                     </button>
                 </div>
             </div>
+            <p className="subtitle" style={{ color: '#666', fontSize: '15px', marginBottom: '30px' }}>Monitor and verify incoming customer payments</p>
 
             <div className="filters-bar" style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <div className="queue-count">

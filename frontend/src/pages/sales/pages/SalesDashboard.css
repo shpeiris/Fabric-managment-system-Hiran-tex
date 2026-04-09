@@ -4,7 +4,7 @@
     max-width: 1400px;
     margin: 0 auto;
     background: transparent;
-    min-height: auto;
+    width: 100%;
 }
 
 .sales-dashboard h1 {
@@ -32,21 +32,20 @@
     background: #ffffff;
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08) !important;
-    border: 2.5px solid #3b82f6;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e5e7eb;
     display: flex;
     align-items: center;
     gap: 20px;
     position: relative;
     overflow: hidden;
-    transform: none !important;
-    transition: none !important;
+    transition: all 0.2s ease;
 }
 
 .sales-dashboard .stat-card:hover {
-    transform: none !important;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08) !important;
-    border-color: #3b82f6 !important;
+    border-color: #3b82f6;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-2px);
 }
 
 .stat-card::before {
@@ -123,9 +122,9 @@
 .table-container {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    border: 2px solid rgba(124, 255, 0, 0.1);
+    border: 1px solid #e5e7eb;
 }
 
 .data-table {
@@ -182,7 +181,7 @@
 .stat-card.verification {
     cursor: pointer;
     background: #ffffff;
-    border-color: #3b82f6;
+    border-color: #e5e7eb;
 }
 
 
@@ -190,7 +189,7 @@
 .stat-card.payment {
     cursor: pointer;
     background: #ffffff;
-    border-color: #3b82f6;
+    border-color: #e5e7eb;
 }
 
 
@@ -208,8 +207,8 @@
     background: white;
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
-    border: 2px solid rgba(124, 255, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
 }
 
 .quick-actions h3 {

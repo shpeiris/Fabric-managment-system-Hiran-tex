@@ -2,6 +2,8 @@
     padding: 0;
     max-width: 1400px;
     margin: 0 auto;
+    background: transparent;
+    width: 100%;
 }
 
 .header h1 {
@@ -14,37 +16,38 @@
 .subtitle {
     color: #666;
     font-size: 15px;
-    margin: 0;
+    margin: 0 0 30px 0;
 }
 
 /* Search Bar */
 .search-bar {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .search-input {
     width: 100%;
     max-width: 500px;
-    padding: 14px 18px;
-    border: 2px solid rgba(124, 255, 0, 0.2);
+    padding: 12px 18px;
+    border: 1px solid #e5e7eb;
     border-radius: 10px;
     font-size: 14px;
     transition: all 0.3s;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #7cff00;
-    box-shadow: 0 0 0 4px rgba(124, 255, 0, 0.1);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* Table */
 .table-container {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    border: 2px solid rgba(124, 255, 0, 0.1);
+    border: 1px solid #e5e7eb;
 }
 
 .data-table {
