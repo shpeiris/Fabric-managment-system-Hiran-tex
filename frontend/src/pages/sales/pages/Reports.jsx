@@ -272,11 +272,6 @@ export default function Reports() {
                   <p>Processed orders</p>
                 </div>
                 <div className="stat-card">
-                  <h3>Avg. Order Value</h3>
-                  <h2>Rs. {Math.round(stats.avgOrderValue).toLocaleString()}</h2>
-                  <p>Revenue per order</p>
-                </div>
-                <div className="stat-card">
                   <h3>Active Customers</h3>
                   <h2>{stats.activeCustomers}</h2>
                   <p>Unique purchasers</p>
