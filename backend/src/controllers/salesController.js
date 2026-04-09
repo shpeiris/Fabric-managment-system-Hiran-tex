@@ -21,6 +21,20 @@ const getCustomers = async (req, res) => {
     }
 };
 
+const createCustomer = async (req, res) => {
+    try {
+        const { full_name, email, tel, address, password } = req.body;
+        if (!full_name || !email || !tel || !address || !password) {
+            return res.status(400).json({ error: 'All fields are required.' });
+        }
+        const customer = await salesService.createCustomer({ full_name, email, tel, address, password });
+        res.status(201).json({ message: 'Customer created successfully', customer });
+    } catch (err) {
+        console.error('Error creating customer:', err);
+        res.status(400).json({ error: err.message || 'Failed to create customer' });
+    }
+};
+
 const getOrders = async (req, res) => {
     try {
         const orders = await orderService.getOrders(req.query);
@@ -122,6 +136,7 @@ const getCustomersView = (req, res) => {
 export {
     getDashboard,
     getCustomers,
+    createCustomer,
     getOrders,
     getPendingVerifications,
     getPendingPayments,

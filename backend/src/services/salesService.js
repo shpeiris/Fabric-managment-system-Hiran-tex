@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import bcrypt from 'bcryptjs';
 
 const getSalesDashboardStats = async () => {
     const queries = {
@@ -103,7 +104,7 @@ const getSalesDashboardStats = async () => {
 const getCustomerStats = async () => {
     try {
         const query = `
-            SELECT c.customer_id, c.full_name, c.email, c.created_at as registration_date,
+            SELECT c.customer_id, c.full_name, c.email, c.address, c.created_at as registration_date,
                    cc_phone.contact_value as phone,
                    COUNT(DISTINCT o.order_id) as total_orders,
                    COALESCE(SUM(o.total_amount), 0) as total_spent
@@ -111,7 +112,7 @@ const getCustomerStats = async () => {
             LEFT JOIN customer_contacts cc_phone ON c.customer_id = cc_phone.customer_id 
                 AND cc_phone.contact_type = 'PHONE' AND cc_phone.is_primary = TRUE
             LEFT JOIN orders o ON c.customer_id = o.customer_id
-            GROUP BY c.customer_id, c.full_name, c.email, c.created_at, cc_phone.contact_value
+            GROUP BY c.customer_id, c.full_name, c.email, c.address, c.created_at, cc_phone.contact_value
             ORDER BY total_spent DESC
         `;
         const result = await pool.query(query);
@@ -385,11 +386,33 @@ const generateConfirmationMessage = (orderId, type, customerInfo) => {
     return messages[type] || `Order #${orderId} update for ${customerInfo.customerName}`;
 };
 
+const createCustomer = async ({ full_name, email, tel, address, password }) => {
+    try {
+        // Check if email already exists
+        const existing = await pool.query('SELECT customer_id FROM customers WHERE email = $1', [email]);
+        if (existing.rows.length > 0) {
+            throw new Error('A customer with this email already exists.');
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await pool.query(
+            `INSERT INTO customers (full_name, email, password, tel, address)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING customer_id, full_name, email, tel, address, created_at`,
+            [full_name, email, hashedPassword, tel, address]
+        );
+        return result.rows[0];
+    } catch (error) {
+        console.error('Error creating customer:', error);
+        throw error;
+    }
+};
+
 export {
     getSalesDashboardStats,
     getCustomerStats,
     getPendingVerifications,
     getPendingPayments,
     verifyOrder,
-    sendConfirmation
+    sendConfirmation,
+    createCustomer
 };
