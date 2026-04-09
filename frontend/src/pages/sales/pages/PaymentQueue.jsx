@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from "../../../utils/auth.js";
-import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, Search, RefreshCw, Truck } from 'lucide-react';
+import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, RefreshCw, Truck } from 'lucide-react';
 import "./PaymentQueue.css";
 
 
@@ -40,7 +40,6 @@ const PaymentQueue = () => {
     const [pendingPayments, setPendingPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
     const [filterMethod, setFilterMethod] = useState('ALL');
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -129,17 +128,9 @@ const PaymentQueue = () => {
         }
     };
 
-    const displayPayments = pendingPayments;
-
-    const filteredPayments = displayPayments.filter(order => {
-        const matchesSearch = 
-            order.order_id.toString().includes(searchTerm) || 
-            order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesMethod = filterMethod === 'ALL' || order.payment_method === filterMethod;
-        
-        return matchesSearch && matchesMethod;
-    });
+    const filteredPayments = pendingPayments.filter(order =>
+        filterMethod === 'ALL' || order.payment_method === filterMethod
+    );
 
     return (
         <div className="payment-queue-page">
@@ -157,15 +148,6 @@ const PaymentQueue = () => {
             </div>
 
             <div className="filters-bar">
-                <div className="search-box">
-                    <Search size={18} />
-                    <input 
-                        type="text" 
-                        placeholder="Search by Order ID or Customer..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
                 <div className="filter-group">
                     <Filter size={18} />
                     <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)}>

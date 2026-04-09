@@ -6,18 +6,14 @@ import "./CustomerManagement.css";
 export default function CustomerManagement() {
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
+
 
     useEffect(() => {
         SalesLogger.customers.pageLoad({ timestamp: new Date().toISOString() });
         fetchCustomers();
     }, []);
 
-    useEffect(() => {
-        if (searchTerm) {
-            SalesLogger.customers.search(searchTerm);
-        }
-    }, [searchTerm]);
+
 
     const SAMPLE_CUSTOMER = {
         customer_id: 'PRE-001',
@@ -52,10 +48,7 @@ export default function CustomerManagement() {
         }
     };
 
-    const filteredCustomers = customers.filter(c =>
-        c.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
 
     return (
         <div className="customer-management">
@@ -75,16 +68,7 @@ export default function CustomerManagement() {
                 </button>
             </div>
 
-            {/* Search */}
-            <div className="search-bar">
-                <input
-                    type="text"
-                    placeholder="Search customers by name or email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input"
-                />
-            </div>
+
 
             {/* Customers Table */}
             <div className="table-container">
@@ -101,7 +85,7 @@ export default function CustomerManagement() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredCustomers.map(customer => (
+                        {customers.map(customer => (
                             <tr key={customer.customer_id}>
                                 <td>#{customer.customer_id}</td>
                                 <td>{customer.full_name}</td>
