@@ -4,24 +4,6 @@ import { apiCall } from "../../../utils/auth.js";
 import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, Search, RefreshCw, Truck } from 'lucide-react';
 import "./PaymentQueue.css";
 
-const HARDCODED_PAYMENTS = [
-    {
-        order_id: 10254,
-        payment_id: 501,
-        customer_name: "Sample Customer (Demo)",
-        phone_number: "+94 77 123 4567",
-        delivery_address: "123, Galle Road, Colombo 03, Sri Lanka",
-        order_date: new Date().toISOString(),
-        total_amount: 16250.00,
-        delivery_fee: 500.00,
-        payment_method: "BANK_TRANSFER",
-        bank_slip_url: null, // We'll show a placeholder for demo
-        items: [
-            { fabric_name: "Premium Silk Satin (Midnight Blue)", quantity: 5, total_price: 7500.00 },
-            { fabric_name: "Soft Cotton Voile (Pure White)", quantity: 10, total_price: 8250.00 }
-        ]
-    }
-];
 
 const HISTORICAL_ORDERS_SAMPLE = [
     {
@@ -147,7 +129,7 @@ const PaymentQueue = () => {
         }
     };
 
-    const displayPayments = pendingPayments.length > 0 ? pendingPayments : HARDCODED_PAYMENTS;
+    const displayPayments = pendingPayments;
 
     const filteredPayments = displayPayments.filter(order => {
         const matchesSearch = 
