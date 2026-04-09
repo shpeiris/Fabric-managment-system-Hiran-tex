@@ -330,8 +330,7 @@ export default function SalesDashboard() {
           display: 'flex',
           alignItems: 'center',
           gap: '15px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          animation: 'pulse 2s infinite'
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
         }}>
           <div style={{ fontSize: '24px' }}>💳</div>
           <div style={{ flex: 1 }}>
@@ -405,7 +404,7 @@ export default function SalesDashboard() {
 
         <div className="stat-card payment" onClick={() => navigate('/sales/payments')}>
           <div className="stat-icon-container">
-            <CreditCard size={32} color="#155724" />
+            <CreditCard size={32} color="#001a66" />
           </div>
           <div className="stat-info">
             <h4>Payment Queue</h4>
@@ -457,7 +456,6 @@ export default function SalesDashboard() {
                 border: '1px solid #e5e7eb', 
                 borderRadius: '10px', 
                 padding: '16px',
-                transition: 'all 0.2s',
                 cursor: 'pointer',
                 backgroundColor: '#fff'
               }} 

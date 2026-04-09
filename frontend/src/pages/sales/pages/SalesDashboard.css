@@ -28,18 +28,25 @@
     margin-bottom: 48px;
 }
 
-.stat-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+.sales-dashboard .stat-card {
+    background: #ffffff;
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
-    border: 2px solid rgba(124, 255, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08) !important;
+    border: 2.5px solid #3b82f6;
     display: flex;
     align-items: center;
     gap: 20px;
-    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    transform: none !important;
+    transition: none !important;
+}
+
+.sales-dashboard .stat-card:hover {
+    transform: none !important;
+    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08) !important;
+    border-color: #3b82f6 !important;
 }
 
 .stat-card::before {
@@ -49,18 +56,15 @@
     left: 0;
     width: 4px;
     height: 100%;
-    background: linear-gradient(180deg, #7cff00 0%, #001a66 100%);
+    background: #001a66;
+    display: none; /* Hidden as per white background focus */
 }
 
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 32px rgba(0, 26, 102, 0.15);
-    border-color: rgba(124, 255, 0, 0.3);
-}
+
 
 .stat-card.highlight {
-    background: linear-gradient(135deg, #7cff00 0%, #6ee000 100%);
-    border-color: #7cff00;
+    background: #ffffff;
+    border-color: #3b82f6;
 }
 
 .stat-card.highlight .stat-info h4,
@@ -177,27 +181,19 @@
 /* Enhanced stat cards for verification and payment */
 .stat-card.verification {
     cursor: pointer;
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-    border-color: #ffc107;
+    background: #ffffff;
+    border-color: #3b82f6;
 }
 
-.stat-card.verification:hover {
-    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-    transform: translateY(-8px);
-    box-shadow: 0 16px 40px rgba(255, 193, 7, 0.3);
-}
+
 
 .stat-card.payment {
     cursor: pointer;
-    background: linear-gradient(135deg, #d4edda 0%, #a3d9a4 100%);
-    border-color: #28a745;
+    background: #ffffff;
+    border-color: #3b82f6;
 }
 
-.stat-card.payment:hover {
-    background: linear-gradient(135deg, #a3d9a4 0%, #7dce7d 100%);
-    transform: translateY(-8px);
-    box-shadow: 0 16px 40px rgba(40, 167, 69, 0.3);
-}
+
 
 .stat-subtitle {
     font-size: 10px;
@@ -253,7 +249,6 @@
 }
 
 .action-btn:not(:disabled):hover {
-    transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
@@ -331,7 +326,6 @@
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    transition: all 0.2s ease;
 }
 
 .mini-btn.verify {
@@ -407,7 +401,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
 }
 
 .close-btn:hover {
@@ -478,7 +471,6 @@
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
     font-size: 14px;
 }
 
@@ -509,7 +501,6 @@
 }
 
 .btn:hover:not(:disabled) {
-    transform: translateY(-2px);
     opacity: 0.9;
 }
 
@@ -538,7 +529,6 @@
 .verification-item.clickable:hover, .payment-item.clickable:hover {
     background: #ffffff;
     border-color: #001a66;
-    transform: translateX(5px);
     box-shadow: 0 4px 12px rgba(0, 26, 102, 0.1);
 }
 
@@ -574,7 +564,6 @@
     font-weight: 600;
     cursor: pointer;
     font-size: 12px;
-    transition: all 0.2s ease;
 }
 
 .bulk-confirmation-actions {
@@ -642,7 +631,6 @@
     justify-content: center;
     background: #f8f9fa;
     cursor: zoom-in;
-    transition: all 0.2s ease;
     margin: 0 auto;
 }
 
