@@ -79,8 +79,13 @@ export default function CustomerManagement() {
     return (
         <div className="customer-management">
             {/* Toolbar */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '16px' }}>
-                <button
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div>
+                    <h1>Customer Relationships</h1>
+                    <p className="subtitle" style={{ margin: 0, color: '#64748b' }}>Manage and track your client base</p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
                     onClick={() => { setShowModal(true); setFormError(''); setForm(EMPTY_FORM); }}
                     style={{ padding: '8px 18px', fontSize: '13px', border: 'none', background: '#3b82f6', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: '700' }}
                 >
@@ -94,6 +99,7 @@ export default function CustomerManagement() {
                     <span style={{ fontSize: '14px' }}>🔄</span>
                     {loading ? 'Syncing...' : 'Sync Customers'}
                 </button>
+                </div>
             </div>
 
             {/* Customers Table */}
