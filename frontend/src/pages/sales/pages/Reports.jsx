@@ -136,92 +136,8 @@ export default function Reports() {
           <p className="subtitle">Comprehensive analytics for your business operations</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button 
-            className="btn-print"
-            onClick={() => window.print()}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              padding: '10px 16px', 
-              borderRadius: '8px', 
-              border: '1px solid #e2e8f0', 
-              background: 'white', 
-              color: '#64748b', 
-              fontWeight: '600', 
-              cursor: 'pointer',
-              fontSize: '13px'
-            }}
-          >
-            <Printer size={18} /> Print Report
-          </button>
-          
-          <div className="report-filters" style={{ 
-            display: 'flex', 
-            gap: '12px', 
-            alignItems: 'center',
-            background: 'white',
-            padding: '12px 20px',
-            borderRadius: '12px',
-            border: '1.5px solid #3b82f6',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
-          }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Calendar size={18} color="#3b82f6" />
-            <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Filter Range:</span>
-          </div>
-          <input 
-            type="date" 
-            value={dateRange.startDate}
-            onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
-          />
-          <span style={{ color: '#94a3b8' }}>to</span>
-          <input 
-            type="date" 
-            value={dateRange.endDate}
-            onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
-          />
-          <button 
-            onClick={refreshData}
-            style={{ 
-              background: '#001a66', 
-              color: 'white', 
-              border: 'none', 
-              padding: '6px 16px', 
-              borderRadius: '6px', 
-              fontSize: '13px', 
-              fontWeight: '600', 
-              cursor: 'pointer' 
-            }}
-          >
-            Apply
-          </button>
-          <button 
-            onClick={() => {
-              setDateRange({ startDate: '', endDate: '' });
-              // Small timeout to ensure state is updated before fetch
-              setTimeout(refreshData, 10);
-            }}
-            style={{ 
-              background: 'transparent', 
-              color: '#64748b', 
-              border: '1px solid #e2e8f0', 
-              padding: '6px 12px', 
-              borderRadius: '6px', 
-              fontSize: '13px', 
-              cursor: 'pointer' 
-            }}
-          >
-            Reset
-          </button>
-        </div>
       </div>
-    </div>
 
-    {/* Tab Switcher */}
       <div className="report-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #e2e8f0', paddingBottom: '15px' }}>
         <button 
           className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`}
@@ -360,7 +276,7 @@ export default function Reports() {
                 </div>
               </div>
 
-              <div className="report-grid">
+              <div className="report-grid" style={{ gridTemplateColumns: '1fr' }}>
                 <div className="report-section table-section">
                   <div className="section-header">
                     <h3><AlertTriangle size={20} color="#001a66" /> Critical Low Stock</h3>
@@ -390,26 +306,6 @@ export default function Reports() {
                         )}
                       </tbody>
                     </table>
-                  </div>
-                </div>
-
-                <div className="report-section chart-section">
-                  <div className="section-header">
-                    <h3><Box size={20} /> Material Distribution</h3>
-                  </div>
-                  <div className="material-list" style={{ padding: '20px' }}>
-                    {inventoryData.materialDistribution?.map((m, idx) => (
-                      <div key={idx} className="material-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#001a66' }}></span>
-                            <span style={{ fontWeight: '600' }}>{m.material_type || 'Other'}</span>
-                        </div>
-                        <div style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                            <span style={{ marginRight: '15px' }}>{m.count} items</span>
-                            <strong>{Number(m.total_meters).toFixed(1)}m</strong>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
