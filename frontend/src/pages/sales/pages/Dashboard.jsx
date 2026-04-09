@@ -362,9 +362,6 @@ export default function SalesDashboard() {
       {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon-container">
-            <DollarSign size={32} color="#001a66" />
-          </div>
           <div className="stat-info">
             <h4>Total Revenue</h4>
             <h2>Rs. {Number(stats.totalSales).toLocaleString()}</h2>
@@ -372,9 +369,6 @@ export default function SalesDashboard() {
         </div>
 
         <div className="stat-card highlight">
-          <div className="stat-icon-container">
-            <TrendingUp size={32} color="#001a66" />
-          </div>
           <div className="stat-info">
             <h4>Monthly Growth</h4>
             <h2>Rs. {Number(stats.monthlySales).toLocaleString()}</h2>
@@ -382,9 +376,6 @@ export default function SalesDashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon-container">
-            <Users size={32} color="#001a66" />
-          </div>
           <div className="stat-info">
             <h4>Active Customers</h4>
             <h2>{stats.totalCustomers}</h2>
@@ -392,10 +383,7 @@ export default function SalesDashboard() {
         </div>
 
         <div className="stat-card verification" onClick={() => setShowVerificationModal(true)}>
-          <div className="stat-icon-container">
-            <CheckCircle size={32} color="#001a66" />
-          </div>
-          <div className="stat-info">
+          <div className="stat-info" style={{ width: '100%', textAlign: 'left' }}>
             <h4>Initial Verifications</h4>
             <h2>{stats.verificationRequired || 0}</h2>
             <p className="stat-subtitle">Approve new orders</p>
@@ -403,10 +391,7 @@ export default function SalesDashboard() {
         </div>
 
         <div className="stat-card payment" onClick={() => navigate('/sales/payments')}>
-          <div className="stat-icon-container">
-            <CreditCard size={32} color="#001a66" />
-          </div>
-          <div className="stat-info">
+          <div className="stat-info" style={{ width: '100%', textAlign: 'left' }}>
             <h4>Payment Queue</h4>
             <h2>{stats.pendingPayments}</h2>
             <p className="stat-subtitle">Process incoming payments</p>
@@ -443,9 +428,6 @@ export default function SalesDashboard() {
       {/* Recent Feedback Section */}
       <div className="quick-actions" style={{ marginTop: '30px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #f3f4f6', paddingBottom: '15px' }}>
-          <div style={{ background: '#e0f2fe', padding: '8px', borderRadius: '8px' }}>
-            <TrendingUp size={20} color="#0284c7" />
-          </div>
           <h3 style={{ margin: 0, color: '#1f2937', fontSize: '18px' }}>Recent Customer Feedback</h3>
         </div>
 
@@ -485,7 +467,6 @@ export default function SalesDashboard() {
             ))
           ) : (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
-              <Package size={40} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
               <p>No recent feedback received yet for these orders.</p>
             </div>
           )}

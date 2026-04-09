@@ -37,25 +37,43 @@ export default function Reports() {
     recentArrivals: []
   });
 
+  const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
+
   useEffect(() => {
     SalesLogger.reports.pageLoad({ tab: activeTab, timestamp: new Date().toISOString() });
-    if (activeTab === 'sales') fetchSalesReports();
+    refreshData();
+  }, [activeTab]);
+
+  const refreshData = () => {
+    if (activeTab === 'sales') {
+      fetchSalesReports();
+      fetchInventoryReports();
+    }
     if (activeTab === 'inventory') fetchInventoryReports();
     if (activeTab === 'suppliers') fetchSupplierReports();
-  }, [activeTab]);
+  };
 
   const fetchSalesReports = async () => {
     try {
       setLoading(true);
-      const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/sales`);
+      let url = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/sales`;
+      if (dateRange.startDate && dateRange.endDate) {
+        url += `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+      }
+      const response = await apiCall(url);
       const data = await response.json();
 
       if (response.ok) {
         setStats({
-            totalSales: data.report ? data.report.reduce((acc, curr) => acc + Number(curr.total_sales), 0) : 0,
+            totalSales: data.summary?.totalRevenue || 0,
             monthlySales: data.report ? Number(data.report[0]?.total_sales || 0) : 0,
             activeCustomers: data.activeCustomers || 0,
             pendingOrders: data.pendingOrders || 0,
+            totalOrders: data.summary?.totalOrders || 0,
+            avgOrderValue: data.summary?.avgOrderValue || 0,
             dailyTrend: data.report ? data.report.map(r => ({
                 date: new Date(r.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
                 total: Number(r.total_sales),
@@ -73,7 +91,11 @@ export default function Reports() {
   const fetchInventoryReports = async () => {
     try {
         setLoading(true);
-        const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/inventory`);
+        let url = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/inventory`;
+        if (dateRange.startDate && dateRange.endDate) {
+          url += `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+        }
+        const response = await apiCall(url);
         const data = await response.json();
         
         if (response.ok) {
@@ -89,7 +111,11 @@ export default function Reports() {
   const fetchSupplierReports = async () => {
     try {
         setLoading(true);
-        const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/suppliers`);
+        let url = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/suppliers`;
+        if (dateRange.startDate && dateRange.endDate) {
+          url += `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+        }
+        const response = await apiCall(url);
         const data = await response.json();
         
         if (response.ok) {
@@ -104,12 +130,98 @@ export default function Reports() {
 
   return (
     <div className="reports-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <h1>Report Center</h1>
-      </div>
-      <p className="subtitle">Comprehensive analytics for your business operations</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+        <div>
+          <h1>Report Center</h1>
+          <p className="subtitle">Comprehensive analytics for your business operations</p>
+        </div>
 
-      {/* Tab Switcher */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button 
+            className="btn-print"
+            onClick={() => window.print()}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              padding: '10px 16px', 
+              borderRadius: '8px', 
+              border: '1px solid #e2e8f0', 
+              background: 'white', 
+              color: '#64748b', 
+              fontWeight: '600', 
+              cursor: 'pointer',
+              fontSize: '13px'
+            }}
+          >
+            <Printer size={18} /> Print Report
+          </button>
+          
+          <div className="report-filters" style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            alignItems: 'center',
+            background: 'white',
+            padding: '12px 20px',
+            borderRadius: '12px',
+            border: '1.5px solid #3b82f6',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Calendar size={18} color="#3b82f6" />
+            <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Filter Range:</span>
+          </div>
+          <input 
+            type="date" 
+            value={dateRange.startDate}
+            onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
+          />
+          <span style={{ color: '#94a3b8' }}>to</span>
+          <input 
+            type="date" 
+            value={dateRange.endDate}
+            onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
+          />
+          <button 
+            onClick={refreshData}
+            style={{ 
+              background: '#001a66', 
+              color: 'white', 
+              border: 'none', 
+              padding: '6px 16px', 
+              borderRadius: '6px', 
+              fontSize: '13px', 
+              fontWeight: '600', 
+              cursor: 'pointer' 
+            }}
+          >
+            Apply
+          </button>
+          <button 
+            onClick={() => {
+              setDateRange({ startDate: '', endDate: '' });
+              // Small timeout to ensure state is updated before fetch
+              setTimeout(refreshData, 10);
+            }}
+            style={{ 
+              background: 'transparent', 
+              color: '#64748b', 
+              border: '1px solid #e2e8f0', 
+              padding: '6px 12px', 
+              borderRadius: '6px', 
+              fontSize: '13px', 
+              cursor: 'pointer' 
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Tab Switcher */}
       <div className="report-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #e2e8f0', paddingBottom: '15px' }}>
         <button 
           className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`}
@@ -145,9 +257,9 @@ export default function Reports() {
             <>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <h3>Total Sales</h3>
+                  <h3>Total Revenue</h3>
                   <h2>Rs. {Number(stats.totalSales).toLocaleString()}</h2>
-                  <p>All time revenue</p>
+                  <p>Filtered period total</p>
                 </div>
                 <div className="stat-card">
                   <h3>Recent Sales</h3>
@@ -155,17 +267,71 @@ export default function Reports() {
                   <p>Last recorded day</p>
                 </div>
                 <div className="stat-card">
-                  <h3>Active Customers</h3>
-                  <h2>{stats.activeCustomers}</h2>
-                  <p>Customers with orders</p>
+                  <h3>Total Orders</h3>
+                  <h2>{stats.totalOrders}</h2>
+                  <p>Processed orders</p>
                 </div>
                 <div className="stat-card">
-                  <h3>Pending Orders</h3>
+                  <h3>Avg. Order Value</h3>
+                  <h2>Rs. {Math.round(stats.avgOrderValue).toLocaleString()}</h2>
+                  <p>Revenue per order</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Active Customers</h3>
+                  <h2>{stats.activeCustomers}</h2>
+                  <p>Unique purchasers</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Pending Processing</h3>
                   <h2>{stats.pendingOrders}</h2>
-                  <p>Awaiting processing</p>
+                  <p>Awaiting attention</p>
                 </div>
               </div>
 
+              {/* Top Selling Fabrics Section */}
+              <div className="report-section table-section" style={{ marginTop: '30px' }}>
+                <div className="section-header">
+                  <h3><Box size={20} /> Top Trending Fabrics</h3>
+                </div>
+                <div className="table-responsive">
+                  <table className="performance-table">
+                    <thead>
+                      <tr>
+                        <th>Fabric Name</th>
+                        <th>Total Meters Sold</th>
+                        <th>Performance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {inventoryData.topSelling?.length > 0 ? inventoryData.topSelling.map((item, index) => (
+                        <tr key={index}>
+                          <td className="month-name">{item.name}</td>
+                          <td style={{ fontWeight: 'bold', color: '#001a66' }}>{item.total_sold}m</td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ flex: 1, height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ 
+                                  height: '100%', 
+                                  background: '#3b82f6', 
+                                  width: `${(item.total_sold / inventoryData.topSelling[0].total_sold) * 100}%` 
+                                }}></div>
+                              </div>
+                              <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                {Math.round((item.total_sold / inventoryData.topSelling[0].total_sold) * 100)}%
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                            No sales data available for this period.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </>
           )}

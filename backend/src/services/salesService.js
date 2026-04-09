@@ -105,14 +105,12 @@ const getCustomerStats = async () => {
     try {
         const query = `
             SELECT c.customer_id, c.full_name, c.email, c.address, c.created_at as registration_date,
-                   cc_phone.contact_value as phone,
+                   c.tel as phone,
                    COUNT(DISTINCT o.order_id) as total_orders,
                    COALESCE(SUM(o.total_amount), 0) as total_spent
             FROM customers c
-            LEFT JOIN customer_contacts cc_phone ON c.customer_id = cc_phone.customer_id 
-                AND cc_phone.contact_type = 'PHONE' AND cc_phone.is_primary = TRUE
             LEFT JOIN orders o ON c.customer_id = o.customer_id
-            GROUP BY c.customer_id, c.full_name, c.email, c.address, c.created_at, cc_phone.contact_value
+            GROUP BY c.customer_id, c.full_name, c.email, c.address, c.created_at, c.tel
             ORDER BY total_spent DESC
         `;
         const result = await pool.query(query);

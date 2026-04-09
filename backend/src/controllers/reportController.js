@@ -14,9 +14,10 @@ const getSalesReport = async (req, res) => {
 };
 
 const getInventoryReport = async (req, res) => {
-    console.log("Fetching inventory report");
+    const { startDate, endDate } = req.query;
+    console.log("Fetching inventory report:", { startDate, endDate });
     try {
-        const report = await reportService.getInventoryReport();
+        const report = await reportService.getInventoryReport(startDate, endDate);
         console.log("Inventory report fetched successfully");
         res.json(report);
     } catch (err) {
@@ -26,9 +27,10 @@ const getInventoryReport = async (req, res) => {
 };
 
 const getSupplierReport = async (req, res) => {
-    console.log("Fetching supplier report");
+    const { startDate, endDate } = req.query;
+    console.log("Fetching supplier report:", { startDate, endDate });
     try {
-        const report = await reportService.getSupplierReport();
+        const report = await reportService.getSupplierReport(startDate, endDate);
         console.log("Supplier report fetched successfully");
         res.json(report);
     } catch (err) {
