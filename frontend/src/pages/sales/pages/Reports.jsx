@@ -50,7 +50,6 @@ export default function Reports() {
   const refreshData = () => {
     if (activeTab === 'sales') {
       fetchSalesReports();
-      fetchInventoryReports();
     }
     if (activeTab === 'inventory') fetchInventoryReports();
     if (activeTab === 'suppliers') fetchSupplierReports();
@@ -74,6 +73,7 @@ export default function Reports() {
             pendingOrders: data.pendingOrders || 0,
             totalOrders: data.summary?.totalOrders || 0,
             avgOrderValue: data.summary?.avgOrderValue || 0,
+            detailedOrders: data.detailedOrders || [],
             dailyTrend: data.report ? data.report.map(r => ({
                 date: new Date(r.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
                 total: Number(r.total_sales),
@@ -283,44 +283,48 @@ export default function Reports() {
                 </div>
               </div>
 
-              {/* Top Selling Fabrics Section */}
+              {/* Detailed Sales Record Section */}
               <div className="report-section table-section" style={{ marginTop: '30px' }}>
                 <div className="section-header">
-                  <h3><Box size={20} /> Top Trending Fabrics</h3>
+                  <h3><FileText size={20} /> Detailed Sales Transaction Record</h3>
                 </div>
                 <div className="table-responsive">
                   <table className="performance-table">
                     <thead>
                       <tr>
-                        <th>Fabric Name</th>
-                        <th>Total Meters Sold</th>
-                        <th>Performance</th>
+                        <th>Date</th>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {inventoryData.topSelling?.length > 0 ? inventoryData.topSelling.map((item, index) => (
+                      {stats.detailedOrders?.length > 0 ? stats.detailedOrders.map((order, index) => (
                         <tr key={index}>
-                          <td className="month-name">{item.name}</td>
-                          <td style={{ fontWeight: 'bold', color: '#001a66' }}>{item.total_sold}m</td>
+                          <td>{new Date(order.order_date).toLocaleDateString()}</td>
+                          <td style={{ fontWeight: 'bold', color: '#001a66' }}>#{order.order_id}</td>
+                          <td className="month-name">{order.customer_name}</td>
+                          <td className="revenue-cell">Rs. {Number(order.total_amount).toLocaleString()}</td>
                           <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{ flex: 1, height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-                                <div style={{ 
-                                  height: '100%', 
-                                  background: '#3b82f6', 
-                                  width: `${(item.total_sold / inventoryData.topSelling[0].total_sold) * 100}%` 
-                                }}></div>
-                              </div>
-                              <span style={{ fontSize: '12px', color: '#64748b' }}>
-                                {Math.round((item.total_sold / inventoryData.topSelling[0].total_sold) * 100)}%
-                              </span>
-                            </div>
+                            <span style={{ 
+                              padding: '4px 10px', 
+                              borderRadius: '20px', 
+                              fontSize: '11px', 
+                              fontWeight: '600',
+                              background: order.order_status === 'DELIVERED' ? '#dcfce7' : 
+                                         order.order_status === 'PENDING' ? '#fef9c3' : '#f1f5f9',
+                              color: order.order_status === 'DELIVERED' ? '#166534' : 
+                                     order.order_status === 'PENDING' ? '#854d0e' : '#475569'
+                            }}>
+                              {order.order_status}
+                            </span>
                           </td>
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan="3" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                            No sales data available for this period.
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                            No transactions found for this period.
                           </td>
                         </tr>
                       )}

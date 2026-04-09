@@ -27,20 +27,19 @@ const getSalesReport = async (startDate, endDate) => {
             ORDER BY date DESC 
             LIMIT 30
         `,
-        monthlyOrders: `
+        detailedOrders: `
             SELECT o.order_id, c.full_name as customer_name, o.total_amount, o.order_status, o.order_date
             FROM orders o
             JOIN customers c ON o.customer_id = c.customer_id
-            WHERE o.order_status != 'CANCELLED' 
-            AND o.order_date >= DATE_TRUNC('month', CURRENT_DATE)
+            ${dateFilter}
             ORDER BY o.order_date DESC
         `
     };
 
-    const [summary, dailySales, monthlyOrders] = await Promise.all([
+    const [summary, dailySales, detailedOrders] = await Promise.all([
         pool.query(queries.summary, params),
         pool.query(queries.dailySales, params),
-        pool.query(queries.monthlyOrders, params)
+        pool.query(queries.detailedOrders, params)
     ]);
 
     return {
@@ -51,7 +50,7 @@ const getSalesReport = async (startDate, endDate) => {
             uniqueCustomers: parseInt(summary.rows[0]?.unique_customers || 0)
         },
         dailySales: dailySales.rows,
-        monthlyOrders: monthlyOrders.rows
+        detailedOrders: detailedOrders.rows
     };
 };
 
