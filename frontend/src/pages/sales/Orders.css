@@ -1,8 +1,9 @@
-/* Orders Page - Premium Theme */
 .orders-page {
-    padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    min-height: 100vh;
+    padding: 0;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: transparent;
+    width: 100%;
 }
 
 .header {
@@ -38,9 +39,9 @@
 .table-container {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 26, 102, 0.08);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    border: 2px solid rgba(124, 255, 0, 0.1);
+    border: 1.5px solid #3b82f6;
 }
 
 .data-table {

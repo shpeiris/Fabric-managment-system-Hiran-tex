@@ -125,7 +125,7 @@
     background: white;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
+    border: 1.5px solid #3b82f6;
     overflow: hidden;
     transition: all 0.3s ease;
     display: flex;

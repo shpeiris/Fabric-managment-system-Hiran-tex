@@ -33,7 +33,7 @@
     padding: 25px;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid #e5e7eb;
+    border: 1.5px solid #3b82f6;
     display: flex;
     align-items: center;
     gap: 20px;
@@ -181,7 +181,7 @@
 .stat-card.verification {
     cursor: pointer;
     background: #ffffff;
-    border-color: #e5e7eb;
+    border: 1.5px solid #3b82f6;
 }
 
 
@@ -189,7 +189,7 @@
 .stat-card.payment {
     cursor: pointer;
     background: #ffffff;
-    border-color: #e5e7eb;
+    border: 1.5px solid #3b82f6;
 }
 
 

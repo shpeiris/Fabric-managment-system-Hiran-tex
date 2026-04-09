@@ -236,14 +236,14 @@ export default function Reports() {
                   <h2>Rs. {Number(inventoryData.totalValue).toLocaleString()}</h2>
                   <p>Current stock worth</p>
                 </div>
-                <div className="stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
+                <div className="stat-card">
                   <h3>Low Stock</h3>
-                  <h2 style={{ color: '#d97706' }}>{inventoryData.lowStockCount}</h2>
+                  <h2>{inventoryData.lowStockCount}</h2>
                   <p>Items near reorder level</p>
                 </div>
-                <div className="stat-card" style={{ borderLeft: '4px solid #ef4444' }}>
+                <div className="stat-card">
                   <h3>Out of Stock</h3>
-                  <h2 style={{ color: '#dc2626' }}>{inventoryData.outOfStockCount}</h2>
+                  <h2>{inventoryData.outOfStockCount}</h2>
                   <p>Zero quantity items</p>
                 </div>
               </div>
