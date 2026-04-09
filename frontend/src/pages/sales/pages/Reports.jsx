@@ -251,7 +251,7 @@ export default function Reports() {
               <div className="report-grid">
                 <div className="report-section table-section">
                   <div className="section-header">
-                    <h3><AlertTriangle size={20} color="#f59e0b" /> Critical Low Stock</h3>
+                    <h3><AlertTriangle size={20} color="#001a66" /> Critical Low Stock</h3>
                   </div>
                   <div className="table-responsive">
                     <table className="performance-table">
@@ -267,7 +267,7 @@ export default function Reports() {
                         {inventoryData.lowStock?.length > 0 ? inventoryData.lowStock.map((item, idx) => (
                           <tr key={idx}>
                             <td className="month-name">{item.name}</td>
-                            <td style={{ color: item.stock_available_quantity === 0 ? 'red' : 'orange', fontWeight: 'bold' }}>
+                            <td style={{ color: item.stock_available_quantity === 0 ? '#001a66' : '#64748b', fontWeight: 'bold' }}>
                                 {item.stock_available_quantity}m
                             </td>
                             <td>{item.reorder_level}m</td>

@@ -305,7 +305,7 @@ const PaymentQueue = () => {
                                         className="btn confirmation-type"
                                         onClick={() => handleSendConfirmation(selectedOrder.order_id, 'payment_rejection')}
                                         disabled={actionLoading}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #ef4444', cursor: 'pointer', background: '#fef2f2', fontSize: '13px', color: '#b91c1c' }}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #001a66', cursor: 'pointer', background: 'white', fontSize: '13px', color: '#001a66' }}
                                     >
                                         <span>Reject & Ask for New Slip</span>
                                     </button>
