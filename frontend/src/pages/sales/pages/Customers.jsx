@@ -15,15 +15,7 @@ export default function CustomerManagement() {
 
 
 
-    const SAMPLE_CUSTOMER = {
-        customer_id: 'PRE-001',
-        full_name: 'Pathum Nissanka (Sample)',
-        email: 'pathum.n@example.lk',
-        phone: '+94 71 987 6543',
-        total_orders: 5,
-        total_spent: 15200,
-        registration_date: '2024-03-05T09:15:00Z'
-    };
+
 
     const fetchCustomers = async () => {
         try {
@@ -34,15 +26,15 @@ export default function CustomerManagement() {
 
             if (response.ok) {
                 const fetched = data.customers || [];
-                setCustomers([SAMPLE_CUSTOMER, ...fetched]);
-                SalesLogger.customers.customersFetch(fetched.length + 1);
+                setCustomers(fetched);
+                SalesLogger.customers.customersFetch(fetched.length);
             } else {
-                setCustomers([SAMPLE_CUSTOMER]);
+                setCustomers([]);
             }
         } catch (err) {
             console.error('Error fetching customers:', err);
             SalesLogger.customers.customersFetchError(err);
-            setCustomers([SAMPLE_CUSTOMER]);
+            setCustomers([]);
         } finally {
             setLoading(false);
         }

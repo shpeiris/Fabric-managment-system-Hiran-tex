@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from "../../../utils/auth.js";
-import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, RefreshCw, Truck } from 'lucide-react';
+import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, RefreshCw, Truck } from 'lucide-react';
 import "./PaymentQueue.css";
 
 
@@ -40,7 +40,7 @@ const PaymentQueue = () => {
     const [pendingPayments, setPendingPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
-    const [filterMethod, setFilterMethod] = useState('ALL');
+
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [specialMessage, setSpecialMessage] = useState('');
@@ -128,9 +128,7 @@ const PaymentQueue = () => {
         }
     };
 
-    const filteredPayments = pendingPayments.filter(order =>
-        filterMethod === 'ALL' || order.payment_method === filterMethod
-    );
+
 
     return (
         <div className="payment-queue-page">
@@ -147,17 +145,9 @@ const PaymentQueue = () => {
                 </div>
             </div>
 
-            <div className="filters-bar">
-                <div className="filter-group">
-                    <Filter size={18} />
-                    <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)}>
-                        <option value="ALL">All Methods</option>
-                        <option value="BANK_TRANSFER">Bank Transfer</option>
-                        <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
-                    </select>
-                </div>
+            <div className="filters-bar" style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <div className="queue-count">
-                    Found {filteredPayments.length} pending payments
+                    Found {pendingPayments.length} pending payments
                 </div>
             </div>
 
@@ -166,9 +156,9 @@ const PaymentQueue = () => {
                     <RefreshCw size={40} className="spinning" />
                     <p>Loading pending transactions...</p>
                 </div>
-            ) : filteredPayments.length > 0 ? (
+            ) : pendingPayments.length > 0 ? (
                 <div className="payments-grid">
-                    {filteredPayments.map(order => (
+                    {pendingPayments.map(order => (
                         <div key={order.order_id} className="payment-card">
                             <div className="card-header">
                                 <div className="order-id">Order #{order.order_id}</div>
