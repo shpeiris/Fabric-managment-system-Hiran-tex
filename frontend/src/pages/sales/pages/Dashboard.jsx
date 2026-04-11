@@ -72,7 +72,6 @@ export default function SalesDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalSales: 0,
-    monthlySales: 0,
     totalCustomers: 0,
     pendingOrders: 0,
     pendingPayments: 0
@@ -367,14 +366,6 @@ export default function SalesDashboard() {
             <h2>Rs. {Number(stats.totalSales).toLocaleString()}</h2>
           </div>
         </div>
-
-        <div className="stat-card highlight">
-          <div className="stat-info">
-            <h4>Monthly Growth</h4>
-            <h2>Rs. {Number(stats.monthlySales).toLocaleString()}</h2>
-          </div>
-        </div>
-
         <div className="stat-card">
           <div className="stat-info">
             <h4>Active Customers</h4>
