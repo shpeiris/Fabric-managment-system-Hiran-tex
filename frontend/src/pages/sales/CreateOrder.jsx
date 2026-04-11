@@ -134,15 +134,13 @@ export default function NewOrder() {
 
     return (
         <div className="new-order-page">
-            <div className="new-order-header">
-                <div>
-                    <h1>New Walk-in Order</h1>
-                    <p style={{ color: '#64748b', margin: '4px 0 0' }}>Create an order for an in-store customer</p>
-                </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h1>New Walk-in Order</h1>
                 <button className="btn-back-dashboard" onClick={() => navigate('/sales/dashboard')}>
                     <ArrowLeft size={16} /> Dashboard
                 </button>
             </div>
+            <p className="subtitle">Create an order for an in-store customer</p>
 
             <div className="new-order-grid">
                 {/* LEFT COLUMN: SELECTION */}

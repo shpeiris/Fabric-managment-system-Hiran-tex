@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import bcrypt from 'bcryptjs';
 
 const getUserOrders = async (userId) => {
     const query = `
@@ -139,10 +140,44 @@ const createOrder = async (orderData) => {
             totalAmount += 500;
         }
 
+        let finalCustomerId = customer_id || null;
+
+        // Auto-register walk-in customer if no customer_id is provided but we have a name
+        if (!finalCustomerId && customer_name) {
+            let existingCustomer = false;
+            
+            // Basic check to see if walk-in already exists by phone number
+            if (phone_number) {
+                 const phoneCheck = await pool.query("SELECT customer_id FROM customers WHERE tel = $1 LIMIT 1", [phone_number]);
+                 if (phoneCheck.rows.length > 0) {
+                      finalCustomerId = phoneCheck.rows[0].customer_id;
+                      existingCustomer = true;
+                 }
+            }
+            
+            if (!existingCustomer) {
+                const tempEmail = `${phone_number || Math.floor(Math.random()*10000)}_walkin@system.local`;
+                const hashedPwd = await bcrypt.hash('Walkin123!', 10);
+                
+                const newCustomer = await pool.query(
+                    `INSERT INTO customers (full_name, email, password, tel, address)
+                     VALUES ($1, $2, $3, $4, $5) RETURNING customer_id`,
+                    [
+                        customer_name,
+                        tempEmail,
+                        hashedPwd,
+                        phone_number || '0000000000',
+                        delivery_address || 'Store Walk-in'
+                    ]
+                );
+                finalCustomerId = newCustomer.rows[0].customer_id;
+            }
+        }
+
         // Insert order with all fields
         const orderResult = await pool.query(
             "INSERT INTO orders (customer_id, customer_name, phone_number, total_amount, delivery_address, delivery_type, special_instructions, order_status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING') RETURNING order_id",
-            [customer_id || null, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '']
+            [finalCustomerId, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '']
         );
 
         const orderId = orderResult.rows[0].order_id;

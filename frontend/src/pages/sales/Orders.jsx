@@ -161,15 +161,13 @@ export default function Orders() {
 
   return (
     <div className="orders-page">
-      <div className="header">
-        <div>
-          <h1>Order Management ({orders.length})</h1>
-          <p className="subtitle">Track and manage customer orders and payments</p>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <h1>Order Management ({orders.length})</h1>
         <button className="btn-add" onClick={() => navigate('/sales/new-order')} style={{ backgroundColor: "#28a745", color: "white", padding: "10px 20px", border: "none", borderRadius: "5px", cursor: "pointer" }}>
           + New Order
         </button>
       </div>
+      <p className="subtitle">Track and manage customer orders and payments</p>
 
       {/* Filter */}
       <div className="filter-bar">

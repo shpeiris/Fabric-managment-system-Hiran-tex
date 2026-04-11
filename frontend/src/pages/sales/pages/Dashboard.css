@@ -32,13 +32,9 @@
   padding: 1.5rem;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1.5px solid #3b82f6;
   display: flex;
   align-items: center;
-  transition: transform 0.2s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
 }
 
 .stat-icon {

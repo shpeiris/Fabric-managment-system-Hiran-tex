@@ -27,20 +27,19 @@ const getSalesReport = async (startDate, endDate) => {
             ORDER BY date DESC 
             LIMIT 30
         `,
-        monthlyOrders: `
-            SELECT o.order_id, u.full_name as customer_name, o.total_amount, o.order_status, o.order_date
+        detailedOrders: `
+            SELECT o.order_id, c.full_name as customer_name, o.total_amount, o.order_status, o.order_date
             FROM orders o
-            JOIN users u ON o.customer_id = u.id
-            WHERE o.order_status != 'CANCELLED' 
-            AND o.order_date >= DATE_TRUNC('month', CURRENT_DATE)
+            JOIN customers c ON o.customer_id = c.customer_id
+            ${dateFilter}
             ORDER BY o.order_date DESC
         `
     };
 
-    const [summary, dailySales, monthlyOrders] = await Promise.all([
+    const [summary, dailySales, detailedOrders] = await Promise.all([
         pool.query(queries.summary, params),
         pool.query(queries.dailySales, params),
-        pool.query(queries.monthlyOrders, params)
+        pool.query(queries.detailedOrders, params)
     ]);
 
     return {
@@ -51,11 +50,21 @@ const getSalesReport = async (startDate, endDate) => {
             uniqueCustomers: parseInt(summary.rows[0]?.unique_customers || 0)
         },
         dailySales: dailySales.rows,
-        monthlyOrders: monthlyOrders.rows
+        detailedOrders: detailedOrders.rows
     };
 };
 
-const getInventoryReport = async () => {
+const getInventoryReport = async (startDate, endDate) => {
+    let dateFilter = "";
+    let orderDateFilter = "";
+    const params = [];
+
+    if (startDate && endDate) {
+        dateFilter = " AND arrival_date BETWEEN $1 AND $2";
+        orderDateFilter = " JOIN orders o ON oi.order_id = o.order_id WHERE o.order_status != 'CANCELLED' AND o.order_date BETWEEN $1 AND $2";
+        params.push(startDate, endDate);
+    }
+
     const queries = {
         lowStock: "SELECT * FROM fabrics WHERE stock_available_quantity <= restock_level ORDER BY stock_available_quantity ASC",
         totalValue: "SELECT SUM(stock_available_quantity * price_per_meter) as total_inventory_value FROM fabrics",
@@ -63,6 +72,7 @@ const getInventoryReport = async () => {
             SELECT f.name, SUM(oi.quantity) as total_sold
             FROM order_items oi
             JOIN fabrics f ON oi.fabric_id = f.fabric_id
+            ${orderDateFilter}
             GROUP BY f.fabric_id, f.name
             ORDER BY total_sold DESC
             LIMIT 5
@@ -95,6 +105,7 @@ const getInventoryReport = async () => {
             JOIN fabrics f ON sa.fabric_id = f.fabric_id
             JOIN suppliers s ON sa.supplier_id = s.supplier_id
             LEFT JOIN employees e ON sa.received_by = e.employee_id
+            WHERE 1=1 ${dateFilter}
             ORDER BY sa.arrival_date DESC
         `
     };
@@ -102,10 +113,10 @@ const getInventoryReport = async () => {
     const [lowStock, totalValue, topSelling, stats, allFabrics, recentArrivals] = await Promise.all([
         pool.query(queries.lowStock),
         pool.query(queries.totalValue),
-        pool.query(queries.topSelling),
+        pool.query(queries.topSelling, params),
         pool.query(queries.stats),
         pool.query(queries.allFabrics),
-        pool.query(queries.recentArrivals)
+        pool.query(queries.recentArrivals, params)
     ]);
 
     return {
@@ -121,7 +132,15 @@ const getInventoryReport = async () => {
     };
 };
 
-const getSupplierReport = async () => {
+const getSupplierReport = async (startDate, endDate) => {
+    let dateFilter = "";
+    const params = [];
+
+    if (startDate && endDate) {
+        dateFilter = " AND arrival_date BETWEEN $1 AND $2";
+        params.push(startDate, endDate);
+    }
+
     const queryStr = `
         SELECT 
             s.supplier_id,
@@ -132,7 +151,7 @@ const getSupplierReport = async () => {
             COALESCE(SUM(sa.total_value), 0) as total_value, 
             MAX(sa.arrival_date) as last_arrival
         FROM suppliers s
-        LEFT JOIN stock_arrivals sa ON s.supplier_id = sa.supplier_id
+        LEFT JOIN stock_arrivals sa ON s.supplier_id = sa.supplier_id ${dateFilter}
         GROUP BY s.supplier_id, s.name, s.contact_person
         ORDER BY total_value DESC
     `;
@@ -145,7 +164,7 @@ const getSupplierReport = async () => {
         FROM (
             SELECT s.supplier_id, COALESCE(SUM(sa.total_value), 0) as total_value
             FROM suppliers s
-            LEFT JOIN stock_arrivals sa ON s.supplier_id = sa.supplier_id
+            LEFT JOIN stock_arrivals sa ON s.supplier_id = sa.supplier_id ${dateFilter}
             GROUP BY s.supplier_id
         ) sub
     `;
@@ -155,6 +174,7 @@ const getSupplierReport = async () => {
         FROM stock_arrivals sa
         JOIN fabrics f ON sa.fabric_id = f.fabric_id
         JOIN suppliers s ON sa.supplier_id = s.supplier_id
+        WHERE 1=1 ${dateFilter}
         ORDER BY sa.arrival_date DESC
         LIMIT 10
     `;

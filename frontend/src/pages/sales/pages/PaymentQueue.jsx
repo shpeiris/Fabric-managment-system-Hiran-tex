@@ -1,27 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from "../../../utils/auth.js";
-import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, Filter, Search, RefreshCw, Truck } from 'lucide-react';
+import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, RefreshCw, Truck } from 'lucide-react';
 import "./PaymentQueue.css";
 
-const HARDCODED_PAYMENTS = [
-    {
-        order_id: 10254,
-        payment_id: 501,
-        customer_name: "Sample Customer (Demo)",
-        phone_number: "+94 77 123 4567",
-        delivery_address: "123, Galle Road, Colombo 03, Sri Lanka",
-        order_date: new Date().toISOString(),
-        total_amount: 16250.00,
-        delivery_fee: 500.00,
-        payment_method: "BANK_TRANSFER",
-        bank_slip_url: null, // We'll show a placeholder for demo
-        items: [
-            { fabric_name: "Premium Silk Satin (Midnight Blue)", quantity: 5, total_price: 7500.00 },
-            { fabric_name: "Soft Cotton Voile (Pure White)", quantity: 10, total_price: 8250.00 }
-        ]
-    }
-];
 
 const HISTORICAL_ORDERS_SAMPLE = [
     {
@@ -58,8 +40,7 @@ const PaymentQueue = () => {
     const [pendingPayments, setPendingPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterMethod, setFilterMethod] = useState('ALL');
+
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [specialMessage, setSpecialMessage] = useState('');
@@ -147,23 +128,12 @@ const PaymentQueue = () => {
         }
     };
 
-    const displayPayments = pendingPayments.length > 0 ? pendingPayments : HARDCODED_PAYMENTS;
 
-    const filteredPayments = displayPayments.filter(order => {
-        const matchesSearch = 
-            order.order_id.toString().includes(searchTerm) || 
-            order.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesMethod = filterMethod === 'ALL' || order.payment_method === filterMethod;
-        
-        return matchesSearch && matchesMethod;
-    });
 
     return (
         <div className="payment-queue-page">
-            <div className="queue-header">
-                <div className="header-title">
-                    <CreditCard size={28} color="#001a66" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <h1>Payment Processing Queue</h1>
                 </div>
                 <div className="header-actions">
@@ -173,27 +143,11 @@ const PaymentQueue = () => {
                     </button>
                 </div>
             </div>
+            <p className="subtitle" style={{ color: '#666', fontSize: '15px', marginBottom: '30px' }}>Monitor and verify incoming customer payments</p>
 
-            <div className="filters-bar">
-                <div className="search-box">
-                    <Search size={18} />
-                    <input 
-                        type="text" 
-                        placeholder="Search by Order ID or Customer..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="filter-group">
-                    <Filter size={18} />
-                    <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)}>
-                        <option value="ALL">All Methods</option>
-                        <option value="BANK_TRANSFER">Bank Transfer</option>
-                        <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
-                    </select>
-                </div>
+            <div className="filters-bar" style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <div className="queue-count">
-                    Found {filteredPayments.length} pending payments
+                    Found {pendingPayments.length} pending payments
                 </div>
             </div>
 
@@ -202,9 +156,9 @@ const PaymentQueue = () => {
                     <RefreshCw size={40} className="spinning" />
                     <p>Loading pending transactions...</p>
                 </div>
-            ) : filteredPayments.length > 0 ? (
+            ) : pendingPayments.length > 0 ? (
                 <div className="payments-grid">
-                    {filteredPayments.map(order => (
+                    {pendingPayments.map(order => (
                         <div key={order.order_id} className="payment-card">
                             <div className="card-header">
                                 <div className="order-id">Order #{order.order_id}</div>
@@ -351,7 +305,7 @@ const PaymentQueue = () => {
                                         className="btn confirmation-type"
                                         onClick={() => handleSendConfirmation(selectedOrder.order_id, 'payment_rejection')}
                                         disabled={actionLoading}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #ef4444', cursor: 'pointer', background: '#fef2f2', fontSize: '13px', color: '#b91c1c' }}
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', border: '1px solid #001a66', cursor: 'pointer', background: 'white', fontSize: '13px', color: '#001a66' }}
                                     >
                                         <span>Reject & Ask for New Slip</span>
                                     </button>
