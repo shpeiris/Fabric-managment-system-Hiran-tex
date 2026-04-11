@@ -171,6 +171,39 @@ export default function SalesDashboard() {
     }
   };
 
+  const handlePrintInvoice = async (orderId) => {
+    try {
+      // 1. Generate/Record the invoice in the official DB table
+      const response = await apiCall(`/api/invoices/generate/${orderId}`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        // 2. Refresh dashboard data so the invoice_number appears in the local state
+        const data = await fetchDashboardData();
+        
+        // 3. Update the selected order if it's the one we just printed
+        if (data && selectedOrder && selectedOrder.order_id === orderId) {
+            const updated = data.recentOrders.find(o => o.order_id === orderId) ||
+                            data.pendingPayments.find(o => o.order_id === orderId);
+            if (updated) setSelectedOrder(updated);
+        }
+
+        // 4. Trigger the browser print
+        setTimeout(() => {
+          window.print();
+        }, 300);
+      } else {
+        console.error("Failed to generate official invoice record");
+        // Fallback to basic print if recording fails
+        window.print();
+      }
+    } catch (error) {
+      console.error("Error during invoice generation:", error);
+      window.print();
+    }
+  };
+
   const handleVerifyOrder = async (orderId, action) => {
     try {
       setActionLoading(true);
@@ -244,7 +277,9 @@ export default function SalesDashboard() {
             <p style={{ fontSize: '12px', margin: '4px 0', color: '#666' }}>Official Order Invoice</p>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontWeight: 'bold', margin: 0 }}>Order #{order.order_id}</p>
+            <p style={{ fontWeight: 'bold', margin: 0, color: '#001a66', fontSize: '18px' }}>
+              {order.invoice_number ? order.invoice_number.toUpperCase() : `ORDER #${order.order_id}`}
+            </p>
             <p style={{ fontSize: '12px', margin: '4px 0', color: '#666' }}>Date: {new Date(order.order_date).toLocaleDateString()}</p>
           </div>
         </div>
@@ -479,7 +514,11 @@ export default function SalesDashboard() {
                 <div className="invoice-preview-mode">
                   {renderInvoice(selectedOrder)}
                   <div className="invoice-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' }}>
-                    <button className="btn print-btn" onClick={() => window.print()} style={{ background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                    <button 
+                      className="btn print-btn" 
+                      onClick={() => handlePrintInvoice(selectedOrder.order_id)} 
+                      style={{ background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+                    >
                       <Clipboard size={16} /> Print Official Invoice
                     </button>
                     <button className="btn notify-btn" onClick={() => { setShowPaymentModal(false); setShowConfirmationModal(true); setShowInvoiceView(false); }} style={{ background: '#22c55e', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
