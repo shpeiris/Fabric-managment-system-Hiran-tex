@@ -367,7 +367,7 @@ export default function Reports() {
 
                 <div className="report-section table-section">
                     <div className="section-header">
-                        <h3><FileText size={20} /> Recent Stock Inward Logs</h3>
+                        <h3><FileText size={20} /> Recent Stock Arrivals</h3>
                     </div>
                     <div className="table-responsive">
                         <table className="performance-table">
