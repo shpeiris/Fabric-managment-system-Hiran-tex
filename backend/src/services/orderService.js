@@ -215,7 +215,7 @@ const createOrder = async (orderData) => {
     }
 };
 
-const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deliveryContactNumber = null) => {
+const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deliveryContactNumber = null, trackingId = null) => {
     let query = "UPDATE orders SET order_status = $1";
     const params = [order_status, orderId];
     let paramIndex = 3;
@@ -227,6 +227,10 @@ const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deli
     if (deliveryContactNumber) {
         query += `, delivery_contact_number = $${paramIndex++}`;
         params.push(deliveryContactNumber);
+    }
+    if (trackingId) {
+        query += `, tracking_id = $${paramIndex++}`;
+        params.push(trackingId);
     }
 
     query += " WHERE order_id = $2 RETURNING *";

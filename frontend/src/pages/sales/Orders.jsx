@@ -15,7 +15,8 @@ export default function Orders() {
   const [deliveryData, setDeliveryData] = useState({
     orderId: null,
     delivered_by: '',
-    delivery_contact_number: ''
+    delivery_contact_number: '',
+    tracking_id: ''
   });
 
   useEffect(() => {
@@ -55,7 +56,8 @@ export default function Orders() {
       setDeliveryData({
         orderId: orderId,
         delivered_by: '',
-        delivery_contact_number: ''
+        delivery_contact_number: '',
+        tracking_id: ''
       });
       setShowDeliveryModal(true);
       return;
@@ -102,7 +104,8 @@ export default function Orders() {
         body: JSON.stringify({ 
           status: 'DELIVERED',
           delivered_by,
-          delivery_contact_number
+          delivery_contact_number,
+          tracking_id
         })
       });
 
@@ -228,9 +231,10 @@ export default function Orders() {
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <span>{order.delivery_type || 'Standard'}</span>
-                    {order.order_status === 'DELIVERED' && (order.delivered_by || order.delivery_contact_number) && (
+                    {order.order_status === 'DELIVERED' && (order.delivered_by || order.delivery_contact_number || order.tracking_id) && (
                       <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>
                         By: {order.delivered_by || 'N/A'} {order.delivery_contact_number ? `(${order.delivery_contact_number})` : ''}
+                        {order.tracking_id && <div style={{ color: '#001a66', marginTop: '2px' }}>Track ID: {order.tracking_id}</div>}
                       </span>
                     )}
                   </div>
@@ -316,6 +320,15 @@ export default function Orders() {
                 value={deliveryData.delivery_contact_number}
                 onChange={(e) => setDeliveryData({...deliveryData, delivery_contact_number: e.target.value})}
                 placeholder="Enter phone number"
+              />
+            </div>
+            <div className="form-group">
+              <label>Tracking ID / Reference</label>
+              <input 
+                type="text" 
+                value={deliveryData.tracking_id}
+                onChange={(e) => setDeliveryData({...deliveryData, tracking_id: e.target.value})}
+                placeholder="Enter tracking ID"
               />
             </div>
             <div className="modal-actions">

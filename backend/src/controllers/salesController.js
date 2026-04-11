@@ -93,9 +93,9 @@ const sendConfirmation = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, delivered_by, delivery_contact_number } = req.body;
+        const { status, delivered_by, delivery_contact_number, tracking_id } = req.body;
         
-        const result = await orderService.updateOrderStatus(id, status, delivered_by, delivery_contact_number);
+        const result = await orderService.updateOrderStatus(id, status, delivered_by, delivery_contact_number, tracking_id);
         
         if (result && status === 'DELIVERED') {
             try {
