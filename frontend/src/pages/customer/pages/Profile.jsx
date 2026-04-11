@@ -146,9 +146,8 @@ export default function Profile() {
 
   return (
     <div className="profile-container">
-      {/* Header with Banner */}
+      {/* Simplified Header */}
       <header className="profile-header">
-        <div className="profile-banner"></div>
         <div className="profile-avatar-wrapper">
           <div className="profile-avatar">
             <div className="avatar-initials">{initials}</div>
@@ -160,54 +159,16 @@ export default function Profile() {
         </div>
       </header>
 
-      {/* Main Grid */}
-      <div className="profile-content-grid">
-        {/* Sidebar */}
-        <aside>
-          <div className="sidebar-card">
-            <h3><ShieldCheck size={18} /> Account Summary</h3>
-            
-            <div className="stat-item">
-              <div className="stat-icon"><Calendar size={18} /></div>
-              <div className="stat-details">
-                <span className="stat-label">Member Since</span>
-                <span className="stat-value">{memberSince}</span>
-              </div>
-            </div>
+      {/* Main Content */}
+      <div className="profile-content-single">
 
-            <div className="stat-item">
-              <div className="stat-icon"><ShoppingBag size={18} /></div>
-              <div className="stat-details">
-                <span className="stat-label">Total Transactions</span>
-                <span className="stat-value">{stats.totalOrders || 0} Orders</span>
-              </div>
-            </div>
-
-            <div className="stat-item">
-              <div className="stat-icon"><CreditCard size={18} /></div>
-              <div className="stat-details">
-                <span className="stat-label">Total Investment</span>
-                <span className="stat-value highlight">Rs. {(stats.totalSpent || 0).toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="sidebar-card" style={{ background: '#f8fafc', borderStyle: 'dashed' }}>
-             <p style={{ fontSize: '12px', color: '#64748b', margin: 0, textAlign: 'center' }}>
-               Your data is secured with end-to-end encryption.
-             </p>
-          </div>
-        </aside>
-
-        {/* Form Area */}
+        {/* Form Area - View Only Card */}
         <main className="form-card">
           <div className="card-header">
             <h2>Personal Information</h2>
-            {!isEditing && (
-              <button className="btn-edit" onClick={() => setIsEditing(true)}>
-                <Edit3 size={16} /> Edit Profile
-              </button>
-            )}
+            <button className="btn-edit" onClick={() => setIsEditing(true)}>
+              <Edit3 size={16} /> Edit Profile
+            </button>
           </div>
 
           {successMsg && (
@@ -216,93 +177,108 @@ export default function Profile() {
             </div>
           )}
           
-          {errorMsg && (
-            <div className="message error">
-              <AlertCircle size={18} /> {errorMsg}
-            </div>
-          )}
-
           <div className="profile-form-grid">
             <div className="form-group">
               <label><User size={14} /> Full Name</label>
-              <input 
-                type="text" 
-                name="full_name" 
-                className="premium-input"
-                value={formData.full_name} 
-                onChange={handleChange} 
-                disabled={!isEditing} 
-                placeholder="Enter your full name"
-              />
+              <div className="premium-input" style={{ background: '#f9fafb', color: '#1f2937' }}>{formData.full_name}</div>
             </div>
 
-            <div className="form-group">
-              <label><Mail size={14} /> Username / ID</label>
-              <input 
-                type="text" 
-                className="premium-input"
-                value={formData.username} 
-                disabled 
-              />
-            </div>
 
             <div className="form-group">
               <label><Mail size={14} /> Primary Email</label>
-              <input 
-                type="email" 
-                className="premium-input"
-                value={formData.email} 
-                disabled 
-              />
+              <div className="premium-input" style={{ background: '#f9fafb', color: '#6b7280' }}>{formData.email}</div>
             </div>
 
             <div className="form-group">
               <label><Phone size={14} /> Phone Number</label>
-              <input 
-                type="tel" 
-                name="phone" 
-                className="premium-input"
-                value={formData.phone} 
-                onChange={handleChange} 
-                disabled={!isEditing}
-                placeholder="07X XXX XXXX"
-              />
+              <div className="premium-input" style={{ background: '#f9fafb', color: '#1f2937' }}>{formData.phone}</div>
             </div>
 
             <div className="form-group full-width">
               <label><MapPin size={14} /> Physical Address</label>
-              <input 
-                type="text" 
-                name="address" 
-                className="premium-input"
-                value={formData.address} 
-                onChange={handleChange} 
-                disabled={!isEditing}
-                placeholder="Enter your delivery address"
-              />
+              <div className="premium-input" style={{ background: '#f9fafb', color: '#1f2937' }}>{formData.address}</div>
             </div>
           </div>
+        </main>
+      </div>
 
-          {isEditing && (
-            <div className="form-actions">
+      {/* Edit Modal */}
+      {isEditing && (
+        <div className={`modal-overlay ${saving ? 'syncing' : ''}`}>
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2><Edit3 size={20} /> Update Profile</h2>
+              <button 
+                className="modal-close" 
+                onClick={() => { setIsEditing(false); setErrorMsg(''); }}
+                disabled={saving}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {errorMsg && (
+                <div className="message error">
+                  <AlertCircle size={18} /> {errorMsg}
+                </div>
+              )}
+
+              <div className="profile-form-grid">
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input 
+                    type="text" 
+                    name="full_name" 
+                    className="premium-input"
+                    value={formData.full_name} 
+                    onChange={handleChange} 
+                    placeholder="Enter your full name"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <input 
+                    type="tel" 
+                    name="phone" 
+                    className="premium-input"
+                    value={formData.phone} 
+                    onChange={handleChange} 
+                    placeholder="07X XXX XXXX"
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Physical Address</label>
+                  <input 
+                    type="text" 
+                    name="address" 
+                    className="premium-input"
+                    value={formData.address} 
+                    onChange={handleChange} 
+                    placeholder="Enter your delivery address"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
               <button className="btn-save" onClick={handleSave} disabled={saving}>
-                {saving ? (
-                  <>Synchronizing...</>
-                ) : (
-                  <><Save size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Save Changes</>
-                )}
+                {saving ? 'Synchronizing...' : 'Save Changes'}
               </button>
               <button 
                 className="btn-cancel" 
                 onClick={() => { setIsEditing(false); setErrorMsg(''); }}
                 disabled={saving}
               >
-                <X size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Cancel
+                Discard
               </button>
             </div>
-          )}
-        </main>
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
