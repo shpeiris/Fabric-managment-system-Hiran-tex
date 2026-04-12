@@ -17,25 +17,15 @@ const generateInvoice = async (orderId) => {
         }
 
         // 2. Insert new invoice record
-        // We'll insert first to get the SERIAL id, then update the invoice_number
-        // This ensures the number accurately reflects the DB identity
         await pool.query('BEGIN');
         
         const insertRes = await pool.query(
-            "INSERT INTO invoices (order_id, status) VALUES ($1, 'ISSUED') RETURNING invoice_id",
+            "INSERT INTO invoices (order_id, status) VALUES ($1, 'ISSUED') RETURNING *",
             [orderId]
         );
         
-        const invoiceId = insertRes.rows[0].invoice_id;
-        const formattedNumber = `inv ${invoiceId.toString().padStart(4, '0')}`;
-        
-        const finalRes = await pool.query(
-            "UPDATE invoices SET invoice_number = $1 WHERE invoice_id = $2 RETURNING *",
-            [formattedNumber, invoiceId]
-        );
-        
         await pool.query('COMMIT');
-        return finalRes.rows[0];
+        return insertRes.rows[0];
     } catch (error) {
         await pool.query('ROLLBACK');
         console.error('Error generating invoice:', error);

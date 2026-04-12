@@ -685,7 +685,7 @@ export default function OrderDetails() {
               <tbody>
                 <tr>
                   <th>Invoice Number:</th>
-                  <td>{invoiceData?.invoice_number || `INV-PENDING`}</td>
+                  <td>{invoiceData?.invoice_id ? `inv ${invoiceData.invoice_id.toString().padStart(4, '0')}` : `INV-PENDING`}</td>
                 </tr>
                 <tr>
                   <th>Date Issued:</th>
