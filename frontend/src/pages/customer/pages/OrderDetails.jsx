@@ -5,6 +5,7 @@ import cartService from '../../../services/cartService'
 import paymentService from '../../../services/paymentService'
 import customerService from '../../../services/customerService'
 import { apiCall } from '../../../utils/auth.js'
+import OrderTimeline from '../components/OrderTimeline'
 import './OrderDetails.css'
 
 export default function OrderDetails() {
@@ -29,6 +30,7 @@ export default function OrderDetails() {
     customer_service: 0,
     comments: ''
   })
+  const [history, setHistory] = useState([])
   
   useEffect(() => {
     if (id) {
@@ -41,14 +43,14 @@ export default function OrderDetails() {
       setLoading(true)
       const data = await orderService.getOrderById(id)
       
-      // Fetch notifications for this specific order
-      const notifResponse = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/customer/notifications`)
-      if (notifResponse.ok) {
-        const notifData = await notifResponse.json()
-        data.notifications = notifData.notifications.filter(n => n.order_id === parseInt(id))
-      }
-      
       setOrderData(data)
+
+      // Fetch status history
+      const historyRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/orders/${id}/history`)
+      if (historyRes.ok) {
+        const historyData = await historyRes.json()
+        setHistory(historyData.history || [])
+      }
       
       // If delivered, check for existing feedback
       if (data.order.order_status === 'DELIVERED') {
@@ -424,7 +426,7 @@ export default function OrderDetails() {
             </div>
           </div>
 
-          {/* New: Status Updates / Notifications */}
+          {/* Order Progress Timeline */}
           <div style={{
             background: 'white',
             border: '1px solid #e5e7eb',
@@ -432,31 +434,7 @@ export default function OrderDetails() {
             padding: '25px',
             marginTop: '20px'
           }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '20px' }}>Status Updates</h2>
-            <div style={{ display: 'grid', gap: '15px' }}>
-              {orderData.notifications && orderData.notifications.length > 0 ? (
-                orderData.notifications.map((notif, idx) => (
-                  <div key={idx} style={{ 
-                    padding: '12px', 
-                    background: '#f9fafb', 
-                    borderRadius: '6px',
-                    borderLeft: '4px solid #2563eb'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151' }}>
-                        {notif.confirmation_type.replace('_', ' ').toUpperCase()}
-                      </span>
-                      <span style={{ fontSize: '11px', color: '#6b7280' }}>
-                        {new Date(notif.sent_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: '13px', color: '#4b5563', margin: 0 }}>{notif.message_content}</p>
-                  </div>
-                ))
-              ) : (
-                <p style={{ fontSize: '14px', color: '#6b7280' }}>No status updates yet.</p>
-              )}
-            </div>
+            <OrderTimeline history={history} />
           </div>
         </div>
 

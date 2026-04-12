@@ -186,6 +186,18 @@ const updateSupplier = async (req, res) => {
     }
 };
 
+const deleteSupplier = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const success = await inventoryService.deleteSupplier(id);
+        if (!success) return res.status(404).json({ error: "Supplier not found" });
+        res.json({ message: "Supplier deleted successfully" });
+    } catch (err) {
+        console.error("Error deleting supplier:", err);
+        res.status(500).json({ error: "Failed to delete supplier" });
+    }
+};
+
 export {
     getDashboard,
     getFabrics,
@@ -197,5 +209,6 @@ export {
     recordStockArrival,
     getSuppliers,
     addSupplier,
-    updateSupplier
+    updateSupplier,
+    deleteSupplier
 };

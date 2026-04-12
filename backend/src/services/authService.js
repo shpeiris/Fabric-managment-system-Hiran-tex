@@ -50,6 +50,27 @@ const findUserByEmailOrUsername = async (email, username) => {
  */
 const createUser = async (userData) => {
   const { full_name, email, phone, password, address } = userData;
+  
+  // Cross-table email uniqueness check
+  const emailCheck = await pool.query(
+    "SELECT email FROM customers WHERE email = $1 UNION SELECT email FROM employees WHERE email = $1",
+    [email]
+  );
+  if (emailCheck.rows.length > 0) {
+    throw new Error("A user with this email already exists in the system.");
+  }
+
+  // Phone uniqueness check
+  if (phone) {
+    const phoneCheck = await pool.query(
+      "SELECT tel FROM customers WHERE tel = $1 UNION SELECT telephone FROM employees WHERE telephone = $1",
+      [phone]
+    );
+    if (phoneCheck.rows.length > 0) {
+      throw new Error("This phone number is already registered.");
+    }
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {

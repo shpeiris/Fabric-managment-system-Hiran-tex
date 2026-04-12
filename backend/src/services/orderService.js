@@ -1,6 +1,15 @@
 import { pool } from '../config/db.js';
 import bcrypt from 'bcryptjs';
 
+const logOrderStatusHistory = async (orderId, oldStatus, newStatus, changedBy = {}) => {
+    const { name, id } = changedBy;
+    const query = `
+        INSERT INTO order_status_history (order_id, old_status, new_status, changed_by_name, changed_by_id)
+        VALUES ($1, $2, $3, $4, $5)
+    `;
+    await pool.query(query, [orderId, oldStatus, newStatus, name || 'System', id || null]);
+};
+
 const getUserOrders = async (userId) => {
     const query = `
       SELECT o.order_id, o.customer_name, o.order_status, o.total_amount, 
@@ -187,7 +196,14 @@ const createOrder = async (orderData) => {
             [finalCustomerId, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '', orderSource]
         );
 
+
         const orderId = orderResult.rows[0].order_id;
+
+        // Log initial PENDING status
+        await logOrderStatusHistory(orderId, null, 'PENDING', { 
+            name: customer_name || 'Customer', 
+            id: finalCustomerId 
+        });
 
         // Insert order items
         for (const item of processedItems) {
@@ -222,7 +238,11 @@ const createOrder = async (orderData) => {
     }
 };
 
-const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deliveryContactNumber = null, trackingId = null) => {
+const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deliveryContactNumber = null, trackingId = null, actor = {}) => {
+    // Get current status before update
+    const currentOrder = await pool.query("SELECT order_status FROM orders WHERE order_id = $1", [orderId]);
+    const oldStatus = currentOrder.rows.length > 0 ? currentOrder.rows[0].order_status : null;
+
     let query = "UPDATE orders SET order_status = $1";
     const params = [order_status, orderId];
     let paramIndex = 3;
@@ -244,7 +264,23 @@ const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deli
 
     const result = await pool.query(query, params);
     if (result.rows.length === 0) return null;
+
+    // Log the transition
+    if (oldStatus !== order_status) {
+        await logOrderStatusHistory(orderId, oldStatus, order_status, actor);
+    }
+
     return result.rows[0];
+};
+
+const getOrderStatusHistory = async (orderId) => {
+    const query = `
+        SELECT * FROM order_status_history 
+        WHERE order_id = $1 
+        ORDER BY created_at ASC
+    `;
+    const result = await pool.query(query, [orderId]);
+    return result.rows;
 };
 
 export {
@@ -252,5 +288,6 @@ export {
     getOrderById,
     getOrders,
     createOrder,
-    updateOrderStatus
+    updateOrderStatus,
+    getOrderStatusHistory
 };

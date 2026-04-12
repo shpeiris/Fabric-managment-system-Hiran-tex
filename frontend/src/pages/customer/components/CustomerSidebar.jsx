@@ -116,6 +116,24 @@ export default function CustomerSidebar() {
         </NavLink>
 
         <NavLink
+          to="/customer/notifications"
+          style={({ isActive }) => ({
+            display: 'flex',
+            alignItems: 'center',
+            padding: '12px 20px',
+            textDecoration: 'none',
+            color: isActive ? '#22c55e' : 'white',
+            background: isActive ? 'rgba(34, 197, 94, 0.1)' : 'transparent',
+            borderLeft: isActive ? '3px solid #22c55e' : '3px solid transparent',
+            fontSize: '14px',
+            fontWeight: isActive ? '500' : '400',
+            transition: 'all 0.2s'
+          })}
+        >
+          Notifications
+        </NavLink>
+
+        <NavLink
           to="/customer/profile"
           style={({ isActive }) => ({
             display: 'flex',

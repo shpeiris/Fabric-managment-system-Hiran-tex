@@ -59,5 +59,6 @@ router.post('/api/inventory/stock-arrivals', ...adminOrInventoryManager, invento
 router.get('/api/inventory/suppliers', ...adminOrInventoryManager, inventoryController.getSuppliers);
 router.post('/api/inventory/suppliers', ...adminOrInventoryManager, inventoryController.addSupplier);
 router.put('/api/inventory/suppliers/:id', ...adminOrInventoryManager, inventoryController.updateSupplier);
+router.delete('/api/inventory/suppliers/:id', ...adminOrInventoryManager, inventoryController.deleteSupplier);
 
 export default router;

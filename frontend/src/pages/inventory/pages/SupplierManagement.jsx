@@ -10,6 +10,7 @@ export default function SupplierManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Form State
   const [formData, setFormData] = useState({
@@ -98,6 +99,12 @@ export default function SupplierManagement() {
     });
     setShowEditModal(true);
   };
+  
+  const filteredSuppliers = suppliers.filter(s => 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.supplier_id.toString().includes(searchTerm) ||
+    s.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading)
     return <div style={{ padding: "20px" }}>Loading suppliers...</div>;
@@ -133,7 +140,32 @@ export default function SupplierManagement() {
               {suppliers.length}
             </span>
           </div>
-          <button
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="Search suppliers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #e5e7eb",
+                  fontSize: "14px",
+                  width: "250px",
+                  outline: "none"
+                }}
+              />
+              {searchTerm && (
+                <button 
+                  onClick={() => setSearchTerm("")}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: '#9ca3af' }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <button
             style={{
               backgroundColor: "#2563eb",
               color: "white",
@@ -241,7 +273,7 @@ export default function SupplierManagement() {
               </tr>
             </thead>
             <tbody>
-              {suppliers.length === 0 ? (
+              {filteredSuppliers.length === 0 ? (
                 <tr>
                   <td
                     colSpan="7"
@@ -251,11 +283,11 @@ export default function SupplierManagement() {
                       color: "#6b7280",
                     }}
                   >
-                    No suppliers found. Add one to get started.
+                    {searchTerm ? "No suppliers match your search." : "No suppliers found. Add one to get started."}
                   </td>
                 </tr>
               ) : (
-                suppliers.map((supplier) => (
+                filteredSuppliers.map((supplier) => (
                   <tr
                     key={supplier.supplier_id}
                     style={{ borderBottom: "1px solid #f3f4f6" }}
