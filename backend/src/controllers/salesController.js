@@ -35,6 +35,23 @@ const createCustomer = async (req, res) => {
     }
 };
 
+const searchCustomerByPhone = async (req, res) => {
+    try {
+        const { phone } = req.query;
+        if (!phone || phone.trim().length < 3) {
+            return res.status(400).json({ error: 'Phone number too short to search' });
+        }
+        const customer = await salesService.findCustomerByPhone(phone.trim());
+        if (!customer) {
+            return res.status(404).json({ found: false });
+        }
+        res.json({ found: true, customer });
+    } catch (err) {
+        console.error('Error searching customer:', err);
+        res.status(500).json({ error: 'Failed to search customer' });
+    }
+};
+
 const getOrders = async (req, res) => {
     try {
         const orders = await orderService.getOrders(req.query);
@@ -137,6 +154,7 @@ export {
     getDashboard,
     getCustomers,
     createCustomer,
+    searchCustomerByPhone,
     getOrders,
     getPendingVerifications,
     getPendingPayments,

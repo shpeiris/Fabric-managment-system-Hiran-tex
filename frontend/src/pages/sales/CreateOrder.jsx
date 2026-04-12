@@ -1,49 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiCall } from "../../utils/auth.js";
 import { 
   ShoppingCart, 
   ArrowLeft, 
   User, 
-  MapPin, 
-  CreditCard, 
   PackageSearch,
   Plus,
   Trash2,
-  CheckCircle2
+  CheckCircle2,
+  Search,
+  UserCheck,
+  UserPlus
 } from "lucide-react";
 import "./CreateOrder.css";
 
 export default function NewOrder() {
     const navigate = useNavigate();
-    const [customers, setCustomers] = useState([]);
     const [fabrics, setFabrics] = useState([]);
-    const [selectedCustomer, setSelectedCustomer] = useState("");
+
+    // Customer lookup state
+    const [phoneSearch, setPhoneSearch] = useState("");
+    const [searching, setSearching] = useState(false);
+    const [foundCustomer, setFoundCustomer] = useState(null);
+    const [customerNotFound, setCustomerNotFound] = useState(false);
     const [customerName, setCustomerName] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState("");
+    const [address, setAddress] = useState("");
+    const searchTimeout = useRef(null);
+
     const [cart, setCart] = useState([]);
     const [selectedFabricName, setSelectedFabricName] = useState("");
     const [selectedFabric, setSelectedFabric] = useState("");
     const [quantity, setQuantity] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState("Cash");
-    const [deliveryType] = useState("Pickup");
-    const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetchCustomers();
         fetchFabrics();
     }, []);
-
-    const fetchCustomers = async () => {
-        try {
-            const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/customers`);
-            const data = await res.json();
-            if (res.ok) setCustomers(data.customers || []);
-        } catch (err) {
-            console.error("Error fetching customers:", err);
-        }
-    };
 
     const fetchFabrics = async () => {
         try {
@@ -55,27 +49,63 @@ export default function NewOrder() {
         }
     };
 
+    const handlePhoneChange = (val) => {
+        setPhoneSearch(val);
+        setFoundCustomer(null);
+        setCustomerNotFound(false);
+        setCustomerName("");
+        setAddress("");
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        if (val.trim().length >= 7) {
+            searchTimeout.current = setTimeout(() => searchCustomer(val.trim()), 600);
+        }
+    };
+
+    const searchCustomer = async (phone) => {
+        try {
+            setSearching(true);
+            const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/customers/search?phone=${encodeURIComponent(phone)}`);
+            const data = await res.json();
+            if (res.ok && data.found) {
+                setFoundCustomer(data.customer);
+                setCustomerName(data.customer.full_name);
+                setAddress(data.customer.address || "");
+                setCustomerNotFound(false);
+            } else {
+                setFoundCustomer(null);
+                setCustomerNotFound(true);
+            }
+        } catch (err) {
+            console.error("Customer search error:", err);
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    const clearCustomer = () => {
+        setPhoneSearch("");
+        setFoundCustomer(null);
+        setCustomerNotFound(false);
+        setCustomerName("");
+        setAddress("");
+    };
+
     const addToCart = () => {
         if (!selectedFabric) return alert("Select a fabric");
         if (quantity <= 0) return alert("Invalid quantity");
-
         const fabricFn = fabrics.find(f => f.fabric_id == selectedFabric);
         if (!fabricFn) return;
-
         const qtyNum = Number(quantity);
         if (qtyNum > Number(fabricFn.stock_available_quantity)) {
             return alert(`Insufficient stock! Available: ${fabricFn.stock_available_quantity}m`);
         }
-
-        const newItem = {
+        setCart([...cart, {
             fabric_id: fabricFn.fabric_id,
             name: `${fabricFn.name} (${fabricFn.color || 'Standard'})`,
             price: Number(fabricFn.price_per_meter),
             quantity: qtyNum,
             total: Number(fabricFn.price_per_meter) * qtyNum
-        };
-
-        setCart([...cart, newItem]);
+        }]);
         setSelectedFabric("");
         setQuantity(1);
     };
@@ -88,35 +118,29 @@ export default function NewOrder() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!selectedCustomer && !customerName.trim()) return alert("Please select a customer or type a Walk-in Name");
+        if (!phoneSearch.trim() && !customerName.trim()) return alert("Please enter a customer phone number or name");
         if (cart.length === 0) return alert("Order cart is empty");
-
         try {
             setLoading(true);
             const payload = {
-                customer_id: selectedCustomer || null,
-                customer_name: customerName.trim() || undefined,
-                phone_number: phoneNumber.trim() || undefined,
+                customer_id: foundCustomer ? foundCustomer.customer_id : null,
+                customer_name: foundCustomer ? foundCustomer.full_name : customerName.trim(),
+                phone_number: phoneSearch.trim() || undefined,
                 items: cart.map(item => ({ fabric_id: item.fabric_id, quantity: item.quantity })),
-                delivery_address: address,
-                delivery_type: deliveryType,
+                delivery_address: address || "Store Walk-in",
+                delivery_type: "STORE_PICKUP",
                 payment_method: paymentMethod
             };
-
             const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders`, {
                 method: "POST",
                 body: JSON.stringify(payload)
             });
-
             const data = await res.json();
             if (res.ok) {
-                alert("Order placed successfully! Order ID: " + data.order_id);
+                alert(`Order placed!\nOrder ID: ${data.order_id}\nCustomer: ${payload.customer_name}`);
                 setCart([]);
-                setSelectedCustomer("");
-                setCustomerName("");
-                setPhoneNumber("");
-                setAddress("");
-                navigate("/sales/orders"); // Optional: Navigate back to orders list
+                clearCustomer();
+                navigate("/sales/orders");
             } else {
                 alert(data.error || "Order failed");
             }
@@ -129,7 +153,6 @@ export default function NewOrder() {
     };
 
     const totalAmount = cart.reduce((acc, item) => acc + item.total, 0);
-
 
 
     return (
@@ -148,67 +171,79 @@ export default function NewOrder() {
                     
                     {/* Customer Info Card */}
                     <div className="order-section-card">
-                        <h3><User size={20} color="#3b82f6" /> Customer Details</h3>
-                        
-                        <div className="form-row" style={{ alignItems: 'flex-start' }}>
-                            <div className="form-group">
-                                <label>Select Existing Customer</label>
-                                <select 
-                                    value={selectedCustomer} 
-                                    onChange={(e) => {
-                                        setSelectedCustomer(e.target.value);
-                                        if (e.target.value) setCustomerName("");
-                                    }}
-                                >
-                                    <option value="">-- Choose Account --</option>
-                                    {customers.map(c => (
-                                        <option key={c.id} value={c.id}>{c.full_name} ({c.email})</option>
-                                    ))}
-                                </select>
+                        <h3><User size={20} color="#3b82f6" /> Customer Lookup</h3>
+
+                        {/* Phone Search */}
+                        <div className="form-group">
+                            <label>Customer Phone Number</label>
+                            <div style={{ position: 'relative', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <div style={{ position: 'relative', flex: 1 }}>
+                                    <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                    <input
+                                        type="text"
+                                        placeholder="Enter phone number to search (e.g. 0771234567)"
+                                        value={phoneSearch}
+                                        onChange={(e) => handlePhoneChange(e.target.value)}
+                                        style={{ paddingLeft: '34px' }}
+                                    />
+                                </div>
+                                {(foundCustomer || customerNotFound) && (
+                                    <button type="button" onClick={clearCustomer} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', cursor: 'pointer', fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                                        Clear
+                                    </button>
+                                )}
                             </div>
-                            <div className="form-group">
-                                <label>OR Type Walk-in Name</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Enter Name (No Account)" 
-                                    value={customerName}
-                                    onChange={(e) => {
-                                        setCustomerName(e.target.value);
-                                        if (e.target.value) setSelectedCustomer("");
-                                    }}
-                                />
-                            </div>
+                            {searching && <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>🔍 Searching...</p>}
                         </div>
 
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Contact Number (Optional)</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="e.g. 0771234567" 
-                                    value={phoneNumber}
-                                    onChange={(e) => setPhoneNumber(e.target.value)}
-                                />
+                        {/* Returning Customer Found */}
+                        {foundCustomer && (
+                            <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '14px', marginBottom: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                    <UserCheck size={18} color="#16a34a" />
+                                    <span style={{ fontWeight: '700', color: '#15803d', fontSize: '14px' }}>Returning Customer Found!</span>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '13px', color: '#166534' }}>
+                                    <div><strong>ID:</strong> #{foundCustomer.customer_id}</div>
+                                    <div><strong>Name:</strong> {foundCustomer.full_name}</div>
+                                    <div><strong>Phone:</strong> {foundCustomer.tel}</div>
+                                    <div><strong>Orders:</strong> {foundCustomer.total_orders} | Spent: Rs.{Number(foundCustomer.total_spent).toLocaleString()}</div>
+                                </div>
+                                {foundCustomer.address && <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}><strong>Address:</strong> {foundCustomer.address}</div>}
                             </div>
-                            <div className="form-group">
-                                <label>Home Address (Optional)</label>
-                                <textarea 
-                                    value={address} 
-                                    onChange={(e) => setAddress(e.target.value)} 
-                                    placeholder="Enter full home/delivery address"
-                                    style={{ minHeight: '40px', resize: 'vertical' }}
-                                />
-                            </div>
-                        </div>
+                        )}
 
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Delivery Method</label>
-                                <select value={deliveryType} disabled>
-                                    <option value="Pickup">Store Pickup (Walk-in)</option>
-                                </select>
+                        {/* New Walk-in Customer */}
+                        {customerNotFound && (
+                            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '14px', marginBottom: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                    <UserPlus size={18} color="#d97706" />
+                                    <span style={{ fontWeight: '700', color: '#b45309', fontSize: '14px' }}>New Customer — Enter Details</span>
+                                </div>
+                                <div className="form-group" style={{ marginBottom: '8px' }}>
+                                    <label>Customer Name *</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter full name"
+                                        value={customerName}
+                                        onChange={(e) => setCustomerName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label>Address (Optional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter address"
+                                        value={address}
+                                        onChange={(e) => setAddress(e.target.value)}
+                                    />
+                                </div>
                             </div>
+                        )}
 
+                        {/* Payment Method */}
+                        <div className="form-row">
                             <div className="form-group">
                                 <label>Payment Method</label>
                                 <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>

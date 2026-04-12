@@ -36,7 +36,7 @@ const getOrderById = async (orderId, userId = null) => {
                f.customer_service,
                f.comments as feedback_comments,
                f.created_at as feedback_date,
-               inv.invoice_number
+               inv.invoice_id
         FROM orders o
         LEFT JOIN (
             SELECT DISTINCT ON (order_id) *
@@ -79,7 +79,7 @@ const getOrders = async (filters) => {
            p.payment_id, p.payment_status, p.payment_method, p.bank_slip_url,
            fb.overall_rating as feedback_rating,
            fb.comments as feedback_comments,
-           inv.invoice_number
+           inv.invoice_id
     FROM orders o
     LEFT JOIN payments p ON o.order_id = p.order_id
     LEFT JOIN feedback fb ON o.order_id = fb.order_id
@@ -178,10 +178,13 @@ const createOrder = async (orderData) => {
             }
         }
 
+        // Determine order source: ONLINE if a real customer placed it, IN_STORE for walk-in
+        const orderSource = customer_id ? 'ONLINE' : 'IN_STORE';
+
         // Insert order with all fields
         const orderResult = await pool.query(
-            "INSERT INTO orders (customer_id, customer_name, phone_number, total_amount, delivery_address, delivery_type, special_instructions, order_status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING') RETURNING order_id",
-            [finalCustomerId, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '']
+            "INSERT INTO orders (customer_id, customer_name, phone_number, total_amount, delivery_address, delivery_type, special_instructions, order_status, order_source) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING', $8) RETURNING order_id",
+            [finalCustomerId, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '', orderSource]
         );
 
         const orderId = orderResult.rows[0].order_id;

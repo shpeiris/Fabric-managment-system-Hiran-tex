@@ -453,7 +453,7 @@ export default function Orders() {
                     disabled={fetchingInvoice}
                   >
                     <FileText size={14} /> 
-                    {order.invoice_number ? order.invoice_number.toUpperCase() : 'View Invoice'}
+                    {order.invoice_id ? `inv ${order.invoice_id.toString().padStart(4, '0')}`.toUpperCase() : 'View Invoice'}
                   </button>
                 </td>
                 <td>

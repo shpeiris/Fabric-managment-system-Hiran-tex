@@ -94,6 +94,7 @@ CREATE TABLE orders (
     delivered_by VARCHAR(255),
     delivery_contact_number VARCHAR(20),
     tracking_id VARCHAR(100),
+    order_source VARCHAR(20) DEFAULT 'ONLINE' CHECK (order_source IN ('ONLINE', 'IN_STORE')),
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
