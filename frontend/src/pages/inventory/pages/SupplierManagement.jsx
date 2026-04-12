@@ -189,6 +189,7 @@ export default function SupplierManagement() {
             + Add New Supplier
           </button>
         </div>
+      </div>
 
         {/* Suppliers Table */}
         <div style={{ overflowX: "auto" }}>
