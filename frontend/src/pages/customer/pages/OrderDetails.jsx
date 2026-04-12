@@ -692,7 +692,7 @@ export default function OrderDetails() {
                   <td>{invoiceData ? new Date(invoiceData.created_at).toLocaleDateString() : new Date().toLocaleDateString()}</td>
                 </tr>
                 <tr>
-                  <th>Order Reference:</th>
+                  <th>Order ID:</th>
                   <td>#{order.order_id}</td>
                 </tr>
                 <tr>
