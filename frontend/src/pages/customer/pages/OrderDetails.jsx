@@ -5,6 +5,7 @@ import cartService from '../../../services/cartService'
 import paymentService from '../../../services/paymentService'
 import customerService from '../../../services/customerService'
 import { apiCall } from '../../../utils/auth.js'
+import './OrderDetails.css'
 
 export default function OrderDetails() {
   const { id } = useParams()
@@ -14,6 +15,9 @@ export default function OrderDetails() {
   const [error, setError] = useState(null)
   const [uploadLoading, setUploadLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
+  
+  const [invoiceData, setInvoiceData] = useState(null)
+  const [isPrinting, setIsPrinting] = useState(false)
 
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [feedback, setFeedback] = useState(null)
@@ -86,6 +90,34 @@ export default function OrderDetails() {
       alert("Failed to reorder items. Some items might be out of stock.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handlePrintInvoice = async () => {
+    try {
+      setIsPrinting(true);
+      // Fetch or generate invoice
+      let invRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/invoices/order/${id}`);
+      if (!invRes.ok) {
+        // Try generating
+        invRes = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/invoices/generate/${id}`, { method: 'POST' });
+        if (!invRes.ok) throw new Error("Failed to generate invoice");
+      }
+      const data = await invRes.json();
+      setInvoiceData(data);
+      
+      // Delay slightly for React to re-render the printable section before printing
+      setTimeout(() => {
+        window.print();
+        setIsPrinting(false);
+      }, 300);
+    } catch (err) {
+      console.error("Print error:", err);
+      // Fallback to print anyway if it fails to get invoice number
+      setTimeout(() => {
+        window.print();
+        setIsPrinting(false);
+      }, 300);
     }
   }
 
@@ -467,7 +499,8 @@ export default function OrderDetails() {
           }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '15px' }}>Actions</h2>
             <button 
-              onClick={() => window.print()}
+              onClick={handlePrintInvoice}
+              disabled={isPrinting}
               style={{
                 background: 'transparent',
                 color: '#2563eb',
@@ -475,13 +508,14 @@ export default function OrderDetails() {
                 padding: '12px',
                 borderRadius: '6px',
                 fontSize: '14px',
-                cursor: 'pointer',
+                cursor: isPrinting ? 'not-allowed' : 'pointer',
+                opacity: isPrinting ? 0.7 : 1,
                 fontWeight: '500',
                 width: '100%',
                 marginBottom: '10px'
               }}
             >
-              Print Invoice
+              {isPrinting ? 'Preparing Invoice...' : 'Print Invoice'}
             </button>
             <button style={{
               background: '#22c55e',
@@ -621,6 +655,105 @@ export default function OrderDetails() {
               )}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Printable Invoice Section */}
+      <div className="printable-invoice">
+        <div className="invoice-header">
+          <div className="invoice-title-section">
+            <h1>INVOICE</h1>
+            <p>Hiran Fabric Textile</p>
+          </div>
+          <div className="company-details">
+            <h2>Hiran Fabric Textile</h2>
+            <p>No 72, New Shopping Complex</p>
+            <p>Nittambuwa, Sri Lanka</p>
+            <p>+94 77 112 4088</p>
+            <p>hiranfabrictextile@gmail.com</p>
+          </div>
+        </div>
+
+        <div className="invoice-meta">
+          <div className="bill-to">
+            <h3>Bill To:</h3>
+            <p><strong>{order.customer_name || 'Customer'}</strong></p>
+            <p>{order.delivery_address || 'Address not provided'}</p>
+          </div>
+          <div className="invoice-info-table">
+            <table>
+              <tbody>
+                <tr>
+                  <th>Invoice Number:</th>
+                  <td>{invoiceData?.invoice_number || `INV-PENDING`}</td>
+                </tr>
+                <tr>
+                  <th>Date Issued:</th>
+                  <td>{invoiceData ? new Date(invoiceData.created_at).toLocaleDateString() : new Date().toLocaleDateString()}</td>
+                </tr>
+                <tr>
+                  <th>Order Reference:</th>
+                  <td>#{order.order_id}</td>
+                </tr>
+                <tr>
+                  <th>Order Date:</th>
+                  <td>{new Date(order.order_date).toLocaleDateString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <table className="items-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th className="right">Quantity (m)</th>
+              <th className="right">Unit Price</th>
+              <th className="right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map(item => (
+              <tr key={item.order_item_id}>
+                <td>
+                  <strong>{item.fabric_name}</strong>
+                  <div style={{color: '#6b7280', fontSize: '12px'}}>Item #{item.fabric_id}</div>
+                </td>
+                <td className="right">{item.quantity}</td>
+                <td className="right">Rs. {parseFloat(item.unit_price).toFixed(2)}</td>
+                <td className="right">Rs. {parseFloat(item.total_price).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="invoice-totals">
+          <table>
+            <tbody>
+              <tr>
+                <td>Subtotal</td>
+                <td className="right">Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+              <tr>
+                <td>Delivery</td>
+                <td className="right">Rs. {deliveryFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+              <tr>
+                <td>Tax</td>
+                <td className="right">Rs. {tax.toFixed(2)}</td>
+              </tr>
+              <tr className="total-row">
+                <td>Total Due</td>
+                <td className="right">Rs. {parseFloat(order.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="invoice-footer">
+          <p>Thank you for your business! For any inquiries regarding this invoice, please contact us.</p>
+          <p>This is a computer-generated document and requires no physical signature.</p>
         </div>
       </div>
     </div>
