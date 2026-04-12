@@ -35,7 +35,8 @@ const getOrderById = async (orderId, userId = null) => {
                f.delivery,
                f.customer_service,
                f.comments as feedback_comments,
-               f.created_at as feedback_date
+               f.created_at as feedback_date,
+               inv.invoice_id
         FROM orders o
         LEFT JOIN (
             SELECT DISTINCT ON (order_id) *
@@ -43,6 +44,7 @@ const getOrderById = async (orderId, userId = null) => {
             ORDER BY order_id, payment_date DESC
         ) p ON o.order_id = p.order_id
         LEFT JOIN feedback f ON o.order_id = f.order_id
+        LEFT JOIN invoices inv ON o.order_id = inv.order_id
         WHERE o.order_id = $1
     `;
     let params = [orderId];
@@ -76,10 +78,12 @@ const getOrders = async (filters) => {
            END as customer_name,
            p.payment_id, p.payment_status, p.payment_method, p.bank_slip_url,
            fb.overall_rating as feedback_rating,
-           fb.comments as feedback_comments
+           fb.comments as feedback_comments,
+           inv.invoice_id
     FROM orders o
     LEFT JOIN payments p ON o.order_id = p.order_id
     LEFT JOIN feedback fb ON o.order_id = fb.order_id
+    LEFT JOIN invoices inv ON o.order_id = inv.order_id
     WHERE 1=1
   `;
     const params = [];
@@ -174,10 +178,13 @@ const createOrder = async (orderData) => {
             }
         }
 
+        // Determine order source: ONLINE if a real customer placed it, IN_STORE for walk-in
+        const orderSource = customer_id ? 'ONLINE' : 'IN_STORE';
+
         // Insert order with all fields
         const orderResult = await pool.query(
-            "INSERT INTO orders (customer_id, customer_name, phone_number, total_amount, delivery_address, delivery_type, special_instructions, order_status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING') RETURNING order_id",
-            [finalCustomerId, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '']
+            "INSERT INTO orders (customer_id, customer_name, phone_number, total_amount, delivery_address, delivery_type, special_instructions, order_status, order_source) VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING', $8) RETURNING order_id",
+            [finalCustomerId, customer_name || '', phone_number || '', totalAmount, delivery_address, delivery_type, special_instructions || '', orderSource]
         );
 
         const orderId = orderResult.rows[0].order_id;
@@ -215,7 +222,7 @@ const createOrder = async (orderData) => {
     }
 };
 
-const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deliveryContactNumber = null) => {
+const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deliveryContactNumber = null, trackingId = null) => {
     let query = "UPDATE orders SET order_status = $1";
     const params = [order_status, orderId];
     let paramIndex = 3;
@@ -227,6 +234,10 @@ const updateOrderStatus = async (orderId, order_status, deliveredBy = null, deli
     if (deliveryContactNumber) {
         query += `, delivery_contact_number = $${paramIndex++}`;
         params.push(deliveryContactNumber);
+    }
+    if (trackingId) {
+        query += `, tracking_id = $${paramIndex++}`;
+        params.push(trackingId);
     }
 
     query += " WHERE order_id = $2 RETURNING *";

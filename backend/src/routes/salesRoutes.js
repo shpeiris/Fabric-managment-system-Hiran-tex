@@ -14,6 +14,7 @@ router.get('/sales/customers', ...salesAuth, salesController.getCustomersView);
 router.get('/api/sales/dashboard', ...adminOrSales, salesController.getDashboard);
 router.get('/api/sales/customers', ...adminOrSales, salesController.getCustomers);
 router.post('/api/sales/customers', ...adminOrSales, salesController.createCustomer);
+router.get('/api/sales/customers/search', ...adminOrSales, salesController.searchCustomerByPhone);
 
 // Order Management Routes
 router.get('/api/sales/orders', ...adminOrSales, salesController.getOrders);

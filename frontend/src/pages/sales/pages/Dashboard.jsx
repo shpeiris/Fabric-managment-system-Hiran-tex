@@ -171,6 +171,39 @@ export default function SalesDashboard() {
     }
   };
 
+  const handlePrintInvoice = async (orderId) => {
+    try {
+      // 1. Generate/Record the invoice in the official DB table
+      const response = await apiCall(`/api/invoices/generate/${orderId}`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        // 2. Refresh dashboard data so the invoice_number appears in the local state
+        const data = await fetchDashboardData();
+        
+        // 3. Update the selected order if it's the one we just printed
+        if (data && selectedOrder && selectedOrder.order_id === orderId) {
+            const updated = data.recentOrders.find(o => o.order_id === orderId) ||
+                            data.pendingPayments.find(o => o.order_id === orderId);
+            if (updated) setSelectedOrder(updated);
+        }
+
+        // 4. Trigger the browser print
+        setTimeout(() => {
+          window.print();
+        }, 300);
+      } else {
+        console.error("Failed to generate official invoice record");
+        // Fallback to basic print if recording fails
+        window.print();
+      }
+    } catch (error) {
+      console.error("Error during invoice generation:", error);
+      window.print();
+    }
+  };
+
   const handleVerifyOrder = async (orderId, action) => {
     try {
       setActionLoading(true);
@@ -232,80 +265,121 @@ export default function SalesDashboard() {
 
   const renderInvoice = (order) => {
     if (!order) return null;
-    
     const items = order.items || [];
-    const subtotal = items.reduce((sum, item) => sum + Number(item.total_price), 0);
     
     return (
-      <div className="invoice-container" id="printable-invoice" style={{ padding: '20px', background: 'white', color: '#1a1a1a' }}>
-        <div className="invoice-header" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #001a66', paddingBottom: '15px', marginBottom: '20px' }}>
+      <div className="invoice-container" id="printable-invoice" style={{ padding: '40px', background: 'white', color: '#1a1a1a', fontFamily: "'Helvetica Neue', 'Helvetica', Arial, sans-serif", maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
+        
+        {/* Header */}
+        <div className="invoice-header" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #001a66', paddingBottom: '20px', marginBottom: '30px' }}>
           <div>
-            <h2 style={{ color: '#001a66', margin: 0 }}>Hiran Fabric Textile</h2>
-            <p style={{ fontSize: '12px', margin: '4px 0', color: '#666' }}>Official Order Invoice</p>
+            <h2 style={{ color: '#001a66', margin: '0 0 5px 0', fontSize: '28px', fontWeight: '800' }}>HIRAN FABRIC TEXTILE</h2>
+            <p style={{ margin: '2px 0', color: '#475569', fontSize: '13px' }}>123 Textile Road, Gampaha, Sri Lanka</p>
+            <p style={{ margin: '2px 0', color: '#475569', fontSize: '13px' }}>Phone: +94 77 123 4567 | Email: support@hiranfabric.com</p>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontWeight: 'bold', margin: 0 }}>Order #{order.order_id}</p>
-            <p style={{ fontSize: '12px', margin: '4px 0', color: '#666' }}>Date: {new Date(order.order_date).toLocaleDateString()}</p>
+            <h1 style={{ margin: '0 0 10px 0', color: '#cbd5e1', fontSize: '36px', textTransform: 'uppercase', letterSpacing: '2px' }}>Invoice</h1>
+            <p style={{ fontWeight: 'bold', margin: '0 0 5px 0', color: '#0f172a', fontSize: '16px' }}>
+              {order.invoice_number ? order.invoice_number.toUpperCase() : `ORDER #${order.order_id}`}
+            </p>
+            <p style={{ margin: '2px 0', color: '#64748b', fontSize: '13px' }}>Date: {new Date(order.order_date || new Date()).toLocaleDateString()}</p>
           </div>
         </div>
 
-        <div className="invoice-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
-          <div className="customer-details">
-            <h5 style={{ margin: '0 0 8px 0', color: '#333', textTransform: 'uppercase', fontSize: '11px' }}>Bill To:</h5>
-            <p style={{ fontWeight: '600', margin: '0 0 4px 0' }}>{order.customer_name}</p>
-            <p style={{ fontSize: '13px', margin: '2px 0' }}>{order.customer_email || 'No email provided'}</p>
+        {/* Customer & Shipping Info */}
+        <div className="invoice-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', gap: '20px' }}>
+          <div style={{ flex: 1, background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
+            <h5 style={{ margin: '0 0 10px 0', color: '#001a66', textTransform: 'uppercase', fontSize: '12px', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>Billed To</h5>
+            <p style={{ fontWeight: '700', margin: '0 0 5px 0', color: '#0f172a' }}>{order.customer_name || 'Walk-in Customer'}</p>
+            <p style={{ margin: '2px 0', fontSize: '13px', color: '#475569' }}>{order.phone_number || 'No phone provided'}</p>
+            {order.customer_email && <p style={{ margin: '2px 0', fontSize: '13px', color: '#475569' }}>{order.customer_email}</p>}
           </div>
-          <div className="order-status-info" style={{ textAlign: 'right' }}>
-            <h5 style={{ margin: '0 0 8px 0', color: '#333', textTransform: 'uppercase', fontSize: '11px' }}>Status:</h5>
-            <span style={{ 
-              padding: '4px 12px', 
-              borderRadius: '20px', 
-              fontSize: '11px', 
-              fontWeight: 'bold',
-              background: '#001a66',
-              color: 'white'
-            }}>
-              {order.order_status}
-            </span>
+
+          <div style={{ flex: 1, background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
+            <h5 style={{ margin: '0 0 10px 0', color: '#001a66', textTransform: 'uppercase', fontSize: '12px', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>Shipped To</h5>
+            <p style={{ margin: '0 0 5px 0', fontSize: '13px', color: '#0f172a', fontWeight: '500' }}>
+               Delivery Method: {order.delivery_type || 'Standard'}
+            </p>
+            <p style={{ margin: '2px 0', fontSize: '13px', color: '#475569', lineHeight: '1.4' }}>
+              {order.delivery_address || 'Store Pickup'}
+            </p>
           </div>
         </div>
 
-        <table className="invoice-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+        {/* Tracking & Delivery Details */}
+        {(order.tracking_id || order.delivered_by) && (
+          <div style={{ marginBottom: '30px', background: '#ecfdf5', padding: '15px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
+             <h5 style={{ margin: '0 0 10px 0', color: '#065f46', textTransform: 'uppercase', fontSize: '12px', borderBottom: '1px solid #a7f3d0', paddingBottom: '5px' }}>Delivery Logistics</h5>
+             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                {order.tracking_id && (
+                  <div>
+                    <span style={{ fontSize: '12px', color: '#047857', display: 'block' }}>Tracking / Reference ID</span>
+                    <strong style={{ color: '#064e3b' }}>{order.tracking_id}</strong>
+                  </div>
+                )}
+                {order.delivered_by && (
+                  <div>
+                    <span style={{ fontSize: '12px', color: '#047857', display: 'block' }}>Assigned Driver</span>
+                    <strong style={{ color: '#064e3b' }}>{order.delivered_by} {order.delivery_contact_number ? `(${order.delivery_contact_number})` : ''}</strong>
+                  </div>
+                )}
+             </div>
+          </div>
+        )}
+
+        {/* Special Instructions */}
+        {order.special_instructions && (
+          <div style={{ marginBottom: '30px', background: '#fffbeb', padding: '15px', borderRadius: '8px', border: '1px solid #fde68a' }}>
+             <h5 style={{ margin: '0 0 5px 0', color: '#92400e', textTransform: 'uppercase', fontSize: '12px' }}>Customer Notes / Special Instructions</h5>
+             <p style={{ margin: 0, fontSize: '13px', color: '#b45309', fontStyle: 'italic' }}>
+               "{order.special_instructions}"
+             </p>
+          </div>
+        )}
+
+        {/* Items Table */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
           <thead>
-            <tr style={{ background: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
-              <th style={{ padding: '12px', textAlign: 'left', fontSize: '13px' }}>Fabric Name</th>
-              <th style={{ padding: '12px', textAlign: 'center', fontSize: '13px' }}>Quantity</th>
-              <th style={{ padding: '12px', textAlign: 'right', fontSize: '13px' }}>Unit Price</th>
-              <th style={{ padding: '12px', textAlign: 'right', fontSize: '13px' }}>Total</th>
+            <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
+              <th style={{ padding: '12px 15px', textAlign: 'left', fontSize: '12px', color: '#475569', textTransform: 'uppercase' }}>Description</th>
+              <th style={{ padding: '12px 15px', textAlign: 'center', fontSize: '12px', color: '#475569', textTransform: 'uppercase' }}>Qty</th>
+              <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '12px', color: '#475569', textTransform: 'uppercase' }}>Unit Price</th>
+              <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '12px', color: '#475569', textTransform: 'uppercase' }}>Amount</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item, idx) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #f1f1f1' }}>
-                <td style={{ padding: '12px', fontSize: '13px' }}>{item.fabric_name}</td>
-                <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px' }}>{item.quantity} m</td>
-                <td style={{ padding: '12px', textAlign: 'right', fontSize: '13px' }}>Rs. {Number(item.unit_price).toLocaleString()}</td>
-                <td style={{ padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '500' }}>Rs. {Number(item.total_price).toLocaleString()}</td>
+              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <td style={{ padding: '15px', fontSize: '14px', color: '#0f172a' }}>
+                  <strong>{item.fabric_name}</strong>
+                </td>
+                <td style={{ padding: '15px', textAlign: 'center', fontSize: '14px', color: '#475569' }}>{item.quantity} m</td>
+                <td style={{ padding: '15px', textAlign: 'right', fontSize: '14px', color: '#475569' }}>Rs. {Number(item.unit_price).toLocaleString()}</td>
+                <td style={{ padding: '15px', textAlign: 'right', fontSize: '14px', color: '#0f172a', fontWeight: '600' }}>Rs. {Number(item.total_price).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="invoice-total" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ width: '250px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '2px solid #001a66' }}>
-              <span style={{ fontWeight: 'bold', fontSize: '16px' }}>Total Amount</span>
-              <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#001a66' }}>Rs. {Number(order.total_amount).toLocaleString()}</span>
+        {/* Totals */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
+          <div style={{ width: '300px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 15px', background: '#f8fafc', borderRadius: '8px 8px 0 0' }}>
+              <span style={{ color: '#475569', fontSize: '14px' }}>Subtotal</span>
+              <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>Rs. {Number(order.total_amount).toLocaleString()}</span>
             </div>
-            <div style={{ fontSize: '11px', color: '#888', textAlign: 'right', marginTop: '4px' }}>
-              Inc. all applicable taxes
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px', background: '#001a66', color: 'white', borderRadius: '0 0 8px 8px' }}>
+              <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Total Due</span>
+              <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Rs. {Number(order.total_amount).toLocaleString()}</span>
             </div>
           </div>
         </div>
 
-        <div className="invoice-footer" style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '15px', textAlign: 'center', fontSize: '11px', color: '#999' }}>
-          <p>Thank you for choosing Hiran Fabric Textile.</p>
-          <p>This is a computer-generated invoice and doesn't require a signature.</p>
+        {/* Footer */}
+        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px', textAlign: 'center' }}>
+          <h4 style={{ margin: '0 0 10px 0', color: '#0f172a', fontSize: '16px' }}>Thank you for your business!</h4>
+          <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>If you have any questions about this invoice, please contact us.</p>
+          <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: '#94a3b8' }}>This is a computer-generated document. No signature is required.</p>
         </div>
       </div>
     );
@@ -479,7 +553,11 @@ export default function SalesDashboard() {
                 <div className="invoice-preview-mode">
                   {renderInvoice(selectedOrder)}
                   <div className="invoice-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' }}>
-                    <button className="btn print-btn" onClick={() => window.print()} style={{ background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                    <button 
+                      className="btn print-btn" 
+                      onClick={() => handlePrintInvoice(selectedOrder.order_id)} 
+                      style={{ background: '#001a66', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+                    >
                       <Clipboard size={16} /> Print Official Invoice
                     </button>
                     <button className="btn notify-btn" onClick={() => { setShowPaymentModal(false); setShowConfirmationModal(true); setShowInvoiceView(false); }} style={{ background: '#22c55e', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>

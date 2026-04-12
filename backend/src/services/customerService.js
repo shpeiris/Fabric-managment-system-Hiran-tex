@@ -64,7 +64,6 @@ export const submitOrderFeedback = async (feedbackData) => {
         customerId, 
         orderId, 
         overall_rating, 
-        order_experience, 
         fabric_quality, 
         delivery, 
         customer_service, 
@@ -82,13 +81,12 @@ export const submitOrderFeedback = async (feedbackData) => {
             customer_id, 
             order_id, 
             overall_rating, 
-            order_experience, 
             fabric_quality, 
             delivery, 
             customer_service, 
             comments
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
     `;
 
@@ -96,7 +94,6 @@ export const submitOrderFeedback = async (feedbackData) => {
         customerId, 
         orderId ? parseInt(orderId) : null, 
         parseInt(overall_rating), 
-        normalizeRating(order_experience), 
         normalizeRating(fabric_quality),
         normalizeRating(delivery), 
         normalizeRating(customer_service), 
