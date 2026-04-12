@@ -3,10 +3,10 @@ const router = express.Router();
 import * as invoiceController from '../controllers/invoiceController.js';
 import { isAuthenticated, hasRole } from '../middleware/authMiddleware.js';
 
-const adminOrSales = [isAuthenticated, hasRole(['ADMIN', 'SALES'])];
+const adminOrSales = [isAuthenticated, hasRole(['ADMIN', 'SALESPERSON'])];
 
-// Generation
-router.post('/api/invoices/generate/:orderId', ...adminOrSales, invoiceController.generateInvoice);
+// Generation - Customers need to hit this endpoint for their own orders
+router.post('/api/invoices/generate/:orderId', isAuthenticated, invoiceController.generateInvoice);
 
 // Retrieval
 router.get('/api/invoices', ...adminOrSales, invoiceController.getInvoices);

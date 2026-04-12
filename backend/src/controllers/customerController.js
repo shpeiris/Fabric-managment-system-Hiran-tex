@@ -12,7 +12,7 @@ export const getDashboardStats = async (req, res) => {
 };
 
 export const submitFeedback = async (req, res) => {
-    const { order_id, overall_rating, order_experience, fabric_quality, delivery, customer_service, comments } = req.body;
+    const { order_id, overall_rating, fabric_quality, delivery, customer_service, comments } = req.body;
     const customerId = req.user.id;
 
     if (!overall_rating || overall_rating < 1 || overall_rating > 5) {
@@ -24,7 +24,6 @@ export const submitFeedback = async (req, res) => {
             customerId,
             orderId: order_id,
             overall_rating,
-            order_experience,
             fabric_quality,
             delivery,
             customer_service,
