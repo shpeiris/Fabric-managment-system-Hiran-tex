@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getUser, removeUser, apiCall } from "../../../utils/auth.js";
 import cartService from "../../../services/cartService.js";
@@ -53,7 +53,9 @@ export default function CustomerLayout() {
       {/* Sidebar */}
       <aside className="customer-sidebar">
         <div className="sidebar-header">
-          <span className="sidebar-title">Hiran Fabrics</span>
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="sidebar-title">🏠Hiran Fabric Textile</span>
+          </Link>
         </div>
 
         <nav className="sidebar-nav">
