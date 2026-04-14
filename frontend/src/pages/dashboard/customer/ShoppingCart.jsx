@@ -215,8 +215,8 @@ const ShoppingCart = () => {
                   <div className="actions-row">
                     <div className="quantity-selector">
                       <button
-                        onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) - 1)}
-                        disabled={updating || parseFloat(item.quantity) <= 1}
+                        onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) - 1) * 100) / 100)}
+                        disabled={updating === item.cart_id || parseFloat(item.quantity) <= 1}
                         className="qty-btn"
                       >
                         <Minus size={14} />
@@ -224,17 +224,22 @@ const ShoppingCart = () => {
                       <input
                         type="number"
                         step="0.01"
+                        min="0.01"
                         value={item.quantity}
                         onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          if (val > 0) updateQuantity(item.cart_id, val);
+                          let val = parseFloat(e.target.value);
+                          if (val > 0) {
+                            // Enforce 2 decimal places
+                            val = Math.round(val * 100) / 100;
+                            updateQuantity(item.cart_id, val);
+                          }
                         }}
                         className="qty-input"
                         disabled={updating}
                       />
                       <button
-                        onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 1)}
-                        disabled={updating}
+                        onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) + 1) * 100) / 100)}
+                        disabled={updating === item.cart_id}
                         className="qty-btn"
                       >
                         <Plus size={14} />

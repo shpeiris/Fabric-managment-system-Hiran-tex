@@ -11,7 +11,7 @@ const FabricDetails = () => {
     const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [quantity, setQuantity] = useState(1);
+    const [quantity, setQuantity] = useState(1.00);
     const [addingToCart, setAddingToCart] = useState(false);
     const [cartMessage, setCartMessage] = useState({ type: '', text: '' });
 
@@ -262,16 +262,27 @@ const FabricDetails = () => {
                                 <div className="qty-selector">
                                     <label htmlFor="qty">Quantity (meters)</label>
                                     <div className="qty-input-wrapper">
-                                        <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</button>
+                                        <button onClick={() => setQuantity(q => Math.max(0.01, Math.round((parseFloat(q) - 1) * 100) / 100))}>-</button>
                                         <input
                                             id="qty"
                                             type="number"
-                                            min="1"
+                                            min="0.01"
+                                            step="0.01"
                                             max={fabric.stock_quantity}
                                             value={quantity}
-                                            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                                            onChange={(e) => {
+                                                const val = parseFloat(e.target.value);
+                                                if (!isNaN(val)) {
+                                                    setQuantity(Math.round(val * 100) / 100);
+                                                } else {
+                                                    setQuantity('');
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (quantity === '' || quantity < 0.01) setQuantity(1.00);
+                                            }}
                                         />
-                                        <button onClick={() => setQuantity(q => Math.min(fabric.stock_quantity, q + 1))}>+</button>
+                                        <button onClick={() => setQuantity(q => Math.min(fabric.stock_quantity, Math.round((parseFloat(q) + 1) * 100) / 100))}>+</button>
                                     </div>
                                 </div>
                                 <button

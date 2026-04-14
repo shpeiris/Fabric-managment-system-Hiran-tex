@@ -132,7 +132,7 @@ export default function Cart() {
                 >×</button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <button
-                    onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) - 1)}
+                    onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) - 1) * 100) / 100)}
                     disabled={updating === item.cart_id || parseFloat(item.quantity) <= 1}
                     style={{ background: '#f3f4f6', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
                   >−</button>
@@ -142,8 +142,12 @@ export default function Cart() {
                     min="0.01"
                     value={item.quantity}
                     onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (val > 0) updateQuantity(item.cart_id, val);
+                      let val = parseFloat(e.target.value);
+                      if (val > 0) {
+                        // Enforce 2 decimal places
+                        val = Math.round(val * 100) / 100;
+                        updateQuantity(item.cart_id, val);
+                      }
                     }}
                     style={{ 
                       width: '80px', 
@@ -158,7 +162,7 @@ export default function Cart() {
                   />
                   <span style={{ fontSize: '13px', color: '#6b7280' }}>m</span>
                   <button
-                    onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 1)}
+                    onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) + 1) * 100) / 100)}
                     disabled={updating === item.cart_id}
                     style={{ background: '#f3f4f6', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
                   >+</button>
