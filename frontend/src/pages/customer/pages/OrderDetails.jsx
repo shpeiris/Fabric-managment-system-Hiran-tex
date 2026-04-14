@@ -509,19 +509,7 @@ export default function OrderDetails() {
             }} onClick={handleReorder}>
               Reorder All Items
             </button>
-            <button style={{
-              background: 'transparent',
-              color: '#6b7280',
-              border: '1px solid #e5e7eb',
-              padding: '12px',
-              borderRadius: '6px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              width: '100%'
-            }}>
-              Contact Support
-            </button>
+
           </div>
 
           {/* Feedback Section */}
