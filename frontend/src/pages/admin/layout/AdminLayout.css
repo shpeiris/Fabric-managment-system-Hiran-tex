@@ -104,7 +104,7 @@
     background: white;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 0 30px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     z-index: 100;

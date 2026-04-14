@@ -37,10 +37,6 @@ export default function AdminLayout() {
       <main className="admin-main">
         {/* Top Header */}
         <header className="admin-header">
-          <div className="header-search">
-            <input type="text" placeholder="Search..." />
-          </div>
-
           <div className="header-profile">
             <div className="user-info">
               <span className="user-name">{user?.full_name || 'Administrator'}</span>
