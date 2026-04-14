@@ -6,7 +6,15 @@ const getSalesReport = async (req, res) => {
     try {
         const reportData = await reportService.getSalesReport(startDate, endDate);
         console.log("Sales report fetched successfully");
-        res.json({ report: reportData.dailySales, activeCustomers: reportData.activeCustomers });
+        
+        // Send the full report data structure expected by the frontend
+        res.json({
+            summary: reportData.summary,
+            report: reportData.dailySales,
+            detailedOrders: reportData.detailedOrders,
+            activeCustomers: reportData.summary.uniqueCustomers,
+            pendingOrders: reportData.detailedOrders.filter(o => o.order_status === 'PENDING' || o.order_status === 'PROCESSING').length
+        });
     } catch (err) {
         console.error("Error fetching sales report:", err);
         res.status(500).json({ error: "Failed to fetch report" });
