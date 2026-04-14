@@ -340,37 +340,7 @@
   color: #10b981;
 }
 
-/* Contact Support */
-.contact-support {
-  background-color: #f8fafc;
-  padding: 25px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  text-align: center;
-}
 
-.contact-support h4 {
-  color: #1e40af;
-  font-size: 1.125rem;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.contact-support p {
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.contact-support a {
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.contact-support a:hover {
-  text-decoration: underline;
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -431,7 +401,5 @@
     font-size: 1rem;
   }
 
-  .contact-support {
-    padding: 20px;
-  }
+
 }

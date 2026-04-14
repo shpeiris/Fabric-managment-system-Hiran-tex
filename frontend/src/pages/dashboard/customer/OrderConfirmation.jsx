@@ -256,14 +256,7 @@ const OrderConfirmation = ({ orderId, orderData, totalAmount, navigate }) => {
         </div>
 
         <div className="action-buttons">
-          <div className="primary-actions">
-            <button onClick={handleGenerateInvoice} className="btn-secondary" disabled={loadingInvoice}>
-              <FileText size={18} /> {loadingInvoice ? 'Generating...' : 'Download Invoice'}
-            </button>
-            <button onClick={handleShareFeedback} className="btn-secondary">
-              💬 Share Feedback
-            </button>
-          </div>
+
           
           <div className="secondary-actions">
             <button onClick={handleViewOrderHistory} className="btn-outline">
@@ -330,14 +323,7 @@ const OrderConfirmation = ({ orderId, orderData, totalAmount, navigate }) => {
           </div>
         </div>
 
-        <div className="contact-support">
-          <h4>Need Help?</h4>
-          <p>
-            If you have any questions about your order, please contact us at{' '}
-            <a href="mailto:support@fabricstore.com">support@fabricstore.com</a>{' '}
-            or call <a href="tel:+94771234567">+94 77 123 4567</a>
-          </p>
-        </div>
+
       </div>
       
       {/* Invoice Modal Overlay */}
