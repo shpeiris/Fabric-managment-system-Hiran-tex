@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../../../utils/auth.js';
+import { Trash2, Plus, Minus } from 'lucide-react';
 import fabric1 from "../../../assets/Fabrics/lasecotton.png";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}`;
@@ -128,14 +129,19 @@ export default function Cart() {
                 <button
                   onClick={() => removeItem(item.cart_id)}
                   disabled={updating === item.cart_id}
-                  style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '22px', lineHeight: 1 }}
-                >×</button>
+                  style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px' }}
+                  title="Remove item"
+                >
+                  <Trash2 size={20} />
+                </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <button
                     onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) - 1) * 100) / 100)}
                     disabled={updating === item.cart_id || parseFloat(item.quantity) <= 1}
-                    style={{ background: '#f3f4f6', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
-                  >−</button>
+                    style={{ background: '#f3f4f6', border: 'none', width: '30px', height: '30px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Minus size={14} />
+                  </button>
                   <input
                     type="number"
                     step="0.01"
@@ -164,8 +170,10 @@ export default function Cart() {
                   <button
                     onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) + 1) * 100) / 100)}
                     disabled={updating === item.cart_id}
-                    style={{ background: '#f3f4f6', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
-                  >+</button>
+                    style={{ background: '#f3f4f6', border: 'none', width: '30px', height: '30px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Plus size={14} />
+                  </button>
                 </div>
                 <p style={{ fontSize: '15px', fontWeight: '700', color: '#1f2937' }}>
                   Rs. {parseFloat(item.total_price || 0).toFixed(2)}

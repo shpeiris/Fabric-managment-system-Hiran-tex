@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Plus, Minus } from 'lucide-react';
 import { apiCall } from '../../../utils/auth.js';
 import './FabricDetails.css';
 
@@ -262,7 +263,12 @@ const FabricDetails = () => {
                                 <div className="qty-selector">
                                     <label htmlFor="qty">Quantity (meters)</label>
                                     <div className="qty-input-wrapper">
-                                        <button onClick={() => setQuantity(q => Math.max(0.01, Math.round((parseFloat(q) - 1) * 100) / 100))}>-</button>
+                                        <button 
+                                            onClick={() => setQuantity(q => Math.max(0.01, Math.round((parseFloat(q) - 1) * 100) / 100))}
+                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                            <Minus size={16} />
+                                        </button>
                                         <input
                                             id="qty"
                                             type="number"
@@ -282,7 +288,12 @@ const FabricDetails = () => {
                                                 if (quantity === '' || quantity < 0.01) setQuantity(1.00);
                                             }}
                                         />
-                                        <button onClick={() => setQuantity(q => Math.min(fabric.stock_quantity, Math.round((parseFloat(q) + 1) * 100) / 100))}>+</button>
+                                        <button 
+                                            onClick={() => setQuantity(q => Math.min(fabric.stock_quantity, Math.round((parseFloat(q) + 1) * 100) / 100))}
+                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                            <Plus size={16} />
+                                        </button>
                                     </div>
                                 </div>
                                 <button

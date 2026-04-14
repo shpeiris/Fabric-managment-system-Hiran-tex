@@ -219,7 +219,7 @@ const ShoppingCart = () => {
                         disabled={updating === item.cart_id || parseFloat(item.quantity) <= 1}
                         className="qty-btn"
                       >
-                        <Minus size={14} />
+                        <Minus size={18} strokeWidth={2.5} />
                       </button>
                       <input
                         type="number"
@@ -242,7 +242,7 @@ const ShoppingCart = () => {
                         disabled={updating === item.cart_id}
                         className="qty-btn"
                       >
-                        <Plus size={14} />
+                        <Plus size={18} strokeWidth={2.5} />
                       </button>
                     </div>
                     <button
@@ -251,7 +251,7 @@ const ShoppingCart = () => {
                       className="btn-remove"
                       title="Remove item"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={20} strokeWidth={2.5} />
                     </button>
                   </div>
                 </div>
