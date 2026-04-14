@@ -1,6 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiCall } from "../../utils/auth.js";
 import "./FabricManagement.css";
+import { useFormValidation } from "../../hooks/useFormValidation";
+import {
+  validateRequired,
+  validateMinLength,
+  validateFabricPrice,
+  validateFabricStock,
+  validateFabricWidth,
+  validateAtLeastOneColor
+} from "../../utils/validators";
 
 
 const FABRIC_COLORS = [
@@ -30,30 +39,60 @@ const FABRIC_COLORS = [
 
 export default function FabricManagement() {
   const [fabrics, setFabrics] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingFabric, setEditingFabric] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [colorFilter, setColorFilter] = useState('all');
-  const [selectedColors, setSelectedColors] = useState([]);
-  const [customColors, setCustomColors] = useState([]); // New custom colors picked via wheel
-  const [variantQuantities, setVariantQuantities] = useState({}); // { '#hex': quantity_string }
+  const [customColors, setCustomColors] = useState([]); 
+  const [variantQuantities, setVariantQuantities] = useState({}); 
   const [variantRestockDates, setVariantRestockDates] = useState({}); // { '#hex': 'YYYY-MM-DD' }
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    material_type: '',
-    design: '',
-    price_per_meter: '',
-    stock_quantity: '',
-    reorder_level: '100',
-    restock_date: '',
-    image_url: '',
-    width: ''
-  });
   const [selectedFile, setSelectedFile] = useState(null);
-  const [imageSource, setImageSource] = useState('select'); // 'select' or 'upload'
+
+  // Validation rules
+  const validationRules = {
+    name: [
+      (val) => validateRequired(val, "Fabric Name"),
+      (val) => validateMinLength(val, 3, "Fabric Name"),
+    ],
+    material_type: [(val) => validateRequired(val, "Material Type")],
+    price_per_meter: [validateFabricPrice],
+    stock_quantity: [validateFabricStock],
+    reorder_level: [(val) => validateFabricStock(val)], // Reorder level follows stock rules
+    width: [validateFabricWidth],
+    selectedColors: [
+      (val, formData) => !editingFabric ? validateAtLeastOneColor(val) : null
+    ]
+  };
+
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting: isFormSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit: handleValidatedSubmit,
+    setFieldValue,
+    setValues,
+    resetForm: resetValidationForm,
+    setFieldError
+  } = useFormValidation(
+    {
+      name: '',
+      material_type: '',
+      design: '',
+      price_per_meter: '',
+      stock_quantity: '',
+      reorder_level: '100',
+      restock_date: '',
+      image_url: '',
+      width: '',
+      selectedColors: []
+    },
+    validationRules
+  );
 
   useEffect(() => {
     fetchFabrics();
@@ -61,7 +100,6 @@ export default function FabricManagement() {
 
   const fetchFabrics = async () => {
     try {
-      setLoading(true);
       const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/fabrics`);
       const data = await response.json();
 
@@ -71,20 +109,10 @@ export default function FabricManagement() {
     } catch (err) {
       console.error('Error fetching fabrics:', err);
       alert('Failed to load fabrics');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Validate: at least one color must be selected when adding
-    if (!editingFabric && selectedColors.length === 0) {
-      alert('Please select at least one color for the fabric.');
-      return;
-    }
-
+  const handleSubmit = async (formValues) => {
     try {
       setIsSubmitting(true);
       const url = editingFabric
@@ -94,7 +122,7 @@ export default function FabricManagement() {
       const method = editingFabric ? 'PUT' : 'POST';
 
       // If editing, we only update one color. If adding, we may have multiple.
-      const colorsToProcess = editingFabric ? [formData.color] : selectedColors;
+      const colorsToProcess = editingFabric ? [editingFabric.color] : values.selectedColors;
       
       let successCount = 0;
       let lastError = null;
@@ -102,9 +130,11 @@ export default function FabricManagement() {
       for (const color of colorsToProcess) {
         let response;
         // Use individual variant quantity if available, otherwise fallback to main stock_quantity
-        const quantityToUse = variantQuantities[color] || formData.stock_quantity;
-        const restockDateToUse = variantRestockDates[color] || formData.restock_date;
-        const currentFormData = { ...formData, color, stock_quantity: quantityToUse, restock_date: restockDateToUse };
+        const quantityToUse = variantQuantities[color] || formValues.stock_quantity;
+        const restockDateToUse = variantRestockDates[color] || formValues.restock_date;
+        const currentFormData = { ...formValues, color, stock_quantity: quantityToUse, restock_date: restockDateToUse };
+        // Remove helper field before sending to API
+        delete currentFormData.selectedColors;
 
         if (selectedFile) {
           const formDataToSend = new FormData();
@@ -135,16 +165,18 @@ export default function FabricManagement() {
       }
 
       if (successCount === colorsToProcess.length) {
+        // We'll use a local state for success message instead of alert if we were going full toast, 
+        // but for now let's at least keep completion alerts or move to a message in the modal.
         alert(editingFabric ? 'Fabric updated successfully' : `Successfully added ${successCount} fabric variant(s)!`);
         setShowModal(false);
         resetForm();
         fetchFabrics();
       } else {
-        alert(lastError?.error || `Failed to process all variants. Successful: ${successCount}`);
+        setFieldError('submit', lastError?.error || `Failed to process all variants. Successful: ${successCount}`);
       }
     } catch (err) {
       console.error('Error saving fabric:', err);
-      alert('Failed to save fabric');
+      setFieldError('submit', 'Failed to save fabric');
     } finally {
       setIsSubmitting(false);
     }
@@ -153,7 +185,7 @@ export default function FabricManagement() {
 
   const handleEdit = (fabric) => {
     setEditingFabric(fabric);
-    setFormData({
+    const editValues = {
       name: fabric.name,
       material_type: fabric.material_type || '',
       design: fabric.design || '',
@@ -164,11 +196,11 @@ export default function FabricManagement() {
         ? new Date(fabric.restock_date).toISOString().split('T')[0]
         : '',
       image_url: fabric.image_url || '',
-      width: fabric.width || ''
-    });
+      width: fabric.width || '',
+      selectedColors: [fabric.color]
+    };
+    setValues(editValues);
     setSelectedFile(null);
-    setSelectedColors([fabric.color]);
-    setImageSource(fabric.image_url?.startsWith('uploads/') ? 'upload' : 'select');
     setShowModal(true);
   };
 
@@ -195,24 +227,12 @@ export default function FabricManagement() {
   };
 
   const resetForm = () => {
-    setFormData({
-      name: '',
-      material_type: '',
-      design: '',
-      price_per_meter: '',
-      stock_quantity: '',
-      reorder_level: '100',
-      restock_date: '',
-      image_url: '',
-      width: ''
-    });
+    resetValidationForm();
     setEditingFabric(null);
     setSelectedFile(null);
-    setSelectedColors([]);
     setCustomColors([]);
     setVariantQuantities({});
     setVariantRestockDates({});
-    setImageSource('select');
   };
 
   const filteredFabrics = fabrics.filter(f => {
@@ -222,7 +242,7 @@ export default function FabricManagement() {
     return matchesSearch && matchesColor;
   });
 
-  const getVariants = (name) => fabrics.filter(f => f.name === name);
+  const getVariants = useCallback((name) => fabrics.filter(f => f.name === name), [fabrics]);
 
   return (
     <div className="fabric-management">
@@ -344,28 +364,37 @@ export default function FabricManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>{editingFabric ? 'Edit Fabric' : 'Add New Fabric'}</h2>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleValidatedSubmit(handleSubmit)}>
+              {errors.submit && <div className="error-msg-banner">✗ {errors.submit}</div>}
+
               <div className="form-grid">
-                <div className="form-group">
+                <div className={`form-group ${touched.name && errors.name ? 'has-error' : ''}`}>
                   <label>Fabric Name *</label>
                   <input
+                    name="name"
                     type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={values.name}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.name && errors.name ? 'error' : ''}
                   />
+                  {touched.name && errors.name && <span className="field-error">{errors.name}</span>}
                 </div>
 
-                <div className="form-group">
-                  <label>Material Type</label>
+                <div className={`form-group ${touched.material_type && errors.material_type ? 'has-error' : ''}`}>
+                  <label>Material Type *</label>
                   <input
+                    name="material_type"
                     type="text"
-                    value={formData.material_type}
-                    onChange={(e) => setFormData({ ...formData, material_type: e.target.value })}
+                    value={values.material_type}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.material_type && errors.material_type ? 'error' : ''}
                   />
+                  {touched.material_type && errors.material_type && <span className="field-error">{errors.material_type}</span>}
                 </div>
 
-                <div className="form-group full-width">
+                <div className={`form-group full-width ${touched.selectedColors && errors.selectedColors ? 'has-error' : ''}`}>
                   <label>{editingFabric ? 'Fabric Color *' : 'Available Colors * (Select all that apply)'}</label>
                   <div className="color-swatch-grid">
                     {[...FABRIC_COLORS, ...customColors.map(hex => ({ name: 'Custom', hex }))].map((c) => (
@@ -375,27 +404,27 @@ export default function FabricManagement() {
                         title={c.name}
                         onClick={() => {
                           if (editingFabric) {
-                            setFormData({ ...formData, color: c.hex });
+                            setFieldValue('color', c.hex);
                           } else {
-                            setSelectedColors(prev => 
-                              prev.includes(c.hex) 
-                                ? prev.filter(h => h !== c.hex) 
-                                : [...prev, c.hex]
-                            );
+                            const newColors = values.selectedColors.includes(c.hex) 
+                              ? values.selectedColors.filter(h => h !== c.hex) 
+                              : [...values.selectedColors, c.hex];
+                            setFieldValue('selectedColors', newColors);
                           }
                         }}
                         className={`color-swatch-item ${
-                          (editingFabric ? formData.color === c.hex : selectedColors.includes(c.hex)) ? 'selected' : ''
+                          (editingFabric ? values.color === c.hex : values.selectedColors.includes(c.hex)) ? 'selected' : ''
                         }`}
                         style={{ backgroundColor: c.hex }}
                       >
-                        {(editingFabric ? formData.color === c.hex : selectedColors.includes(c.hex)) && (
+                        {(editingFabric ? values.color === c.hex : values.selectedColors.includes(c.hex)) && (
                           <span className="check-mark">✓</span>
                         )}
                       </button>
                     ))}
                   </div>
-                  <div className="custom-color-picker">
+                  {touched.selectedColors && errors.selectedColors && <span className="field-error">{errors.selectedColors}</span>}
+                   <div className="custom-color-picker">
                     <label className="text-xs text-gray-500 font-medium">Custom Color Wheel:</label>
                     <input 
                       type="color" 
@@ -403,15 +432,15 @@ export default function FabricManagement() {
                       onChange={(e) => {
                         const newColor = e.target.value;
                         if (editingFabric) {
-                          setFormData({ ...formData, color: newColor });
+                          setFieldValue('color', newColor);
                         } else {
                           // Add to custom list if not already there
                           if (!customColors.includes(newColor)) {
                             setCustomColors(prev => [...prev, newColor]);
                           }
                           // Also select it
-                          if (!selectedColors.includes(newColor)) {
-                            setSelectedColors(prev => [...prev, newColor]);
+                          if (!values.selectedColors.includes(newColor)) {
+                            setFieldValue('selectedColors', [...values.selectedColors, newColor]);
                           }
                         }
                       }}
@@ -419,7 +448,7 @@ export default function FabricManagement() {
                     <div 
                       className="color-preview-box" 
                       style={{ 
-                        backgroundColor: editingFabric ? formData.color : (selectedColors[selectedColors.length - 1] || '#ffffff') 
+                        backgroundColor: editingFabric ? values.color : (values.selectedColors[values.selectedColors.length - 1] || '#ffffff') 
                       }}
                       title="Current Pick"
                     />
@@ -430,48 +459,60 @@ export default function FabricManagement() {
                 <div className="form-group">
                   <label>Design</label>
                   <input
+                    name="design"
                     type="text"
-                    value={formData.design}
-                    onChange={(e) => setFormData({ ...formData, design: e.target.value })}
+                    value={values.design}
+                    onChange={handleChange}
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={`form-group ${touched.width && errors.width ? 'has-error' : ''}`}>
                   <label>Width (e.g. 45", 60")</label>
                   <input
+                    name="width"
                     type="text"
-                    value={formData.width}
-                    onChange={(e) => setFormData({ ...formData, width: e.target.value })}
+                    value={values.width}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.width && errors.width ? 'error' : ''}
                   />
+                  {touched.width && errors.width && <span className="field-error">{errors.width}</span>}
                 </div>
 
-                <div className="form-group">
+                <div className={`form-group ${touched.price_per_meter && errors.price_per_meter ? 'has-error' : ''}`}>
                   <label>Price per Meter *</label>
                   <input
+                    name="price_per_meter"
                     type="number"
                     step="0.01"
-                    required
-                    value={formData.price_per_meter}
-                    onChange={(e) => setFormData({ ...formData, price_per_meter: e.target.value })}
+                    value={values.price_per_meter}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.price_per_meter && errors.price_per_meter ? 'error' : ''}
                   />
+                  {touched.price_per_meter && errors.price_per_meter && <span className="field-error">{errors.price_per_meter}</span>}
                 </div>
 
-                <div className="form-group">
+                <div className={`form-group ${touched.stock_quantity && errors.stock_quantity ? 'has-error' : ''}`}>
                   <label>Stock Quantity (Default)</label>
                   <input
+                    name="stock_quantity"
                     type="number"
-                    value={formData.stock_quantity}
-                    onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                    placeholder={selectedColors.length > 1 ? "Shared default" : "Total meters"}
+                    value={values.stock_quantity}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder={values.selectedColors.length > 1 ? "Shared default" : "Total meters"}
+                    className={touched.stock_quantity && errors.stock_quantity ? 'error' : ''}
                   />
+                  {touched.stock_quantity && errors.stock_quantity && <span className="field-error">{errors.stock_quantity}</span>}
                 </div>
 
                 {/* Individual Variant Quantities */}
-                {!editingFabric && selectedColors.length > 1 && (
+                {!editingFabric && values.selectedColors.length > 1 && (
                   <div className="form-group full-width variant-quantity-section">
                     <label className="section-label">Set Stock per Color (Meters):</label>
                     <div className="variant-quantity-grid">
-                      {selectedColors.map(colorHex => {
+                      {values.selectedColors.map(colorHex => {
                         const colorName = [...FABRIC_COLORS, ...customColors.map(hex => ({ name: 'Custom', hex }))].find(c => c.hex === colorHex)?.name || 'Custom';
                         return (
                           <div key={colorHex} className="variant-quantity-item">
@@ -502,21 +543,26 @@ export default function FabricManagement() {
                   </div>
                 )}
 
-                <div className="form-group">
+                <div className={`form-group ${touched.reorder_level && errors.reorder_level ? 'has-error' : ''}`}>
                   <label>Reorder Level</label>
                   <input
+                    name="reorder_level"
                     type="number"
-                    value={formData.reorder_level}
-                    onChange={(e) => setFormData({ ...formData, reorder_level: e.target.value })}
+                    value={values.reorder_level}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.reorder_level && errors.reorder_level ? 'error' : ''}
                   />
+                  {touched.reorder_level && errors.reorder_level && <span className="field-error">{errors.reorder_level}</span>}
                 </div>
 
                 <div className="form-group">
                   <label>Restock Date</label>
                   <input
+                    name="restock_date"
                     type="date"
-                    value={formData.restock_date}
-                    onChange={(e) => setFormData({ ...formData, restock_date: e.target.value })}
+                    value={values.restock_date}
+                    onChange={handleChange}
                   />
                 </div>
 
@@ -550,8 +596,8 @@ export default function FabricManagement() {
                 <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); resetForm(); }}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-save" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : (editingFabric ? 'Update' : 'Add')} Fabric
+                <button type="submit" className="btn-save" disabled={isFormSubmitting}>
+                  {(isSubmitting || isFormSubmitting) ? 'Saving...' : (editingFabric ? 'Update' : 'Add')} Fabric
                 </button>
               </div>
             </form>
