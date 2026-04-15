@@ -65,6 +65,7 @@ const addToCart = async (customerId, fabricId, quantity) => {
 };
 
 const updateCartItem = async (customerId, cartId, quantity) => {
+    // 1. Find the fabric associated with the cart item
   const cartCheck = await pool.query(
     "SELECT c.fabric_id FROM cart c WHERE c.cart_id = $1 AND c.customer_id = $2",
     [cartId, customerId]
@@ -74,7 +75,7 @@ const updateCartItem = async (customerId, cartId, quantity) => {
     throw new Error("Cart item not found");
 
   const fabricId = cartCheck.rows[0].fabric_id;
-
+  // 2. Check real-time stock availability
   const fabricResult = await pool.query(
     "SELECT price_per_meter, stock_quantity, stock_available_quantity FROM fabrics WHERE fabric_id = $1",
     [fabricId]
@@ -84,10 +85,12 @@ const updateCartItem = async (customerId, cartId, quantity) => {
     throw new Error("Fabric not found");
     
   const fabric = fabricResult.rows[0];
+
+   // 3. Prevent the update if requested quantity exceeds stock
   if (fabric.stock_available_quantity < quantity && fabric.stock_quantity < quantity) {
     throw new Error("Insufficient stock");
   }
-
+   // 4. Proceed with update
   const totalPrice = fabricResult.rows[0].price_per_meter * quantity;
 
   await pool.query(
