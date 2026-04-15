@@ -104,10 +104,58 @@ const Contact = ({ address, phone, email, hours }) => {
 };
 
 // Footer Component
-const Footer = () => {
+const Footer = ({ settings }) => {
   return (
-    <footer>
-      <p>&copy; {new Date().getFullYear()} Hiran Fabric Textile. All rights reserved.</p>
+    <footer className="main-footer">
+      <div className="footer-grid">
+        {/* Brand Section */}
+        <div className="footer-column footer-about">
+          <div className="logo" style={{ marginBottom: '20px' }}>
+            <span className="logo-icon" style={{ fontSize: '24px' }}>🏠</span>
+            <span className="company-name" style={{ fontSize: '18px' }}>{settings?.company_name || "Hiran Fabric Textile"}</span>
+          </div>
+          <p>
+            {settings?.about_content?.substring(0, 150)}...
+          </p>
+        </div>
+
+        {/* Quick Links */}
+        <div className="footer-column footer-links">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About Us</a></li>
+            <li><Link to="/test-browse">Explore Fabrics</Link></li>
+            <li><Link to="/login">Account Login</Link></li>
+          </ul>
+        </div>
+
+        {/* Contact Info */}
+        <div className="footer-column footer-contact">
+          <h3>Contact Us</h3>
+          <p>📍 {settings?.contact_address || "Nittambuwa, Sri Lanka"}</p>
+          <p>📞 {settings?.contact_phone || "+94 77 112 4088"}</p>
+          <p>✉️ {settings?.contact_email || "hiranfabrictextile@gmail.com"}</p>
+        </div>
+
+        {/* Social Media */}
+        <div className="footer-column footer-social">
+          <h3>Social</h3>
+          <div className="social-icons">
+            <a href="#" className="social-icon">f</a>
+            <a href="#" className="social-icon">t</a>
+            <a href="#" className="social-icon">i</a>
+          </div>
+        </div>
+      </div>
+
+      <div className="footer-bottom">
+        <p>&copy; {new Date().getFullYear()} {settings?.company_name || "Hiran Fabric Textile"}. All rights reserved.</p>
+        <div className="footer-bottom-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
     </footer>
   );
 };
@@ -143,7 +191,7 @@ export default function Home() {
         email={settings?.contact_email}
         hours={settings?.contact_hours}
       />
-      <Footer />
+      <Footer settings={settings} />
     </div>
   );
 }

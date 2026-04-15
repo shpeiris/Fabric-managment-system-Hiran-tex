@@ -106,9 +106,8 @@ const ShoppingCart = () => {
     }, 0);
   };
 
-  const deliveryFee = cartItems.length > 0 ? 500 : 0;
   const subtotal = calculateSubtotal();
-  const total = subtotal + deliveryFee;
+  const total = subtotal;
 
   const getImageSrc = (imageUrl) => {
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -216,29 +215,34 @@ const ShoppingCart = () => {
                   <div className="actions-row">
                     <div className="quantity-selector">
                       <button
-                        onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) - 1)}
-                        disabled={updating || parseFloat(item.quantity) <= 1}
+                        onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) - 1) * 100) / 100)}
+                        disabled={updating === item.cart_id || parseFloat(item.quantity) <= 1}
                         className="qty-btn"
                       >
-                        <Minus size={14} />
+                        <Minus size={18} strokeWidth={2.5} />
                       </button>
                       <input
                         type="number"
                         step="0.01"
+                        min="0.01"
                         value={item.quantity}
                         onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          if (val > 0) updateQuantity(item.cart_id, val);
+                          let val = parseFloat(e.target.value);
+                          if (val > 0) {
+                            // Enforce 2 decimal places
+                            val = Math.round(val * 100) / 100;
+                            updateQuantity(item.cart_id, val);
+                          }
                         }}
                         className="qty-input"
                         disabled={updating}
                       />
                       <button
-                        onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 1)}
-                        disabled={updating}
+                        onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) + 1) * 100) / 100)}
+                        disabled={updating === item.cart_id}
                         className="qty-btn"
                       >
-                        <Plus size={14} />
+                        <Plus size={18} strokeWidth={2.5} />
                       </button>
                     </div>
                     <button
@@ -247,7 +251,7 @@ const ShoppingCart = () => {
                       className="btn-remove"
                       title="Remove item"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={20} strokeWidth={2.5} />
                     </button>
                   </div>
                 </div>
@@ -263,10 +267,7 @@ const ShoppingCart = () => {
                   <span>Subtotal ({cartItems.length} items)</span>
                   <span>Rs. {subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
-                <div className="summary-row">
-                  <span>Standard Delivery</span>
-                  <span>Rs. {deliveryFee.toLocaleString()}</span>
-                </div>
+
                 <div className="summary-row total">
                   <span>Grand Total</span>
                   <span className="grand-total">Rs. {total.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>

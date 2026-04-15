@@ -102,7 +102,8 @@ const updateOrderStatus = async (req, res) => {
     }
 
     try {
-        const result = await orderService.updateOrderStatus(id, status, delivered_by, delivery_contact_number);
+        const actor = { name: req.user.name, id: req.user.id };
+        const result = await orderService.updateOrderStatus(id, status, delivered_by, delivery_contact_number, null, actor);
         if (!result) return res.status(404).json({ error: "Order not found" });
 
         if (status === 'DELIVERED') {
@@ -120,11 +121,32 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
+const getOrderHistory = async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Ownership check
+        const orderInfo = await orderService.getOrderById(id);
+        if (!orderInfo) return res.status(404).json({ error: "Order not found" });
+
+        // Only owner or Admin/Sales can view history
+        if (req.user.role !== 'ADMIN' && req.user.role !== 'SALESPERSON' && orderInfo.order.customer_id !== req.user.id) {
+            return res.status(403).json({ error: "Unauthorized to view this order history" });
+        }
+
+        const history = await orderService.getOrderStatusHistory(id);
+        res.json({ history });
+    } catch (err) {
+        console.error("Error fetching order history:", err);
+        res.status(500).json({ error: "Failed to fetch order history" });
+    }
+};
+
 export {
     getUserOrders,
     getOrderById,
     getOrders,
     createOrder,
     createCustomerOrder,
-    updateOrderStatus
+    updateOrderStatus,
+    getOrderHistory
 };

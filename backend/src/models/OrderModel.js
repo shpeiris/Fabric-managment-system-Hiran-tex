@@ -22,6 +22,17 @@ export const initOrderModel = async () => {
       delivered_by VARCHAR(255),
       delivery_contact_number VARCHAR(20)
     );
+
+    CREATE TABLE IF NOT EXISTS order_status_history (
+      history_id SERIAL PRIMARY KEY,
+      order_id INTEGER NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+      old_status order_status,
+      new_status order_status NOT NULL,
+      changed_by_name VARCHAR(255),
+      changed_by_id INTEGER,
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `;
   await pool.query(query);
 };

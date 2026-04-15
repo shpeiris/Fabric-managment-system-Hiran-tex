@@ -2,6 +2,11 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { apiCall } from "../../../utils/auth.js";
 import "./InventoryDashboard.css";
+import { useFormValidation } from "../../../hooks/useFormValidation";
+import {
+  validateRequired,
+  validateFabricPrice
+} from "../../../utils/validators";
 
 export default function StockArrivals() {
   const location = useLocation();
@@ -11,13 +16,7 @@ export default function StockArrivals() {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  const [formData, setFormData] = useState({
-    supplier_id: "",
-    supply_unit_price: "",
-    arrival_date: new Date().toISOString().split('T')[0]
-  });
-  const [colorQuantities, setColorQuantities] = useState({});
+  const [filter, setFilter] = useState("all"); // all, arrived, expected
   const [selectedVariants, setSelectedVariants] = useState([]);
 
   const [fabricSearch, setFabricSearch] = useState("");
@@ -25,10 +24,44 @@ export default function StockArrivals() {
   const [showFabricDropdown, setShowFabricDropdown] = useState(false);
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
 
+  // Validation rules
+  const validationRules = {
+    supplier_id: [(val) => validateRequired(val, "Supplier")],
+    supply_unit_price: [validateFabricPrice],
+    arrival_date: [(val) => validateRequired(val, "Arrival Date")],
+    colorQuantities: [
+      (val) => {
+        const hasQty = Object.values(val || {}).some(q => parseFloat(q) > 0);
+        return hasQty ? null : "Please enter a quantity for at least one color";
+      }
+    ]
+  };
+
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting: isFormSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit: handleValidatedSubmit,
+    setFieldValue,
+    resetForm: resetValidationForm,
+    setFieldError
+  } = useFormValidation(
+    {
+      supplier_id: "",
+      supply_unit_price: "",
+      arrival_date: new Date().toISOString().split('T')[0],
+      colorQuantities: {}
+    },
+    validationRules
+  );
+
   // Calculate total value automatically
-  const totalQuantity = Object.values(colorQuantities).reduce((sum, q) => sum + (parseFloat(q) || 0), 0);
-  const totalValue = totalQuantity && formData.supply_unit_price ?
-    totalQuantity * parseFloat(formData.supply_unit_price) : 0;
+  const totalQuantity = Object.values(values.colorQuantities).reduce((sum, q) => sum + (parseFloat(q) || 0), 0);
+  const totalValue = totalQuantity && values.supply_unit_price ?
+    totalQuantity * parseFloat(values.supply_unit_price) : 0;
 
   // Group fabrics by name for dropdown
   const uniqueFabrics = Object.values(fabrics.reduce((acc, f) => {
@@ -83,48 +116,36 @@ export default function StockArrivals() {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleQuantityChange = (fabricId, value) => {
-    setColorQuantities(prev => ({ ...prev, [fabricId]: value }));
+    setFieldValue('colorQuantities', {
+      ...values.colorQuantities,
+      [fabricId]: value
+    });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const itemsToSubmit = Object.entries(colorQuantities)
-      .filter(([id, qty]) => parseFloat(qty) > 0)
+  const handleSubmit = async (formValues) => {
+    const itemsToSubmit = Object.entries(formValues.colorQuantities)
+      .filter(([, qty]) => parseFloat(qty) > 0)
       .map(([id, qty]) => ({ fabric_id: id, quantity: parseFloat(qty) }));
-
-    if (itemsToSubmit.length === 0) {
-      alert("Please enter a quantity greater than 0 for at least one fabric color.");
-      return;
-    }
-    if (!formData.supplier_id) {
-      alert("Please select a Supplier from the dropdown suggestions.");
-      return;
-    }
-    if (!formData.supply_unit_price) {
-      alert("Please enter a Unit Price.");
-      return;
-    }
 
     try {
       setSubmitting(true);
       
       const promises = itemsToSubmit.map(item => {
-        const itemTotalValue = item.quantity * parseFloat(formData.supply_unit_price);
+        const itemTotalValue = item.quantity * parseFloat(formValues.supply_unit_price);
+        const submitData = {
+          ...formValues,
+          fabric_id: item.fabric_id,
+          quantity: item.quantity,
+          supply_unit_price: parseFloat(formValues.supply_unit_price),
+          total_value: itemTotalValue
+        };
+        // Remove helper field before sending to API
+        delete submitData.colorQuantities;
+
         return apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/inventory/stock-arrivals`, {
             method: 'POST',
-            body: JSON.stringify({
-              ...formData,
-              fabric_id: item.fabric_id,
-              quantity: item.quantity,
-              supply_unit_price: parseFloat(formData.supply_unit_price),
-              total_value: itemTotalValue
-            })
+            body: JSON.stringify(submitData)
         });
       });
 
@@ -134,22 +155,17 @@ export default function StockArrivals() {
       if (allOk) {
             alert("Stock arrivals recorded successfully!");
             setShowModal(false);
-            setFormData({
-                supplier_id: "",
-                supply_unit_price: "",
-                arrival_date: new Date().toISOString().split('T')[0]
-            });
-            setColorQuantities({});
+            resetValidationForm();
             setSelectedVariants([]);
             setFabricSearch("");
             setSupplierSearch("");
             fetchInitialData(); // Refresh list
         } else {
-            alert("Some arrivals failed to record. Please check the list.");
+            setFieldError('submit', "Some arrivals failed to record. Please check the network log.");
         }
     } catch (err) {
       console.error('Error recording arrival:', err);
-      alert("An error occurred. Please try again.");
+      setFieldError('submit', "An error occurred. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -160,12 +176,28 @@ export default function StockArrivals() {
   }
 
   const totalMeters = arrivals.reduce((sum, a) => sum + parseFloat(a.quantity), 0);
-  const totalHistoryValue = arrivals.reduce((sum, a) => sum + parseFloat(a.total_value), 0);
   const recentArrivals = arrivals.filter(a => {
     const arrivalDate = new Date(a.arrival_date);
     const today = new Date();
     return (today - arrivalDate) / (1000 * 60 * 60 * 24) <= 7;
   }).length;
+  
+  const expectedDeliveries = arrivals.filter(a => {
+    const arrivalDate = new Date(a.arrival_date);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return arrivalDate > today;
+  }).length;
+
+  const filteredArrivals = arrivals.filter(a => {
+    const arrivalDate = new Date(a.arrival_date);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    if (filter === 'arrived') return arrivalDate <= today;
+    if (filter === 'expected') return arrivalDate > today;
+    return true;
+  });
 
   return (
     <div style={{ background: "#ffffff", padding: "20px", borderRadius: "10px" }}>
@@ -201,14 +233,51 @@ export default function StockArrivals() {
           <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", marginBottom: "5px" }}>Recent Arrivals (7d)</div>
           <div style={{ fontSize: "24px", color: "#001a66", fontWeight: "800" }}>{recentArrivals}</div>
         </div>
+        <div style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", padding: "20px", borderRadius: "16px", border: "1px solid #bbf7d0" }}>
+          <div style={{ fontSize: "12px", color: "#166534", fontWeight: "700", textTransform: "uppercase", marginBottom: "5px" }}>Expected Deliveries</div>
+          <div style={{ fontSize: "24px", color: "#15803d", fontWeight: "800" }}>{expectedDeliveries}</div>
+        </div>
         <div style={{ background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", marginBottom: "5px" }}>Total Meters Received</div>
           <div style={{ fontSize: "24px", color: "#001a66", fontWeight: "800" }}>{totalMeters.toFixed(1)} m</div>
         </div>
-        <div style={{ background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-          <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", marginBottom: "5px" }}>Total Supply Value</div>
-          <div style={{ fontSize: "24px", color: "#059669", fontWeight: "800" }}>Rs. {totalHistoryValue.toLocaleString()}</div>
-        </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <button 
+            onClick={() => setFilter('all')}
+            style={{ 
+                padding: '8px 16px', borderRadius: '20px', border: 'none', 
+                background: filter === 'all' ? '#001a66' : '#f1f5f9', 
+                color: filter === 'all' ? 'white' : '#475569',
+                fontSize: '13px', fontWeight: '600', cursor: 'pointer'
+            }}
+        >
+            All History
+        </button>
+        <button 
+            onClick={() => setFilter('arrived')}
+            style={{ 
+                padding: '8px 16px', borderRadius: '20px', border: 'none', 
+                background: filter === 'arrived' ? '#001a66' : '#f1f5f9', 
+                color: filter === 'arrived' ? 'white' : '#475569',
+                fontSize: '13px', fontWeight: '600', cursor: 'pointer'
+            }}
+        >
+            Received
+        </button>
+        <button 
+            onClick={() => setFilter('expected')}
+            style={{ 
+                padding: '8px 16px', borderRadius: '20px', border: 'none', 
+                background: filter === 'expected' ? '#001a66' : '#f1f5f9', 
+                color: filter === 'expected' ? 'white' : '#475569',
+                fontSize: '13px', fontWeight: '600', cursor: 'pointer'
+            }}
+        >
+            Expected {expectedDeliveries > 0 && `(${expectedDeliveries})`}
+        </button>
       </div>
 
       <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 10px 30px rgba(0,26,102,0.05)" }}>
@@ -225,12 +294,20 @@ export default function StockArrivals() {
             </tr>
           </thead>
           <tbody>
-            {arrivals.length > 0 ? (
-              arrivals.map((arrival) => (
+            {filteredArrivals.length > 0 ? (
+              filteredArrivals.map((arrival) => (
                 <tr key={arrival.arrival_id} style={{ borderTop: "1px solid #f1f5f9" }}>
                   <td style={{ padding: "16px", color: "#001a66", fontWeight: "700" }}>#ARV-{arrival.arrival_id.toString().padStart(3, '0')}</td>
                   <td style={{ padding: "16px", color: "#64748b" }}>
-                    {new Date(arrival.arrival_date).toLocaleDateString()}
+                    <div style={{
+                        color: new Date(arrival.arrival_date) > new Date() ? '#2563eb' : '#64748b',
+                        fontWeight: new Date(arrival.arrival_date) > new Date() ? '700' : '400'
+                    }}>
+                        {new Date(arrival.arrival_date).toLocaleDateString()}
+                    </div>
+                    {new Date(arrival.arrival_date) > new Date() && (
+                        <div style={{ fontSize: '10px', color: '#2563eb', textTransform: 'uppercase', fontWeight: '800' }}>Expected</div>
+                    )}
                   </td>
                   <td style={{ padding: "16px" }}>
                     <div style={{ fontWeight: "700", color: "#1e293b" }}>{arrival.fabric_name}</div>
@@ -283,7 +360,9 @@ export default function StockArrivals() {
           >
             <h2 style={{ color: "#001a66", marginBottom: "25px", fontWeight: "800", textAlign: "center" }}>Record Stock Arrival</h2>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleValidatedSubmit(handleSubmit)}>
+              {errors.submit && <div className="error-msg-banner">✗ {errors.submit}</div>}
+
               <div style={{ display: "grid", gap: "20px" }}>
                 <div style={{ position: "relative" }}>
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Fabric Group Selection *</label>
@@ -297,8 +376,13 @@ export default function StockArrivals() {
                     onFocus={() => setShowFabricDropdown(true)}
                     placeholder="Search by name or material..."
                     required={selectedVariants.length === 0}
-                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
+                    style={{ 
+                      width: "100%", padding: "12px", borderRadius: "10px", 
+                      border: (touched.colorQuantities && errors.colorQuantities) ? "2px solid #ef4444" : "2px solid #e2e8f0", 
+                      outline: "none" 
+                    }}
                   />
+                  {touched.colorQuantities && errors.colorQuantities && <span className="field-error">{errors.colorQuantities}</span>}
                   {showFabricDropdown && fabricSearch && (
                     <div className="search-results-dropdown">
                       {uniqueFabrics
@@ -309,7 +393,7 @@ export default function StockArrivals() {
                             className="search-item"
                             onClick={() => {
                               setSelectedVariants(f.variants);
-                              setColorQuantities({});
+                              setFieldValue('colorQuantities', {});
                               setFabricSearch(`${f.name} (${f.material_type})`);
                               setShowFabricDropdown(false);
                             }}
@@ -340,8 +424,9 @@ export default function StockArrivals() {
                             step="0.01"
                             min="0"
                             placeholder="Qty..."
-                            value={colorQuantities[variant.fabric_id] || ""}
+                            value={values.colorQuantities[variant.fabric_id] || ""}
                             onChange={(e) => handleQuantityChange(variant.fabric_id, e.target.value)}
+                            onBlur={handleBlur}
                             style={{ width: "90px", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", outline: "none", textAlign: "right" }}
                           />
                         </div>
@@ -353,6 +438,7 @@ export default function StockArrivals() {
                 <div style={{ position: "relative" }}>
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Supplier *</label>
                   <input
+                    name="supplier_id"
                     type="text"
                     value={supplierSearch}
                     onChange={(e) => {
@@ -360,9 +446,14 @@ export default function StockArrivals() {
                       setShowSupplierDropdown(true);
                     }}
                     onFocus={() => setShowSupplierDropdown(true)}
-                    required
-                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
+                    onBlur={handleBlur}
+                    style={{ 
+                      width: "100%", padding: "12px", borderRadius: "10px", 
+                      border: (touched.supplier_id && errors.supplier_id) ? "2px solid #ef4444" : "2px solid #e2e8f0", 
+                      outline: "none" 
+                    }}
                   />
+                  {touched.supplier_id && errors.supplier_id && <span className="field-error">{errors.supplier_id}</span>}
                   {showSupplierDropdown && supplierSearch && (
                     <div className="search-results-dropdown">
                       {suppliers
@@ -372,7 +463,7 @@ export default function StockArrivals() {
                             key={s.supplier_id} 
                             className="search-item"
                             onClick={() => {
-                              setFormData({...formData, supplier_id: s.supplier_id});
+                              setFieldValue('supplier_id', s.supplier_id);
                               setSupplierSearch(s.name);
                               setShowSupplierDropdown(false);
                             }}
@@ -391,22 +482,33 @@ export default function StockArrivals() {
                       type="number"
                       name="supply_unit_price"
                       step="0.01"
-                      required
                       placeholder="e.g. 1200.0"
-                      value={formData.supply_unit_price}
-                      onChange={handleInputChange}
-                      style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
+                      value={values.supply_unit_price}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      style={{ 
+                        width: "100%", padding: "12px", borderRadius: "10px", 
+                        border: (touched.supply_unit_price && errors.supply_unit_price) ? "2px solid #ef4444" : "2px solid #e2e8f0", 
+                        outline: "none" 
+                      }}
                     />
+                    {touched.supply_unit_price && errors.supply_unit_price && <span className="field-error">{errors.supply_unit_price}</span>}
                   </div>
                   <div>
                     <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>Arrival Date</label>
                     <input
                       type="date"
                       name="arrival_date"
-                      value={formData.arrival_date}
-                      onChange={handleInputChange}
-                      style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "2px solid #e2e8f0", outline: "none" }}
+                      value={values.arrival_date}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      style={{ 
+                        width: "100%", padding: "12px", borderRadius: "10px", 
+                        border: (touched.arrival_date && errors.arrival_date) ? "2px solid #ef4444" : "2px solid #e2e8f0", 
+                        outline: "none" 
+                      }}
                     />
+                    {touched.arrival_date && errors.arrival_date && <span className="field-error">{errors.arrival_date}</span>}
                   </div>
                 </div>
 
@@ -429,14 +531,14 @@ export default function StockArrivals() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || isFormSubmitting}
                   style={{
                     flex: 1, padding: "12px", borderRadius: "12px", border: "none",
-                    background: submitting ? "#94a3b8" : "#001a66",
-                    color: "white", fontWeight: "700", cursor: submitting ? "not-allowed" : "pointer"
+                    background: (submitting || isFormSubmitting) ? "#94a3b8" : "#001a66",
+                    color: "white", fontWeight: "700", cursor: (submitting || isFormSubmitting) ? "not-allowed" : "pointer"
                   }}
                 >
-                  {submitting ? "Recording..." : "Record Arrival"}
+                  {(submitting || isFormSubmitting) ? "Recording..." : "Record Arrival"}
                 </button>
               </div>
             </form>

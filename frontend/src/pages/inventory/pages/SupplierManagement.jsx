@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supplierService } from "../../../services";
+import { useFormValidation } from "../../../hooks/useFormValidation";
+import {
+  validateRequired,
+  validateMinLength,
+  validateEmail,
+  validatePhone
+} from "../../../utils/validators";
 
 export default function SupplierManagement() {
   const [suppliers, setSuppliers] = useState([]);
@@ -10,15 +17,40 @@ export default function SupplierManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Form State
-  const [formData, setFormData] = useState({
-    name: "",
-    contact_person: "",
-    contact_number: "",
-    email: "",
-    address: "",
-  });
+  // Validation rules
+  const validationRules = {
+    name: [
+      (val) => validateRequired(val, "Company Name"),
+      (val) => validateMinLength(val, 3, "Company Name"),
+    ],
+    contact_person: [(val) => validateRequired(val, "Contact Person")],
+    contact_number: [validatePhone],
+    email: [validateEmail],
+  };
+
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting: isFormSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit: handleValidatedSubmit,
+    setValues,
+    resetForm: resetValidationForm,
+    setFieldError
+  } = useFormValidation(
+    {
+      name: "",
+      contact_person: "",
+      contact_number: "",
+      email: "",
+      address: "",
+    },
+    validationRules
+  );
 
   useEffect(() => {
     fetchSuppliers();
@@ -44,52 +76,40 @@ export default function SupplierManagement() {
         await supplierService.delete(id);
         fetchSuppliers();
       } catch (err) {
-        alert("Failed to delete supplier");
+        setFieldError('submit', "Failed to delete supplier");
         console.error(err);
       }
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
+  const handleAddSubmit = async (formValues) => {
     try {
-      await supplierService.create(formData);
+      await supplierService.create(formValues);
       setShowAddModal(false);
-      setFormData({
-        name: "",
-        contact_person: "",
-        contact_number: "",
-        email: "",
-        address: "",
-      });
+      resetValidationForm();
       fetchSuppliers();
     } catch (err) {
-      alert("Failed to add supplier");
+      setFieldError('submit', "Failed to add supplier");
       console.error(err);
     }
   };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
+  const handleEditSubmit = async (formValues) => {
     try {
-      await supplierService.update(selectedSupplier.supplier_id, formData);
+      await supplierService.update(selectedSupplier.supplier_id, formValues);
       setShowEditModal(false);
       setSelectedSupplier(null);
+      resetValidationForm();
       fetchSuppliers();
     } catch (err) {
-      alert("Failed to update supplier");
+      setFieldError('submit', "Failed to update supplier");
       console.error(err);
     }
   };
 
   const openEditModal = (supplier) => {
     setSelectedSupplier(supplier);
-    setFormData({
+    setValues({
       name: supplier.name,
       contact_person: supplier.contact_person || "",
       contact_number: supplier.contact_number || "",
@@ -98,6 +118,12 @@ export default function SupplierManagement() {
     });
     setShowEditModal(true);
   };
+  
+  const filteredSuppliers = suppliers.filter(s => 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.supplier_id.toString().includes(searchTerm) ||
+    s.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading)
     return <div style={{ padding: "20px" }}>Loading suppliers...</div>;
@@ -133,7 +159,32 @@ export default function SupplierManagement() {
               {suppliers.length}
             </span>
           </div>
-          <button
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="Search suppliers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #e5e7eb",
+                  fontSize: "14px",
+                  width: "250px",
+                  outline: "none"
+                }}
+              />
+              {searchTerm && (
+                <button 
+                  onClick={() => setSearchTerm("")}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: '#9ca3af' }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <button
             style={{
               backgroundColor: "#2563eb",
               color: "white",
@@ -144,19 +195,14 @@ export default function SupplierManagement() {
               transition: "background-color 0.2s",
             }}
             onClick={() => {
-              setFormData({
-                name: "",
-                contact_person: "",
-                contact_number: "",
-                email: "",
-                address: "",
-              });
+              resetValidationForm();
               setShowAddModal(true);
             }}
           >
             + Add New Supplier
           </button>
         </div>
+      </div>
 
         {/* Suppliers Table */}
         <div style={{ overflowX: "auto" }}>
@@ -241,7 +287,7 @@ export default function SupplierManagement() {
               </tr>
             </thead>
             <tbody>
-              {suppliers.length === 0 ? (
+              {filteredSuppliers.length === 0 ? (
                 <tr>
                   <td
                     colSpan="7"
@@ -251,11 +297,11 @@ export default function SupplierManagement() {
                       color: "#6b7280",
                     }}
                   >
-                    No suppliers found. Add one to get started.
+                    {searchTerm ? "No suppliers match your search." : "No suppliers found. Add one to get started."}
                   </td>
                 </tr>
               ) : (
-                suppliers.map((supplier) => (
+                filteredSuppliers.map((supplier) => (
                   <tr
                     key={supplier.supplier_id}
                     style={{ borderBottom: "1px solid #f3f4f6" }}
@@ -356,7 +402,9 @@ export default function SupplierManagement() {
             >
               Add New Supplier
             </h3>
-            <form onSubmit={handleAddSubmit}>
+            <form onSubmit={handleValidatedSubmit(handleAddSubmit)}>
+              {errors.submit && <div className="error-msg-banner">✗ {errors.submit}</div>}
+
               <div style={{ marginBottom: "16px" }}>
                 <label
                   style={{
@@ -370,17 +418,19 @@ export default function SupplierManagement() {
                 </label>
                 <input
                   name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
+                  value={values.name}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
-                    border: "1px solid #e5e7eb",
+                    border: touched.name && errors.name ? "1px solid #ef4444" : "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                   placeholder="Enter supplier name"
-                  required
                 />
+                {touched.name && errors.name && <span className="field-error">{errors.name}</span>}
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label
@@ -395,16 +445,19 @@ export default function SupplierManagement() {
                 </label>
                 <input
                   name="contact_person"
-                  value={formData.contact_person}
-                  onChange={handleInputChange}
+                  value={values.contact_person}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
-                    border: "1px solid #e5e7eb",
+                    border: touched.contact_person && errors.contact_person ? "1px solid #ef4444" : "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                   placeholder="Contact person name"
                 />
+                {touched.contact_person && errors.contact_person && <span className="field-error">{errors.contact_person}</span>}
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label
@@ -419,16 +472,19 @@ export default function SupplierManagement() {
                 </label>
                 <input
                   name="contact_number"
-                  value={formData.contact_number}
-                  onChange={handleInputChange}
+                  value={values.contact_number}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
-                    border: "1px solid #e5e7eb",
+                    border: touched.contact_number && errors.contact_number ? "1px solid #ef4444" : "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                   placeholder="Phone number"
                 />
+                {touched.contact_number && errors.contact_number && <span className="field-error">{errors.contact_number}</span>}
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label
@@ -444,16 +500,19 @@ export default function SupplierManagement() {
                 <input
                   name="email"
                   type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
+                  value={values.email}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
-                    border: "1px solid #e5e7eb",
+                    border: touched.email && errors.email ? "1px solid #ef4444" : "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                   placeholder="Email address"
                 />
+                {touched.email && errors.email && <span className="field-error">{errors.email}</span>}
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label
@@ -468,13 +527,15 @@ export default function SupplierManagement() {
                 </label>
                 <textarea
                   name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
+                  value={values.address}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
                     border: "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                   placeholder="Full address"
                   rows="3"
@@ -503,16 +564,17 @@ export default function SupplierManagement() {
                 </button>
                 <button
                   type="submit"
+                  disabled={isFormSubmitting}
                   style={{
                     padding: "8px 16px",
-                    backgroundColor: "#2563eb",
+                    backgroundColor: isFormSubmitting ? "#94a3b8" : "#2563eb",
                     color: "white",
                     border: "none",
                     borderRadius: "4px",
-                    cursor: "pointer",
+                    cursor: isFormSubmitting ? "not-allowed" : "pointer",
                   }}
                 >
-                  Add Supplier
+                  {isFormSubmitting ? "Adding..." : "Add Supplier"}
                 </button>
               </div>
             </form>
@@ -551,7 +613,9 @@ export default function SupplierManagement() {
             >
               Edit Supplier
             </h3>
-            <form onSubmit={handleEditSubmit}>
+            <form onSubmit={handleValidatedSubmit(handleEditSubmit)}>
+              {errors.submit && <div className="error-msg-banner">✗ {errors.submit}</div>}
+
               <div style={{ marginBottom: "16px" }}>
                 <label
                   style={{
@@ -565,16 +629,18 @@ export default function SupplierManagement() {
                 </label>
                 <input
                   name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
+                  value={values.name}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
-                    border: "1px solid #e5e7eb",
+                    border: touched.name && errors.name ? "1px solid #ef4444" : "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
-                  required
                 />
+                {touched.name && errors.name && <span className="field-error">{errors.name}</span>}
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label
@@ -589,15 +655,18 @@ export default function SupplierManagement() {
                 </label>
                 <input
                   name="contact_person"
-                  value={formData.contact_person}
-                  onChange={handleInputChange}
+                  value={values.contact_person}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
-                    border: "1px solid #e5e7eb",
+                    border: touched.contact_person && errors.contact_person ? "1px solid #ef4444" : "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                 />
+                {touched.contact_person && errors.contact_person && <span className="field-error">{errors.contact_person}</span>}
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label
@@ -612,15 +681,18 @@ export default function SupplierManagement() {
                 </label>
                 <input
                   name="contact_number"
-                  value={formData.contact_number}
-                  onChange={handleInputChange}
+                  value={values.contact_number}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
-                    border: "1px solid #e5e7eb",
+                    border: touched.contact_number && errors.contact_number ? "1px solid #ef4444" : "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                 />
+                {touched.contact_number && errors.contact_number && <span className="field-error">{errors.contact_number}</span>}
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label
@@ -636,15 +708,18 @@ export default function SupplierManagement() {
                 <input
                   name="email"
                   type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
+                  value={values.email}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
-                    border: "1px solid #e5e7eb",
+                    border: touched.email && errors.email ? "1px solid #ef4444" : "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                 />
+                {touched.email && errors.email && <span className="field-error">{errors.email}</span>}
               </div>
               <div style={{ marginBottom: "16px" }}>
                 <label
@@ -659,13 +734,15 @@ export default function SupplierManagement() {
                 </label>
                 <textarea
                   name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
+                  value={values.address}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     width: "100%",
                     border: "1px solid #e5e7eb",
                     padding: "8px",
                     borderRadius: "4px",
+                    outline: "none"
                   }}
                   rows="3"
                 />
@@ -693,16 +770,17 @@ export default function SupplierManagement() {
                 </button>
                 <button
                   type="submit"
+                  disabled={isFormSubmitting}
                   style={{
                     padding: "8px 16px",
-                    backgroundColor: "#2563eb",
+                    backgroundColor: isFormSubmitting ? "#94a3b8" : "#2563eb",
                     color: "white",
                     border: "none",
                     borderRadius: "4px",
-                    cursor: "pointer",
+                    cursor: isFormSubmitting ? "not-allowed" : "pointer",
                   }}
                 >
-                  Save Changes
+                  {isFormSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>

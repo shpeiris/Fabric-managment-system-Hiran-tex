@@ -14,5 +14,6 @@ router.post('/api/orders', isAuthenticated, orderController.createCustomerOrder)
 router.get('/api/sales/orders', ...adminOrSales, orderController.getOrders);
 router.post('/api/sales/orders', ...adminOrSales, orderController.createOrder); // Salesperson creates order for user
 router.put('/api/sales/orders/:id/status', ...adminOrSales, orderController.updateOrderStatus);
+router.get('/api/orders/:id/history', isAuthenticated, orderController.getOrderHistory);
 
 export default router;

@@ -143,10 +143,7 @@ export default function Payments() {
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <button
-                    onClick={() => window.location.hash = `#/orders/${notif.order_id}`}
-                    style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', color: '#64748b' }}
-                  >Details →</button>
+
                   <button
                     onClick={() => setDismissedIds(prev => [...prev, notif.confirmation_id])}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#d1d5db', padding: '0 4px' }}

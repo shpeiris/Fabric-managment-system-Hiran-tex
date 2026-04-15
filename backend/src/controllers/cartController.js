@@ -44,6 +44,7 @@ const updateCartItem = async (req, res) => {
     } catch (err) {
         console.error("Error updating cart:", err);
         if (err.message === "Cart item not found") return res.status(404).json({ error: err.message });
+        if (err.message === "Insufficient stock") return res.status(400).json({ error: err.message });
         res.status(500).json({ error: "Failed to update cart" });
     }
 };

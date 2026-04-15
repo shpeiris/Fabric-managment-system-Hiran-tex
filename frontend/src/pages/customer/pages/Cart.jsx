@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../../../utils/auth.js';
+import { Trash2, Plus, Minus } from 'lucide-react';
 import fabric1 from "../../../assets/Fabrics/lasecotton.png";
 
 const API = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}`;
@@ -77,8 +78,7 @@ export default function Cart() {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0);
-  const delivery = cartItems.length > 0 ? 500 : 0;
-  const total = subtotal + delivery;
+  const total = subtotal;
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>
@@ -129,22 +129,31 @@ export default function Cart() {
                 <button
                   onClick={() => removeItem(item.cart_id)}
                   disabled={updating === item.cart_id}
-                  style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '22px', lineHeight: 1 }}
-                >×</button>
+                  style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px' }}
+                  title="Remove item"
+                >
+                  <Trash2 size={20} />
+                </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <button
-                    onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) - 1)}
+                    onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) - 1) * 100) / 100)}
                     disabled={updating === item.cart_id || parseFloat(item.quantity) <= 1}
-                    style={{ background: '#f3f4f6', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
-                  >−</button>
+                    style={{ background: '#f3f4f6', border: 'none', width: '30px', height: '30px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Minus size={14} />
+                  </button>
                   <input
                     type="number"
                     step="0.01"
                     min="0.01"
                     value={item.quantity}
                     onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (val > 0) updateQuantity(item.cart_id, val);
+                      let val = parseFloat(e.target.value);
+                      if (val > 0) {
+                        // Enforce 2 decimal places
+                        val = Math.round(val * 100) / 100;
+                        updateQuantity(item.cart_id, val);
+                      }
                     }}
                     style={{ 
                       width: '80px', 
@@ -159,10 +168,12 @@ export default function Cart() {
                   />
                   <span style={{ fontSize: '13px', color: '#6b7280' }}>m</span>
                   <button
-                    onClick={() => updateQuantity(item.cart_id, parseFloat(item.quantity) + 1)}
+                    onClick={() => updateQuantity(item.cart_id, Math.round((parseFloat(item.quantity) + 1) * 100) / 100)}
                     disabled={updating === item.cart_id}
-                    style={{ background: '#f3f4f6', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}
-                  >+</button>
+                    style={{ background: '#f3f4f6', border: 'none', width: '30px', height: '30px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Plus size={14} />
+                  </button>
                 </div>
                 <p style={{ fontSize: '15px', fontWeight: '700', color: '#1f2937' }}>
                   Rs. {parseFloat(item.total_price || 0).toFixed(2)}
@@ -194,12 +205,7 @@ export default function Cart() {
                 <span style={{ fontSize: '14px', color: '#6b7280' }}>Subtotal ({cartItems.length} items)</span>
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>Rs. {subtotal.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '14px', color: '#6b7280' }}>Delivery</span>
-                <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>
-                  {delivery > 0 ? `Rs. ${delivery.toFixed(2)}` : 'Free'}
-                </span>
-              </div>
+
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937' }}>Total</span>

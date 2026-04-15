@@ -549,7 +549,7 @@ export default function Checkout() {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>Phone Number *</label>
-                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+94 77 123 4567"
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+94 77 112 4088"
                     style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 

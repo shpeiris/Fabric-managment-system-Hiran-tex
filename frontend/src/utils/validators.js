@@ -272,3 +272,58 @@ export const validateDecimal = (
 
   return null;
 };
+
+/**
+ * Validate Fabric Price (Textile specific)
+ * @param {string|number} price - Fabric price
+ * @returns {string|null} Error message or null if valid
+ */
+export const validateFabricPrice = (price) => {
+  const num = Number(price);
+  if (isNaN(num) || num <= 0) {
+    return "Valid price per meter is required";
+  }
+  if (num > 100000) {
+    return "Price per meter seems unusually high. Please verify.";
+  }
+  return null;
+};
+
+/**
+ * Validate Fabric Stock Quantity
+ * @param {string|number} qty - Stock quantity
+ * @returns {string|null} Error message or null if valid
+ */
+export const validateFabricStock = (qty) => {
+  const num = Number(qty);
+  if (isNaN(num) || num < 0) {
+    return "Stock quantity must be a non-negative number";
+  }
+  return null;
+};
+
+/**
+ * Validate Fabric Width
+ * @param {string|number} width - Fabric width
+ * @returns {string|null} Error message or null if valid
+ */
+export const validateFabricWidth = (width) => {
+  if (!width) return null; // Optional field
+  const num = Number(width.toString().replace(/[^0-9.]/g, ""));
+  if (isNaN(num) || num <= 0) {
+    return "Width must be a positive number (e.g., 45 or 60)";
+  }
+  return null;
+};
+
+/**
+ * Validate that at least one color is selected
+ * @param {Array} colors - Selected colors array
+ * @returns {string|null} Error message or null if valid
+ */
+export const validateAtLeastOneColor = (colors) => {
+  if (!colors || colors.length === 0) {
+    return "Please select at least one color";
+  }
+  return null;
+};
