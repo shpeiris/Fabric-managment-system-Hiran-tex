@@ -16,7 +16,7 @@ const getCart = async (customerId) => {
 const addToCart = async (customerId, fabricId, quantity) => {
   // Check fabric
   const fabricResult = await pool.query(
-    "SELECT price_per_meter, stock_quantity FROM fabrics WHERE fabric_id = $1",
+    "SELECT price_per_meter, stock_quantity, stock_available_quantity FROM fabrics WHERE fabric_id = $1",
     [fabricId]
   );
 
@@ -24,7 +24,7 @@ const addToCart = async (customerId, fabricId, quantity) => {
     throw new Error("Fabric not found");
 
   const fabric = fabricResult.rows[0];
-  if (fabric.stock_quantity < quantity)
+  if (fabric.stock_available_quantity < quantity && fabric.stock_quantity < quantity)
     throw new Error("Insufficient stock");
 
   const totalPrice = fabric.price_per_meter * quantity;
@@ -38,6 +38,9 @@ const addToCart = async (customerId, fabricId, quantity) => {
   if (cartResult.rows.length > 0) {
     // Update
     const newQuantity = cartResult.rows[0].quantity + quantity;
+    if (fabric.stock_available_quantity < newQuantity && fabric.stock_quantity < newQuantity) {
+      throw new Error("Insufficient stock");
+    }
     const newTotalPrice = fabric.price_per_meter * newQuantity;
 
     const updateResult = await pool.query(
@@ -73,12 +76,17 @@ const updateCartItem = async (customerId, cartId, quantity) => {
   const fabricId = cartCheck.rows[0].fabric_id;
 
   const fabricResult = await pool.query(
-    "SELECT price_per_meter FROM fabrics WHERE fabric_id = $1",
+    "SELECT price_per_meter, stock_quantity, stock_available_quantity FROM fabrics WHERE fabric_id = $1",
     [fabricId]
   );
 
   if (fabricResult.rows.length === 0)
     throw new Error("Fabric not found");
+    
+  const fabric = fabricResult.rows[0];
+  if (fabric.stock_available_quantity < quantity && fabric.stock_quantity < quantity) {
+    throw new Error("Insufficient stock");
+  }
 
   const totalPrice = fabricResult.rows[0].price_per_meter * quantity;
 
