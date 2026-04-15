@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { apiCall } from "../../utils/auth.js";
 import { 
@@ -91,13 +92,13 @@ export default function NewOrder() {
     };
 
     const addToCart = () => {
-        if (!selectedFabric) return alert("Select a fabric");
-        if (quantity <= 0) return alert("Invalid quantity");
+        if (!selectedFabric) return toast.warning("Select a fabric");
+        if (quantity <= 0) return toast.warning("Invalid quantity");
         const fabricFn = fabrics.find(f => f.fabric_id == selectedFabric);
         if (!fabricFn) return;
         const qtyNum = Number(quantity);
         if (qtyNum > Number(fabricFn.stock_available_quantity)) {
-            return alert(`Insufficient stock! Available: ${fabricFn.stock_available_quantity}m`);
+            return toast.error(`Insufficient stock! Available: ${fabricFn.stock_available_quantity}m`);
         }
         setCart([...cart, {
             fabric_id: fabricFn.fabric_id,
@@ -118,8 +119,8 @@ export default function NewOrder() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!phoneSearch.trim() && !customerName.trim()) return alert("Please enter a customer phone number or name");
-        if (cart.length === 0) return alert("Order cart is empty");
+        if (!phoneSearch.trim() && !customerName.trim()) return toast.warning("Please enter a customer phone number or name");
+        if (cart.length === 0) return toast.warning("Order cart is empty");
         try {
             setLoading(true);
             const payload = {
@@ -137,16 +138,16 @@ export default function NewOrder() {
             });
             const data = await res.json();
             if (res.ok) {
-                alert(`Order placed!\nOrder ID: ${data.order_id}\nCustomer: ${payload.customer_name}`);
+                toast.success(`Order placed! ID: ${data.order_id}`);
                 setCart([]);
                 clearCustomer();
                 navigate("/sales/orders");
             } else {
-                alert(data.error || "Order failed");
+                toast.error(data.error || "Order failed");
             }
         } catch (err) {
             console.error("Order error:", err);
-            alert("Failed to place order");
+            toast.error("Failed to place order");
         } finally {
             setLoading(false);
         }

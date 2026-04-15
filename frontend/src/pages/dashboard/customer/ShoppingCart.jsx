@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+
 import { useNavigate } from "react-router-dom";
 import { 
   ShoppingBag, 
@@ -45,7 +47,7 @@ const ShoppingCart = () => {
     // Find item to check stock
     const item = cartItems.find(i => i.cart_id === cartId);
     if (item && newQuantity > parseFloat(item.stock_available_quantity)) {
-        alert(`Only ${item.stock_available_quantity}m available in stock.`);
+        toast.error(`Only ${item.stock_available_quantity}m available in stock.`);
         return;
     }
 
@@ -62,7 +64,7 @@ const ShoppingCart = () => {
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error("Error updating quantity:", err);
-      alert(err.error || "Failed to update quantity");
+      toast.error(err.error || "Failed to update quantity");
     } finally {
       setUpdating(null);
     }
@@ -77,7 +79,7 @@ const ShoppingCart = () => {
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error("Error removing item:", err);
-      alert("Failed to remove item");
+      toast.error("Failed to remove item");
     } finally {
       setUpdating(null);
     }
@@ -92,7 +94,7 @@ const ShoppingCart = () => {
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error("Error clearing cart:", err);
-      alert("Failed to clear cart");
+      toast.error("Failed to clear cart");
     } finally {
       setLoading(false);
     }

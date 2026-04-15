@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../../utils/auth.js';
 import './BrowseFabrics.css';
@@ -47,13 +49,12 @@ const BrowseFabrics = () => {
             });
 
             if (response.ok) {
-                alert('Added to cart!');
+                toast.success('Added to cart!');
                 // Trigger cart count update in layout
                 window.dispatchEvent(new Event('cartUpdated'));
             } else {
-
                 const data = await response.json();
-                alert(data.error || 'Failed to add to cart');
+                toast.error(data.error || 'Failed to add to cart');
             }
         } catch (err) {
             console.error('Cart error:', err);

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from "../../utils/auth.js";
 import SalesLogger from "../../utils/salesLogger.js";
@@ -78,12 +80,12 @@ export default function Orders() {
       });
 
       if (response.ok) {
-        alert('Order status updated successfully!');
+        toast.success('Order status updated successfully!');
         SalesLogger.orders.statusUpdate(orderId, `${newStatus}_success`);
         fetchOrders();
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error || 'Failed to update order status'}`);
+        toast.error(`Error: ${errorData.error || 'Failed to update order status'}`);
       }
     } catch (err) {
       console.error('Error updating order:', err);
@@ -98,7 +100,7 @@ export default function Orders() {
     const { orderId, delivered_by, delivery_contact_number } = deliveryData;
     
     if (!delivered_by || !delivery_contact_number) {
-      alert('Please enter both name and contact number');
+      toast.warning('Please enter both name and contact number');
       return;
     }
 
@@ -116,18 +118,18 @@ export default function Orders() {
       });
 
       if (response.ok) {
-        alert('Order marked as Delivered!');
+        toast.success('Order marked as Delivered!');
         SalesLogger.orders.statusUpdate(orderId, 'DELIVERED_success');
         setShowDeliveryModal(false);
         fetchOrders();
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error || 'Failed to mark as Delivered'}`);
+        toast.error(`Error: ${errorData.error || 'Failed to mark as Delivered'}`);
       }
     } catch (err) {
       console.error('Error updating order:', err);
       SalesLogger.orders.statusUpdateError(orderId, err);
-      alert('Failed to update order status');
+      toast.error('Failed to update order status');
     } finally {
       setLoading(false);
     }
@@ -144,7 +146,7 @@ export default function Orders() {
 
       // If order has no payment_id, we can't use /api/payments/confirm.
       // We might need to ask user to "Adding Cash Payment" -> then confirm.
-      alert("No payment record found. Only orders with initial payment records can be confirmed.");
+      toast.error("No payment record found. Only orders with initial payment records can be confirmed.");
       return;
     }
 
@@ -157,14 +159,14 @@ export default function Orders() {
       });
 
       if (response.ok) {
-        alert("Payment confirmed!");
+        toast.success("Payment confirmed!");
         fetchOrders();
       } else {
-        alert("Failed to confirm payment");
+        toast.error("Failed to confirm payment");
       }
     } catch (err) {
       console.error(err);
-      alert("Error confirming payment");
+      toast.error("Error confirming payment");
     }
   };
 
@@ -179,11 +181,11 @@ export default function Orders() {
         setSelectedOrderForInvoice(fullOrder);
         setShowInvoiceModal(true);
       } else {
-        alert("Failed to fetch order details for invoice");
+        toast.error("Failed to fetch order details for invoice");
       }
     } catch (err) {
       console.error("Error fetching invoice details:", err);
-      alert("Error loading invoice");
+      toast.error("Error loading invoice");
     } finally {
       setFetchingInvoice(false);
     }

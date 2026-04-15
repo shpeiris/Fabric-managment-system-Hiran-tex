@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'react-toastify';
 import { apiCall } from "../../utils/auth";
 
 export default function Payments() {
@@ -47,7 +48,7 @@ export default function Payments() {
   };
 
   const handleUploadSlip = async () => {
-    if (!slipFile) return alert("Please select a bank slip image");
+    if (!slipFile) return toast.warning("Please select a bank slip image");
 
     try {
       setLoading(true);
@@ -65,11 +66,11 @@ export default function Payments() {
         fetchPayments();
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to upload slip");
+        toast.error(error.error || "Failed to upload slip");
       }
     } catch (err) {
       console.error(err);
-      alert("Error uploading slip");
+      toast.error("Error uploading slip");
     } finally {
       setLoading(false);
     }

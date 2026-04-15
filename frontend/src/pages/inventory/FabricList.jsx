@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-toastify';
+
 import { apiCall } from "../../utils/auth.js";
 import "./FabricManagement.css";
 import { useFormValidation } from "../../hooks/useFormValidation";
@@ -108,7 +110,7 @@ export default function FabricManagement() {
       }
     } catch (err) {
       console.error('Error fetching fabrics:', err);
-      alert('Failed to load fabrics');
+      toast.error('Failed to load fabrics');
     }
   };
 
@@ -165,9 +167,7 @@ export default function FabricManagement() {
       }
 
       if (successCount === colorsToProcess.length) {
-        // We'll use a local state for success message instead of alert if we were going full toast, 
-        // but for now let's at least keep completion alerts or move to a message in the modal.
-        alert(editingFabric ? 'Fabric updated successfully' : `Successfully added ${successCount} fabric variant(s)!`);
+        toast.success(editingFabric ? 'Fabric updated successfully' : `Successfully added ${successCount} fabric variant(s)!`);
         setShowModal(false);
         resetForm();
         fetchFabrics();
@@ -215,14 +215,14 @@ export default function FabricManagement() {
       const data = await response.json();
 
       if (response.ok) {
-        alert(data.message);
+        toast.success(data.message);
         fetchFabrics();
       } else {
-        alert(data.error || 'Delete failed');
+        toast.error(data.error || 'Delete failed');
       }
     } catch (err) {
       console.error('Error deleting fabric:', err);
-      alert('Failed to delete fabric');
+      toast.error('Failed to delete fabric');
     }
   };
 

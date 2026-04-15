@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from "../../../utils/auth.js";
 import { CreditCard, Package, CheckCircle, XCircle, Clipboard, Mail, RefreshCw, Truck, Search } from 'lucide-react';
@@ -85,15 +87,15 @@ const PaymentQueue = () => {
             });
 
             if (response.ok) {
-                alert(`Payment ${methodOrStatus === 'FAILED' ? 'rejected' : 'confirmed'} successfully.`);
+                toast.success(`Payment ${methodOrStatus === 'FAILED' ? 'rejected' : 'confirmed'} successfully.`);
                 fetchPendingPayments();
             } else {
                 const error = await response.json();
-                alert(`Error: ${error.error || 'Failed to process payment'}`);
+                toast.error(`Error: ${error.error || 'Failed to process payment'}`);
             }
         } catch (err) {
             console.error('Error confirming payment:', err);
-            alert(`Error: ${err.message}`);
+            toast.error(`Error: ${err.message}`);
         } finally {
             setActionLoading(false);
         }
@@ -113,7 +115,7 @@ const PaymentQueue = () => {
             });
 
             if (response.ok) {
-                alert(`${customMessage ? 'Special message' : type.replace('_', ' ')} sent successfully!`);
+                toast.success(`${customMessage ? 'Special message' : type.replace('_', ' ')} sent successfully!`);
                 setShowConfirmationModal(false);
                 setSelectedOrder(null);
                 setSpecialMessage('');
@@ -122,7 +124,7 @@ const PaymentQueue = () => {
                 throw new Error(error.error || 'Failed to send confirmation');
             }
         } catch (err) {
-            alert(`Error: ${err.message}`);
+            toast.error(`Error: ${err.message}`);
         } finally {
             setActionLoading(false);
         }
