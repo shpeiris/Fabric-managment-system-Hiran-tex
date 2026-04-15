@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+
 import { apiCall } from "@/utils/auth.js";
 import "./pages/UserManagement.css";
 
@@ -102,7 +104,7 @@ export default function UserManagement() {
         setErrors({});
 
         if (!data.isDefaultPassword) {
-          alert("User created successfully!");
+          toast.success("User created successfully!");
         }
       } else {
         const errorData = await response.json();
@@ -130,7 +132,7 @@ export default function UserManagement() {
             user.id === userId ? { ...user, status: newStatus } : user,
           ),
         );
-        alert(`User ${newStatus.toLowerCase()} successfully!`);
+        toast.success(`User ${newStatus.toLowerCase()} successfully!`);
       }
     } catch (error) {
       console.error("Error updating user status:", error);
@@ -328,7 +330,7 @@ export default function UserManagement() {
                   className="copy-btn"
                   onClick={() => {
                     navigator.clipboard.writeText(generatedPassword);
-                    alert("Password copied to clipboard!");
+                    toast.info("Password copied to clipboard!");
                   }}
                 >
                   Copy

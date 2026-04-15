@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+
 import { useLocation } from "react-router-dom";
 import { apiCall } from "../../../utils/auth.js";
 import "./InventoryDashboard.css";
@@ -153,7 +155,7 @@ export default function StockArrivals() {
       const allOk = responses.every(r => r.ok);
 
       if (allOk) {
-            alert("Stock arrivals recorded successfully!");
+            toast.success("Stock arrivals recorded successfully!");
             setShowModal(false);
             resetValidationForm();
             setSelectedVariants([]);

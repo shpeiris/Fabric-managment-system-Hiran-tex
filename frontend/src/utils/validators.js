@@ -228,7 +228,7 @@ export const validateNIC = (nic) => {
  * @param {number} maxSizeMB - Maximum file size in MB
  * @returns {string|null} Error message or null if valid
  */
-export const validateFile = (file, allowedTypes = [], maxSizeMB = 5) => {
+export const validateFile = (file, allowedTypes = [], maxSizeMB = 50) => {
   if (!file) {
     return "Please select a file";
   }

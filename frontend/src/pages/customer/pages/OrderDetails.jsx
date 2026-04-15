@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify';
+
 import { useParams, useNavigate } from 'react-router-dom'
 import orderService from '../../../services/orderService'
 import cartService from '../../../services/cartService'
@@ -67,6 +69,7 @@ export default function OrderDetails() {
       setLoading(false)
     } catch (err) {
       console.error("Error fetching order details:", err)
+      toast.error("Failed to load order details.")
       setError("Failed to load order details.")
       setLoading(false)
     }
@@ -85,11 +88,11 @@ export default function OrderDetails() {
       )
       
       await Promise.all(reorderPromises)
-      alert("Items added to cart successfully!")
+      toast.success("Items added to cart successfully!")
       navigate('/customer/cart')
     } catch (err) {
       console.error("Reorder error:", err)
-      alert("Failed to reorder items. Some items might be out of stock.")
+      toast.error("Failed to reorder items. Some items might be out of stock.")
     } finally {
       setLoading(false)
     }
@@ -129,7 +132,7 @@ export default function OrderDetails() {
       // Basic validation
       const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
       if (!allowedTypes.includes(file.type)) {
-        alert('Please upload a valid image (JPG, PNG) or PDF file')
+        toast.warning('Please upload a valid image (JPG, PNG) or PDF file')
         return
       }
       setSelectedFile(file)
@@ -138,7 +141,7 @@ export default function OrderDetails() {
 
   const handleUploadSlip = async () => {
     if (!selectedFile) {
-      alert("Please select a file first")
+      toast.warning("Please select a file first")
       return
     }
 
@@ -154,7 +157,7 @@ export default function OrderDetails() {
       fetchOrderDetails() // Refresh data
     } catch (err) {
       console.error("Upload error:", err)
-      alert("Failed to upload bank slip. Please try again.")
+      toast.error("Failed to upload bank slip. Please try again.")
     } finally {
       setUploadLoading(false)
     }
@@ -163,7 +166,7 @@ export default function OrderDetails() {
   const handleSubmitFeedback = async (e) => {
     e.preventDefault()
     if (newFeedback.fabric_quality === 0 || newFeedback.delivery === 0) {
-      alert("Please provide ratings for both Fabric Quality and Delivery Service")
+      toast.warning("Please provide ratings for both Fabric Quality and Delivery Service")
       return
     }
 
@@ -185,7 +188,7 @@ export default function OrderDetails() {
 
       await customerService.submitFeedback(feedbackPayload)
       
-      alert("Thank you for your feedback!")
+      toast.success("Thank you for your feedback!")
       
       // Refresh to show the submitted feedback
       const fbData = await customerService.getOrderFeedback(id)
@@ -194,7 +197,7 @@ export default function OrderDetails() {
       }
     } catch (err) {
       console.error("Feedback submission error:", err)
-      alert(err.error || "Failed to submit feedback. Please try again.")
+      toast.error(err.error || "Failed to submit feedback. Please try again.")
     } finally {
       setSubmittingFeedback(false)
     }

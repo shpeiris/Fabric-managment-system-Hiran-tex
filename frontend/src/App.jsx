@@ -46,6 +46,9 @@ import OrderHistory from "./pages/customer/pages/OrderHistory"; // Left behind
 import Feedback from "./pages/customer/pages/Feedback"; // Left behind
 import FabricDetails from "./pages/dashboard/customer/FabricDetails";
 import Notifications from "./pages/dashboard/customer/Notifications";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
   return (
@@ -122,7 +125,9 @@ function App() {
           <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>
+      <ToastContainer position="top-right" autoClose={3000} />
     </BrowserRouter>
+
   );
 }
 

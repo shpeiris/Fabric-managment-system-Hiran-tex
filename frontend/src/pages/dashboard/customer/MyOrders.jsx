@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify';
+
 import { useNavigate } from 'react-router-dom'
 import orderService from '../../../services/orderService'
 import cartService from '../../../services/cartService'
@@ -57,14 +59,14 @@ const MyOrders = () => {
       setSelectedOrder(data)
       setShowModal(true)
     } catch (err) {
-      alert("Failed to fetch order details.")
+      toast.error("Failed to fetch order details.")
     }
   }
 
   const handleReorder = async (items) => {
     try {
       if (!items || items.length === 0) {
-        alert("No items to reorder.")
+        toast.warning("No items to reorder.")
         return
       }
 
@@ -79,12 +81,12 @@ const MyOrders = () => {
       await Promise.all(reorderPromises)
       setLoading(false)
       
-      alert("Items added to cart successfully!")
+      toast.success("Items added to cart successfully!")
       navigate('/customer/cart')
     } catch (err) {
       console.error("Reorder error:", err)
       setLoading(false)
-      alert("Failed to reorder items. Some items might be out of stock.")
+      toast.error("Failed to reorder items. Some items might be out of stock.")
     }
   }
 
@@ -96,7 +98,7 @@ const MyOrders = () => {
     } catch (err) {
       console.error("Reorder from list error:", err)
       setLoading(false)
-      alert("Failed to fetch order items for reorder.")
+      toast.error("Failed to fetch order items for reorder.")
     }
   }
 
