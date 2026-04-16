@@ -184,12 +184,7 @@ export default function StockArrivals() {
     return (today - arrivalDate) / (1000 * 60 * 60 * 24) <= 7;
   }).length;
   
-  const expectedDeliveries = arrivals.filter(a => {
-    const arrivalDate = new Date(a.arrival_date);
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    return arrivalDate > today;
-  }).length;
+
 
   const filteredArrivals = arrivals.filter(a => {
     const arrivalDate = new Date(a.arrival_date);
@@ -197,7 +192,7 @@ export default function StockArrivals() {
     today.setHours(0,0,0,0);
     
     if (filter === 'arrived') return arrivalDate <= today;
-    if (filter === 'expected') return arrivalDate > today;
+
     return true;
   });
 
@@ -235,10 +230,7 @@ export default function StockArrivals() {
           <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", marginBottom: "5px" }}>Recent Arrivals</div>
           <div style={{ fontSize: "24px", color: "#001a66", fontWeight: "800" }}>{recentArrivals}</div>
         </div>
-        <div style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", padding: "20px", borderRadius: "16px", border: "1px solid #bbf7d0" }}>
-          <div style={{ fontSize: "12px", color: "#166534", fontWeight: "700", textTransform: "uppercase", marginBottom: "5px" }}>Expected Deliveries</div>
-          <div style={{ fontSize: "24px", color: "#15803d", fontWeight: "800" }}>{expectedDeliveries}</div>
-        </div>
+
         <div style={{ background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", marginBottom: "5px" }}>Total Meters Received</div>
           <div style={{ fontSize: "24px", color: "#001a66", fontWeight: "800" }}>{totalMeters.toFixed(1)} m</div>
@@ -269,17 +261,7 @@ export default function StockArrivals() {
         >
             Received
         </button>
-        <button 
-            onClick={() => setFilter('expected')}
-            style={{ 
-                padding: '8px 16px', borderRadius: '20px', border: 'none', 
-                background: filter === 'expected' ? '#001a66' : '#f1f5f9', 
-                color: filter === 'expected' ? 'white' : '#475569',
-                fontSize: '13px', fontWeight: '600', cursor: 'pointer'
-            }}
-        >
-            Expected {expectedDeliveries > 0 && `(${expectedDeliveries})`}
-        </button>
+
       </div>
 
       <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 10px 30px rgba(0,26,102,0.05)" }}>
@@ -301,15 +283,7 @@ export default function StockArrivals() {
                 <tr key={arrival.arrival_id} style={{ borderTop: "1px solid #f1f5f9" }}>
                   <td style={{ padding: "16px", color: "#001a66", fontWeight: "700" }}>#ARV-{arrival.arrival_id.toString().padStart(3, '0')}</td>
                   <td style={{ padding: "16px", color: "#64748b" }}>
-                    <div style={{
-                        color: new Date(arrival.arrival_date) > new Date() ? '#2563eb' : '#64748b',
-                        fontWeight: new Date(arrival.arrival_date) > new Date() ? '700' : '400'
-                    }}>
-                        {new Date(arrival.arrival_date).toLocaleDateString()}
-                    </div>
-                    {new Date(arrival.arrival_date) > new Date() && (
-                        <div style={{ fontSize: '10px', color: '#2563eb', textTransform: 'uppercase', fontWeight: '800' }}>Expected</div>
-                    )}
+                    {new Date(arrival.arrival_date).toLocaleDateString()}
                   </td>
                   <td style={{ padding: "16px" }}>
                     <div style={{ fontWeight: "700", color: "#1e293b" }}>{arrival.fabric_name}</div>
