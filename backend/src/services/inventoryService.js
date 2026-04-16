@@ -21,7 +21,7 @@ const getDashboardStats = async () => {
 
 const getInventoryFabrics = async () => {
   const query = `
-    SELECT f.*, 
+    SELECT f.*, f.restock_level AS reorder_level,
            CASE 
              WHEN f.stock_quantity = 0 THEN 'OUT_OF_STOCK'
              WHEN f.stock_quantity <= f.restock_level THEN 'LOW'
