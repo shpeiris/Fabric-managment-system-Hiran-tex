@@ -79,13 +79,7 @@ const addFabric = async (fabricData) => {
     );
   } catch (_) { /* column may not exist */ }
 
-  // Automatically add to main catalog (catalog_id 1)
-  try {
-    await pool.query(
-      "INSERT INTO catalog_items (catalog_id, fabric_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-      [1, newFabricId]
-    );
-  } catch (_) { /* Best effort */ }
+
 
   return { fabric_id: newFabricId, ...fabricData };
 };

@@ -64,6 +64,7 @@ CREATE TABLE fabrics (
     image_url TEXT,
     width VARCHAR(50),
     restock_date DATE,
+    is_in_catalog BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

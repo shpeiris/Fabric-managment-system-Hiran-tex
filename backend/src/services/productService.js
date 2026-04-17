@@ -5,8 +5,7 @@ const getPublicFabrics = async (filters) => {
     let query = `
         SELECT f.* 
         FROM fabrics f
-        INNER JOIN catalog_items ci ON f.fabric_id = ci.fabric_id
-        WHERE ci.catalog_id = 1
+        WHERE f.is_in_catalog = true
     `;
     const params = [];
     let paramCount = 0;
@@ -44,8 +43,7 @@ const getPublicFabricById = async (id) => {
         const query = `
             SELECT f.* 
             FROM fabrics f
-            INNER JOIN catalog_items ci ON f.fabric_id = ci.fabric_id
-            WHERE f.fabric_id = $1 AND ci.catalog_id = 1
+            WHERE f.fabric_id = $1 AND f.is_in_catalog = true
         `;
         const result = await pool.query(query, [id]);
         return result.rows.length > 0 ? result.rows[0] : null;
