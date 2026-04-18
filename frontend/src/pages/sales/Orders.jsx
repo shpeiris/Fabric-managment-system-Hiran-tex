@@ -60,7 +60,39 @@ export default function Orders() {
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
+    const order = orders.find(o => o.order_id === orderId);
+
     if (newStatus === 'DELIVERED') {
+      if (order?.delivery_type === 'STORE_PICKUP') {
+        // Automatic complete for Store Pickup
+        setLoading(true);
+        try {
+          const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders/${orderId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ 
+              status: 'DELIVERED',
+              delivered_by: 'Customer (Store Pickup)',
+              delivery_contact_number: order.phone_number || 'Internal',
+              tracking_id: 'STORE-PICKUP'
+            })
+          });
+
+          if (response.ok) {
+            toast.success('Order picked up and marked as Delivered!');
+            fetchOrders();
+          } else {
+            toast.error('Failed to update status automatically');
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('Error in automatic delivery update');
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Show modal for standard deliveries
       setDeliveryData({
         orderId: orderId,
         delivered_by: '',
@@ -90,7 +122,7 @@ export default function Orders() {
     } catch (err) {
       console.error('Error updating order:', err);
       SalesLogger.orders.statusUpdateError(orderId, err);
-      alert('Failed to update order status');
+      toast.error('Failed to update order status');
     } finally {
       setLoading(false);
     }
