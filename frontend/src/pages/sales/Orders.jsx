@@ -97,7 +97,7 @@ export default function Orders() {
   };
 
   const submitDeliveredStatus = async () => {
-    const { orderId, delivered_by, delivery_contact_number } = deliveryData;
+    const { orderId, delivered_by, delivery_contact_number, tracking_id } = deliveryData;
     
     if (!delivered_by || !delivery_contact_number) {
       toast.warning('Please enter both name and contact number');

@@ -20,7 +20,8 @@ export const initOrderModel = async () => {
       verified_at TIMESTAMP,
       verified_by INTEGER,
       delivered_by VARCHAR(255),
-      delivery_contact_number VARCHAR(20)
+      delivery_contact_number VARCHAR(20),
+      tracking_id VARCHAR(255)
     );
 
     CREATE TABLE IF NOT EXISTS order_status_history (
