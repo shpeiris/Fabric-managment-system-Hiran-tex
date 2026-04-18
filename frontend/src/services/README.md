@@ -125,7 +125,7 @@ const order = await orderService.createOrder({
 });
 
 // Update order status
-await orderService.updateOrderStatus(orderId, "SHIPPED");
+await orderService.updateOrderStatus(orderId, "DELIVERED");
 
 // Cancel order
 await orderService.cancelOrder(orderId);

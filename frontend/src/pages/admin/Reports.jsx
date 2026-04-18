@@ -4,7 +4,7 @@ import "./pages/Reports.css";
 
 export default function Reports() {
   const [activeTab, setActiveTab] = useState("sales");
-  const [salesReport, setSalesReport] = useState([]);
+  const [salesReport, setSalesReport] = useState(null);
   const [inventoryReport, setInventoryReport] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -13,10 +13,14 @@ export default function Reports() {
     if (activeTab === "inventory") fetchInventoryReport();
   }, [activeTab]);
 
-  const fetchSalesReport = async () => {
+  const fetchSalesReport = async (startDate = "", endDate = "") => {
     try {
       setLoading(true);
-      const res = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/sales`);
+      let url = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/sales`;
+      if (startDate) url += `?startDate=${startDate}`;
+      if (endDate) url += `${startDate ? '&' : '?'}endDate=${endDate}`;
+      
+      const res = await apiCall(url);
       const data = await res.json();
       if (res.ok) setSalesReport(data);
     } catch (err) {
@@ -41,7 +45,16 @@ export default function Reports() {
 
   return (
     <div className="reports-page">
-      <h1>Reports and Analytics</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <h1>Reports and Analytics</h1>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+           <input 
+             type="date" 
+             style={{ padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+             onChange={(e) => fetchSalesReport(e.target.value)} 
+           />
+        </div>
+      </div>
 
       {/* TABS */}
       <div className="report-tabs">
@@ -61,22 +74,25 @@ export default function Reports() {
           <p className="note">Comprehensive sales overview and recent performance.</p>
 
           {salesReport.summary && (
-            <div className="inventory-summary">
-              <div className="summary-card">
+            <div className="inventory-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <div className="summary-card" style={{ background: '#f8fafc', borderLeft: '4px solid #001a66' }}>
                 <h3>Total Revenue</h3>
-                <p>Rs. {salesReport.summary.totalRevenue.toLocaleString()}</p>
+                <p style={{ fontWeight: 'bold', fontSize: '1.4rem' }}>Rs. {salesReport.summary.totalRevenue.toLocaleString()}</p>
+                <small style={{ color: '#64748b' }}>Combined Total</small>
+              </div>
+              <div className="summary-card" style={{ background: '#f8fafc', borderLeft: '4px solid #059669' }}>
+                <h3>Product Sales</h3>
+                <p style={{ color: '#059669', fontWeight: 'bold' }}>Rs. {salesReport.summary.productRevenue.toLocaleString()}</p>
+                <small style={{ color: '#64748b' }}>Fabric value</small>
+              </div>
+              <div className="summary-card" style={{ background: '#f8fafc', borderLeft: '4px solid #2563eb' }}>
+                <h3>Delivery Fees</h3>
+                <p style={{ color: '#2563eb', fontWeight: 'bold' }}>Rs. {salesReport.summary.deliveryRevenue.toLocaleString()}</p>
+                <small style={{ color: '#64748b' }}>Shipping collected</small>
               </div>
               <div className="summary-card">
                 <h3>Total Orders</h3>
                 <p>{salesReport.summary.totalOrders}</p>
-              </div>
-              <div className="summary-card">
-                <h3>Unique Customers</h3>
-                <p>{salesReport.summary.uniqueCustomers}</p>
-              </div>
-              <div className="summary-card">
-                <h3>Avg. Order Value</h3>
-                <p>Rs. {Number(salesReport.summary.avgOrderValue).toFixed(2)}</p>
               </div>
             </div>
           )}
@@ -89,20 +105,24 @@ export default function Reports() {
                   <tr>
                     <th>Date</th>
                     <th>Orders</th>
-                    <th>Revenue</th>
+                    <th>Product Sales</th>
+                    <th>Delivery Fees</th>
+                    <th>Total Revenue</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {salesReport.dailySales?.length > 0 ? (
-                    salesReport.dailySales.map((row, idx) => (
-                      <tr key={idx}>
-                        <td style={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString()}</td>
-                        <td>{row.order_count}</td>
-                        <td>Rs. {Number(row.total_sales).toFixed(2)}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="3">No sales metrics recorded.</td></tr>
+                    {salesReport.dailySales?.length > 0 ? (
+                      salesReport.dailySales.map((row, idx) => (
+                        <tr key={idx}>
+                          <td style={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString()}</td>
+                          <td>{row.order_count}</td>
+                          <td>Rs. {Number(row.product_sales).toLocaleString()}</td>
+                          <td>Rs. {Number(row.delivery_sales).toLocaleString()}</td>
+                          <td style={{ fontWeight: 'bold' }}>Rs. {Number(row.total_sales).toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                    <tr><td colSpan="5">No sales metrics recorded.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -123,8 +143,8 @@ export default function Reports() {
                   </tr>
                 </thead>
                 <tbody>
-                  {salesReport.monthlyOrders?.length > 0 ? (
-                    salesReport.monthlyOrders.map((o, idx) => (
+                  {salesReport.detailedOrders?.length > 0 ? (
+                    salesReport.detailedOrders.map((o, idx) => (
                       <tr key={idx}>
                         <td style={{ fontWeight: 600 }}>#{o.order_id}</td>
                         <td>{o.customer_name}</td>
@@ -136,8 +156,8 @@ export default function Reports() {
                             padding: '4px 8px', 
                             borderRadius: '4px',
                             fontWeight: 'bold',
-                            background: o.order_status === 'COMPLETED' ? '#e8f5e9' : '#fff3e0',
-                            color: o.order_status === 'COMPLETED' ? '#2e7d32' : '#ef6c00'
+                            background: o.order_status === 'DELIVERED' ? '#e8f5e9' : '#fff3e0',
+                            color: o.order_status === 'DELIVERED' ? '#2e7d32' : '#ef6c00'
                           }}>
                             {o.order_status}
                           </span>
@@ -145,7 +165,35 @@ export default function Reports() {
                       </tr>
                     ))
                   ) : (
-                    <tr><td colSpan="5">No transactions this month.</td></tr>
+                    <tr><td colSpan="5">No transaction records found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="report-box" style={{ marginBottom: '40px' }}>
+            <h3>Top Performing Fabrics</h3>
+            <div className="table-container">
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>Fabric Name</th>
+                    <th>Meters Sold</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salesReport.topSelling?.length > 0 ? (
+                    salesReport.topSelling.map((f, idx) => (
+                      <tr key={idx}>
+                        <td style={{ fontWeight: 600 }}>{f.name}</td>
+                        <td>{Number(f.total_meters).toLocaleString()} m</td>
+                        <td style={{ color: '#059669', fontWeight: 700 }}>Rs. {Number(f.total_revenue).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="3">No sales record found.</td></tr>
                   )}
                 </tbody>
               </table>

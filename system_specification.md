@@ -9,7 +9,7 @@ The system uses custom PostgreSQL types to enforce data integrity across various
 | :--- | :--- | :--- |
 | `user_role` | `ADMIN`, `INVENTORY_MANAGER`, `SALESPERSON` | Defines access levels for staff. |
 | `user_status` | `ACTIVE`, `INACTIVE` | Current employment status. |
-| `order_status` | `PENDING`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED` | Lifecycle of a customer order. |
+| `order_status` | `PENDING`, `PROCESSING`, `DELIVERED`, `CANCELLED` | Lifecycle of a customer order. |
 | `payment_status` | `PENDING`, `COMPLETED`, `FAILED`, `REFUNDED` | Status of financial transactions. |
 
 ---

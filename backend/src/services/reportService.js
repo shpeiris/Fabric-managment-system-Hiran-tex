@@ -1,29 +1,44 @@
 import { pool } from '../config/db.js';
 
 const getSalesReport = async (startDate, endDate) => {
-    let dateFilter = "WHERE order_status != 'CANCELLED'";
+    let dateFilter = "WHERE o.order_status != 'CANCELLED'";
     const params = [];
 
     if (startDate && endDate) {
-        dateFilter += " AND order_date BETWEEN $1 AND $2";
+        dateFilter += " AND o.order_date BETWEEN $1 AND $2";
         params.push(startDate, endDate);
     }
 
     const queries = {
         summary: `
             SELECT 
-                COALESCE(SUM(total_amount), 0) as total_revenue, 
-                COUNT(*) as total_orders, 
-                COALESCE(AVG(total_amount), 0) as avg_order_value,
-                COUNT(DISTINCT customer_id) as unique_customers
-            FROM orders 
+                COALESCE(SUM(o.total_amount), 0) as total_revenue, 
+                COUNT(DISTINCT o.order_id) as total_orders, 
+                COALESCE(AVG(o.total_amount), 0) as avg_order_value,
+                COUNT(DISTINCT o.customer_id) as unique_customers,
+                COALESCE(SUM(oi_sub.items_total), 0) as product_revenue
+            FROM orders o
+            LEFT JOIN (
+                SELECT order_id, SUM(total_price) as items_total 
+                FROM order_items 
+                GROUP BY order_id
+            ) oi_sub ON o.order_id = oi_sub.order_id
             ${dateFilter}
         `,
         dailySales: `
-            SELECT DATE(order_date) as date, SUM(total_amount) as total_sales, COUNT(*) as order_count
-            FROM orders 
+            SELECT 
+                DATE(o.order_date) as date, 
+                SUM(o.total_amount) as total_sales, 
+                COUNT(DISTINCT o.order_id) as order_count,
+                SUM(COALESCE(oi_sub.items_total, 0)) as product_sales
+            FROM orders o
+            LEFT JOIN (
+                SELECT order_id, SUM(total_price) as items_total 
+                FROM order_items 
+                GROUP BY order_id
+            ) oi_sub ON o.order_id = oi_sub.order_id
             ${dateFilter}
-            GROUP BY DATE(order_date) 
+            GROUP BY DATE(o.order_date) 
             ORDER BY date DESC 
             LIMIT 30
         `,
@@ -33,24 +48,46 @@ const getSalesReport = async (startDate, endDate) => {
             JOIN customers c ON o.customer_id = c.customer_id
             ${dateFilter}
             ORDER BY o.order_date DESC
+        `,
+        topSelling: `
+            SELECT f.name, SUM(oi.quantity) as total_meters, SUM(oi.total_price) as total_revenue
+            FROM order_items oi
+            JOIN fabrics f ON oi.fabric_id = f.fabric_id
+            JOIN orders o ON oi.order_id = o.order_id
+            ${dateFilter}
+            GROUP BY f.fabric_id, f.name
+            ORDER BY total_meters DESC
+            LIMIT 10
         `
     };
 
-    const [summary, dailySales, detailedOrders] = await Promise.all([
+    const [summary, dailySales, detailedOrders, topSelling] = await Promise.all([
         pool.query(queries.summary, params),
         pool.query(queries.dailySales, params),
-        pool.query(queries.detailedOrders, params)
+        pool.query(queries.detailedOrders, params),
+        pool.query(queries.topSelling, params)
     ]);
+
+    const totalRevenue = parseFloat(summary.rows[0]?.total_revenue || 0);
+    const productRevenue = parseFloat(summary.rows[0]?.product_revenue || 0);
 
     return {
         summary: {
-            totalRevenue: parseFloat(summary.rows[0]?.total_revenue || 0),
+            totalRevenue,
+            productRevenue,
+            deliveryRevenue: totalRevenue - productRevenue,
             totalOrders: parseInt(summary.rows[0]?.total_orders || 0),
             avgOrderValue: parseFloat(summary.rows[0]?.avg_order_value || 0),
             uniqueCustomers: parseInt(summary.rows[0]?.unique_customers || 0)
         },
-        dailySales: dailySales.rows,
-        detailedOrders: detailedOrders.rows
+        dailySales: dailySales.rows.map(row => ({
+            ...row,
+            total_sales: parseFloat(row.total_sales),
+            product_sales: parseFloat(row.product_sales),
+            delivery_sales: parseFloat(row.total_sales) - parseFloat(row.product_sales)
+        })),
+        detailedOrders: detailedOrders.rows,
+        topSelling: topSelling.rows
     };
 };
 

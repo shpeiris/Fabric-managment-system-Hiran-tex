@@ -434,15 +434,30 @@ export default function SalesDashboard() {
 
       {/* Stats Cards */}
       <div className="stats-grid">
-        <div className="stat-card">
+        <div className="stat-card" style={{ background: 'linear-gradient(135deg, #001a66 0%, #002a99 100%)', color: 'white' }}>
           <div className="stat-info">
-            <h4>Total Revenue</h4>
-            <h2>Rs. {Number(stats.totalSales).toLocaleString()}</h2>
+            <h4 style={{ color: 'rgba(255,255,255,0.8)' }}>Total Revenue</h4>
+            <h2 style={{ color: 'white' }}>Rs. {Number(stats.totalSales).toLocaleString()}</h2>
+            <p className="stat-subtitle" style={{ color: 'rgba(255,255,255,0.6)' }}>Combined Sales</p>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-info">
-            <h4>Active Customers</h4>
+            <h4 style={{ color: '#059669' }}>Product Sales</h4>
+            <h2 style={{ color: '#059669' }}>Rs. {Number(stats.productSales || 0).toLocaleString()}</h2>
+            <p className="stat-subtitle">Fabric items only</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-info">
+            <h4 style={{ color: '#2563eb' }}>Delivery Revenue</h4>
+            <h2 style={{ color: '#2563eb' }}>Rs. {Number(stats.deliverySales || 0).toLocaleString()}</h2>
+            <p className="stat-subtitle">Shipping fees</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-info">
+            <h4>Total Customers</h4>
             <h2>{stats.totalCustomers}</h2>
           </div>
         </div>

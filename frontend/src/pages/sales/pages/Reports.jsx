@@ -68,13 +68,17 @@ export default function Reports() {
       if (response.ok) {
         setStats({
             totalSales: data.summary?.totalRevenue || 0,
-            monthlySales: data.report ? Number(data.report[0]?.total_sales || 0) : 0,
+            productSales: data.summary?.productRevenue || 0,
+            deliverySales: data.summary?.deliveryRevenue || 0,
+            monthlySales: data.dailySales?.length > 0 ? Number(data.dailySales[0]?.total_sales || 0) : 0,
             activeCustomers: data.activeCustomers || 0,
             pendingOrders: data.pendingOrders || 0,
             totalOrders: data.summary?.totalOrders || 0,
             avgOrderValue: data.summary?.avgOrderValue || 0,
             detailedOrders: data.detailedOrders || [],
-            dailyTrend: data.report ? data.report.map(r => ({
+            topSelling: data.topSelling || [],
+            dailyPerformance: data.dailySales || [],
+            dailyTrend: data.dailySales ? data.dailySales.map(r => ({
                 date: new Date(r.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
                 total: Number(r.total_sales),
                 order_count: r.order_count
@@ -130,12 +134,33 @@ export default function Reports() {
 
   return (
     <div className="reports-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
         <div>
           <h1>Report Center</h1>
           <p className="subtitle">Comprehensive analytics for your business operations</p>
         </div>
-
+        <div className="date-filter-standalone" style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'white', padding: '10px', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+          <Calendar size={18} color="#001a66" />
+          <input 
+            type="date" 
+            value={dateRange.startDate} 
+            onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+            style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px 10px', fontSize: '13px' }}
+          />
+          <span style={{ color: '#64748b' }}>to</span>
+          <input 
+            type="date" 
+            value={dateRange.endDate} 
+            onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+            style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px 10px', fontSize: '13px' }}
+          />
+          <button 
+            onClick={refreshData}
+            style={{ background: '#001a66', color: 'white', border: 'none', padding: '6px 15px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+          >
+            Apply
+          </button>
+        </div>
       </div>
 
       <div className="report-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid #e2e8f0', paddingBottom: '15px' }}>
@@ -172,30 +197,92 @@ export default function Reports() {
           {activeTab === 'sales' && (
             <>
               <div className="stats-grid">
-                <div className="stat-card">
-                  <h3>Total Revenue</h3>
-                  <h2>Rs. {Number(stats.totalSales).toLocaleString()}</h2>
-                  <p>Filtered period total</p>
+                <div className="stat-card" style={{ background: 'linear-gradient(135deg, #001a66 0%, #002a99 100%)', color: 'white' }}>
+                  <h3 style={{ color: 'rgba(255,255,255,0.8)' }}>Total Revenue</h3>
+                  <h2 style={{ color: 'white' }}>Rs. {Number(stats.totalSales).toLocaleString()}</h2>
+                  <p style={{ color: 'rgba(255,255,255,0.6)' }}>Combined Total</p>
                 </div>
                 <div className="stat-card">
-                  <h3>Recent Sales</h3>
-                  <h2>Rs. {Number(stats.monthlySales).toLocaleString()}</h2>
-                  <p>Last recorded day</p>
+                  <h3 style={{ color: '#059669' }}>Fabric Sales</h3>
+                  <h2 style={{ color: '#059669' }}>Rs. {Number(stats.productSales).toLocaleString()}</h2>
+                  <p>Product value</p>
+                </div>
+                <div className="stat-card">
+                  <h3 style={{ color: '#2563eb' }}>Delivery Revenue</h3>
+                  <h2 style={{ color: '#2563eb' }}>Rs. {Number(stats.deliverySales).toLocaleString()}</h2>
+                  <p>Shipping fees</p>
                 </div>
                 <div className="stat-card">
                   <h3>Total Orders</h3>
                   <h2>{stats.totalOrders}</h2>
-                  <p>Processed orders</p>
+                  <p>Success rate</p>
                 </div>
                 <div className="stat-card">
-                  <h3>Active Customers</h3>
-                  <h2>{stats.activeCustomers}</h2>
-                  <p>Unique purchasers</p>
+                  <h3>Avg. Order</h3>
+                  <h2>Rs. {Number(stats.avgOrderValue).toLocaleString()}</h2>
+                  <p>Per customer</p>
                 </div>
-                <div className="stat-card">
-                  <h3>Pending Processing</h3>
-                  <h2>{stats.pendingOrders}</h2>
-                  <p>Awaiting attention</p>
+              </div>
+
+              {/* Daily Sales Performance Table */}
+              <div className="report-section table-section" style={{ marginTop: '30px' }}>
+                <div className="section-header">
+                  <h3><TrendingUp size={20} /> Daily Sales Performance</h3>
+                </div>
+                <div className="table-responsive">
+                  <table className="performance-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Orders</th>
+                        <th>Product Sales</th>
+                        <th>Delivery Fees</th>
+                        <th>Total Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.dailyPerformance?.length > 0 ? stats.dailyPerformance.map((day, idx) => (
+                        <tr key={idx}>
+                          <td>{new Date(day.date).toLocaleDateString()}</td>
+                          <td style={{ fontWeight: '600' }}>{day.order_count}</td>
+                          <td>Rs. {Number(day.product_sales).toLocaleString()}</td>
+                          <td>Rs. {Number(day.delivery_sales).toLocaleString()}</td>
+                          <td style={{ fontWeight: 'bold', color: '#001a66' }}>Rs. {Number(day.total_sales).toLocaleString()}</td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan="5">No performance metrics recorded.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Top Selling Fabrics Section */}
+              <div className="report-section table-section" style={{ marginTop: '30px' }}>
+                <div className="section-header">
+                  <h3><TrendingUp size={20} color="#059669" /> Top Selling Fabrics</h3>
+                </div>
+                <div className="table-responsive">
+                  <table className="performance-table">
+                    <thead>
+                      <tr>
+                        <th>Fabric Name</th>
+                        <th>Meters Sold</th>
+                        <th>Total Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.topSelling?.length > 0 ? stats.topSelling.map((fabric, idx) => (
+                        <tr key={idx}>
+                          <td style={{ fontWeight: '600' }}>{fabric.name}</td>
+                          <td>{Number(fabric.total_meters).toLocaleString()} m</td>
+                          <td style={{ fontWeight: '700', color: '#059669' }}>Rs. {Number(fabric.total_revenue).toLocaleString()}</td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan="3">No best-sellers found in this period.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 

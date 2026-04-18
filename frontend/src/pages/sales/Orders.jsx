@@ -60,7 +60,39 @@ export default function Orders() {
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
+    const order = orders.find(o => o.order_id === orderId);
+
     if (newStatus === 'DELIVERED') {
+      if (order?.delivery_type === 'STORE_PICKUP') {
+        // Automatic complete for Store Pickup
+        setLoading(true);
+        try {
+          const response = await apiCall(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/sales/orders/${orderId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ 
+              status: 'DELIVERED',
+              delivered_by: 'Customer (Store Pickup)',
+              delivery_contact_number: order.phone_number || 'Internal',
+              tracking_id: 'STORE-PICKUP'
+            })
+          });
+
+          if (response.ok) {
+            toast.success('Order picked up and marked as Delivered!');
+            fetchOrders();
+          } else {
+            toast.error('Failed to update status automatically');
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('Error in automatic delivery update');
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Show modal for standard deliveries
       setDeliveryData({
         orderId: orderId,
         delivered_by: '',
@@ -90,14 +122,14 @@ export default function Orders() {
     } catch (err) {
       console.error('Error updating order:', err);
       SalesLogger.orders.statusUpdateError(orderId, err);
-      alert('Failed to update order status');
+      toast.error('Failed to update order status');
     } finally {
       setLoading(false);
     }
   };
 
   const submitDeliveredStatus = async () => {
-    const { orderId, delivered_by, delivery_contact_number } = deliveryData;
+    const { orderId, delivered_by, delivery_contact_number, tracking_id } = deliveryData;
     
     if (!delivered_by || !delivery_contact_number) {
       toast.warning('Please enter both name and contact number');
@@ -224,6 +256,16 @@ export default function Orders() {
     if (!order) return null;
     const items = order.items || [];
     
+    const getDeliveryFee = (type) => {
+      if (type === 'GAMPAHA') return 500;
+      if (type === 'OUT_OF_GAMPAHA') return 750;
+      if (type === 'STORE_PICKUP') return 0;
+      return 500;
+    };
+
+    const deliveryFee = getDeliveryFee(order.delivery_type);
+    const subtotal = items.reduce((sum, item) => sum + parseFloat(item.total_price), 0);
+    
     return (
       <div className="invoice-container" id="printable-invoice" style={{ padding: '40px', background: 'white', color: '#1a1a1a', fontFamily: "'Helvetica Neue', 'Helvetica', Arial, sans-serif", maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
         
@@ -321,9 +363,13 @@ export default function Orders() {
         {/* Totals */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
           <div style={{ width: '300px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 15px', background: '#f8fafc', borderRadius: '8px 8px 0 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 15px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <span style={{ color: '#475569', fontSize: '14px' }}>Subtotal</span>
-              <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>Rs. {Number(order.total_amount).toLocaleString()}</span>
+              <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>Rs. {subtotal.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 15px', background: '#f8fafc', borderRadius: '0 0 0 0' }}>
+              <span style={{ color: '#475569', fontSize: '14px' }}>Delivery Fee</span>
+              <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>Rs. {deliveryFee.toLocaleString()}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px', background: '#001a66', color: 'white', borderRadius: '0 0 8px 8px' }}>
               <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Total Due</span>

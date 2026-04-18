@@ -10,8 +10,9 @@ const getSalesReport = async (req, res) => {
         // Send the full report data structure expected by the frontend
         res.json({
             summary: reportData.summary,
-            report: reportData.dailySales,
+            dailySales: reportData.dailySales,
             detailedOrders: reportData.detailedOrders,
+            topSelling: reportData.topSelling,
             activeCustomers: reportData.summary.uniqueCustomers,
             pendingOrders: reportData.detailedOrders.filter(o => o.order_status === 'PENDING' || o.order_status === 'PROCESSING').length
         });

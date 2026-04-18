@@ -3,7 +3,7 @@ import { pool } from "../config/db.js";
 export const initOrderModel = async () => {
   const query = `
     DO $$ BEGIN
-      CREATE TYPE order_status AS ENUM ('PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED');
+      CREATE TYPE order_status AS ENUM ('PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED');
     EXCEPTION WHEN duplicate_object THEN null; END $$;
 
     CREATE TABLE IF NOT EXISTS orders (
@@ -20,7 +20,8 @@ export const initOrderModel = async () => {
       verified_at TIMESTAMP,
       verified_by INTEGER,
       delivered_by VARCHAR(255),
-      delivery_contact_number VARCHAR(20)
+      delivery_contact_number VARCHAR(20),
+      tracking_id VARCHAR(255)
     );
 
     CREATE TABLE IF NOT EXISTS order_status_history (

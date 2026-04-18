@@ -11,7 +11,6 @@ const OrderTimeline = ({ history }) => {
             case 'PROCESSING': return '#d97706';
             case 'CANCELLED': return '#dc2626';
             case 'PENDING': return '#2563eb';
-            case 'SHIPPED': return '#7c3aed';
             default: return '#64748b';
         }
     };
