@@ -50,8 +50,8 @@ const createUser = async (userData, creatorId) => {
       hashedPassword,
       nic,
       telephone || null,
-      role,
-      "ACTIVE",
+      role::user_role,
+      "ACTIVE"::user_status,
     ];
   }
 
@@ -77,8 +77,8 @@ const getAllUsers = async () => {
         full_name, 
         email, 
         tel as phone, 
-        'CUSTOMER' as role, 
-        'ACTIVE' as status, 
+        'CUSTOMER'::text as role, 
+        'ACTIVE'::text as status, 
         created_at 
       FROM customers
       UNION ALL
@@ -88,8 +88,8 @@ const getAllUsers = async () => {
         email, 
         telephone as phone, 
         CASE 
-          WHEN role = 'INVENTORY' OR role = 'INVENTORY_MANAGER' THEN 'INVENTORY_MANAGER'
-          WHEN role = 'SALES' OR role = 'SALESPERSON' THEN 'SALESPERSON'
+          WHEN role::text = 'INVENTORY' OR role::text = 'INVENTORY_MANAGER' THEN 'INVENTORY_MANAGER'
+          WHEN role::text = 'SALES' OR role::text = 'SALESPERSON' THEN 'SALESPERSON'
           ELSE role::text 
         END as role,
         status::text,
