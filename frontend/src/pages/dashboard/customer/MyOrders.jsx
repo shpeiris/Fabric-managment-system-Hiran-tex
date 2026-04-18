@@ -90,6 +90,13 @@ const MyOrders = () => {
     }
   }
 
+  const getDeliveryFee = (type) => {
+    if (type === 'GAMPAHA') return 500;
+    if (type === 'OUT_OF_GAMPAHA') return 750;
+    if (type === 'STORE_PICKUP') return 0;
+    return 500; // Default fallback
+  }
+
   const handleReorderFromList = async (orderId) => {
     try {
       setLoading(true)
@@ -287,9 +294,19 @@ const MyOrders = () => {
               ))}
             </div>
             
-            <div className="order-summary-total">
-              <span>Total Amount</span>
-              <span>Rs. {parseFloat(selectedOrder.order.total_amount).toFixed(2)}</span>
+            <div className="order-summary-breakdown" style={{ marginTop: '1.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '14px', color: '#4b5563' }}>
+                <span>Subtotal</span>
+                <span>Rs. {selectedOrder.items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '14px', color: '#4b5563' }}>
+                <span>Delivery Fee</span>
+                <span>Rs. {getDeliveryFee(selectedOrder.order.delivery_type).toFixed(2)}</span>
+              </div>
+              <div className="order-summary-total" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '2px solid #e2e8f0', fontWeight: '800', fontSize: '18px', color: '#2563eb' }}>
+                <span>Total Amount</span>
+                <span>Rs. {parseFloat(selectedOrder.order.total_amount).toFixed(2)}</span>
+              </div>
             </div>
             
             <div className="modal-actions" style={{marginTop: '2rem', display: 'flex', gap: '1rem'}}>

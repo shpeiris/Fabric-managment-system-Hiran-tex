@@ -224,6 +224,16 @@ export default function Orders() {
     if (!order) return null;
     const items = order.items || [];
     
+    const getDeliveryFee = (type) => {
+      if (type === 'GAMPAHA') return 500;
+      if (type === 'OUT_OF_GAMPAHA') return 750;
+      if (type === 'STORE_PICKUP') return 0;
+      return 500;
+    };
+
+    const deliveryFee = getDeliveryFee(order.delivery_type);
+    const subtotal = items.reduce((sum, item) => sum + parseFloat(item.total_price), 0);
+    
     return (
       <div className="invoice-container" id="printable-invoice" style={{ padding: '40px', background: 'white', color: '#1a1a1a', fontFamily: "'Helvetica Neue', 'Helvetica', Arial, sans-serif", maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
         
@@ -321,9 +331,13 @@ export default function Orders() {
         {/* Totals */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
           <div style={{ width: '300px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 15px', background: '#f8fafc', borderRadius: '8px 8px 0 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 15px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <span style={{ color: '#475569', fontSize: '14px' }}>Subtotal</span>
-              <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>Rs. {Number(order.total_amount).toLocaleString()}</span>
+              <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>Rs. {subtotal.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 15px', background: '#f8fafc', borderRadius: '0 0 0 0' }}>
+              <span style={{ color: '#475569', fontSize: '14px' }}>Delivery Fee</span>
+              <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>Rs. {deliveryFee.toLocaleString()}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px', background: '#001a66', color: 'white', borderRadius: '0 0 8px 8px' }}>
               <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Total Due</span>
