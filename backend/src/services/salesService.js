@@ -4,9 +4,16 @@ import bcrypt from 'bcryptjs';
 const getSalesDashboardStats = async () => {
     const queries = {
         totalSales: `
-            SELECT SUM(total_amount) as total 
-            FROM orders 
-            WHERE order_status = 'DELIVERED'
+            SELECT 
+                COALESCE(SUM(total_amount), 0) as total,
+                COALESCE(SUM(oi_sub.items_total), 0) as product_total
+            FROM orders o
+            LEFT JOIN (
+                SELECT order_id, SUM(total_price) as items_total 
+                FROM order_items 
+                GROUP BY order_id
+            ) oi_sub ON o.order_id = oi_sub.order_id
+            WHERE o.order_status = 'DELIVERED'
         `,
         monthlySales: `
             SELECT SUM(total_amount) as total 
@@ -86,9 +93,14 @@ const getSalesDashboardStats = async () => {
             pool.query(queries.monthlyTrend)
         ]);
 
+        const total = parseFloat(totalSales.rows[0]?.total || 0);
+        const productTotal = parseFloat(totalSales.rows[0]?.product_total || 0);
+
         return {
             stats: {
-                totalSales: parseFloat(totalSales.rows[0]?.total || 0),
+                totalSales: total,
+                productSales: productTotal,
+                deliverySales: total - productTotal,
                 monthlySales: parseFloat(monthlySales.rows[0]?.total || 0),
                 totalCustomers: parseInt(customers.rows[0]?.total || 0),
                 pendingOrders: parseInt(pending.rows[0]?.total || 0),
