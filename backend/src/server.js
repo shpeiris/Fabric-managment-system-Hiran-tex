@@ -14,6 +14,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1);
 
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -77,7 +78,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: process.env.NODE_ENV === "production", // Secure in production
+      secure: false, // Set to true only if using HTTPS/SSL
       httpOnly: true,
     },
   }),
