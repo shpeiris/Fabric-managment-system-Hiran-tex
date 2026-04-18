@@ -131,14 +131,17 @@ const createOrder = async (orderData) => {
             if (fabricResult.rows.length === 0) throw new Error(`Fabric ${item.fabric_id} not found`);
 
             const fabric = fabricResult.rows[0];
-            if (fabric.stock_available_quantity < item.quantity) throw new Error(`Insufficient stock for fabric ID ${item.fabric_id}`);
+            const stockAvailable = parseFloat(fabric.stock_available_quantity);
+            const requestedQty = parseFloat(item.quantity);
 
-            const itemTotal = fabric.price_per_meter * item.quantity;
+            if (stockAvailable < requestedQty) throw new Error(`Insufficient stock for fabric ID ${item.fabric_id}`);
+
+            const itemTotal = parseFloat(fabric.price_per_meter) * requestedQty;
             totalAmount += itemTotal;
             processedItems.push({
                 fabric_id: item.fabric_id,
-                quantity: item.quantity,
-                unit_price: fabric.price_per_meter,
+                quantity: requestedQty,
+                unit_price: parseFloat(fabric.price_per_meter),
                 total_price: itemTotal
             });
         }

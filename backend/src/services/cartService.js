@@ -24,10 +24,14 @@ const addToCart = async (customerId, fabricId, quantity) => {
     throw new Error("Fabric not found");
 
   const fabric = fabricResult.rows[0];
-  if (fabric.stock_available_quantity < quantity && fabric.stock_quantity < quantity)
+  const stockAvailable = parseFloat(fabric.stock_available_quantity);
+  const stockQty = parseFloat(fabric.stock_quantity);
+  const requestedQty = parseFloat(quantity);
+
+  if (stockAvailable < requestedQty && stockQty < requestedQty)
     throw new Error("Insufficient stock");
 
-  const totalPrice = fabric.price_per_meter * quantity;
+  const totalPrice = parseFloat(fabric.price_per_meter) * requestedQty;
 
   // Check existing cart item
   const cartResult = await pool.query(
@@ -37,11 +41,11 @@ const addToCart = async (customerId, fabricId, quantity) => {
 
   if (cartResult.rows.length > 0) {
     // Update
-    const newQuantity = cartResult.rows[0].quantity + quantity;
-    if (fabric.stock_available_quantity < newQuantity && fabric.stock_quantity < newQuantity) {
+    const newQuantity = parseFloat(cartResult.rows[0].quantity) + requestedQty;
+    if (stockAvailable < newQuantity && stockQty < newQuantity) {
       throw new Error("Insufficient stock");
     }
-    const newTotalPrice = fabric.price_per_meter * newQuantity;
+    const newTotalPrice = parseFloat(fabric.price_per_meter) * newQuantity;
 
     const updateResult = await pool.query(
       "UPDATE cart SET quantity = $1, total_price = $2 WHERE cart_id = $3 RETURNING cart_id",
@@ -87,11 +91,15 @@ const updateCartItem = async (customerId, cartId, quantity) => {
   const fabric = fabricResult.rows[0];
 
    // 3. Prevent the update if requested quantity exceeds stock
-  if (fabric.stock_available_quantity < quantity && fabric.stock_quantity < quantity) {
+  const stockAvailable = parseFloat(fabric.stock_available_quantity);
+  const stockQty = parseFloat(fabric.stock_quantity);
+  const requestedQty = parseFloat(quantity);
+
+  if (stockAvailable < requestedQty && stockQty < requestedQty) {
     throw new Error("Insufficient stock");
   }
    // 4. Proceed with update
-  const totalPrice = fabricResult.rows[0].price_per_meter * quantity;
+  const totalPrice = parseFloat(fabricResult.rows[0].price_per_meter) * requestedQty;
 
   await pool.query(
     "UPDATE cart SET quantity = $1, total_price = $2 WHERE cart_id = $3",
