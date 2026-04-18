@@ -30,25 +30,6 @@ export const initFabricModel = async () => {
         ALTER TABLE fabrics ADD COLUMN reorder_level INTEGER DEFAULT 50;
       END IF;
     END $$;
-
-    -- Seed some initial fabrics if empty
-    const fabricCount = await pool.query("SELECT COUNT(*) FROM fabrics");
-    if (parseInt(fabricCount.rows[0].count) === 0) {
-      console.log("🌱 Seeding demo fabrics...");
-      const demoFabrics = [
-        ['Linen Cotton Mix', 'Linen', 'Green', 'Plain', 1250, 150, 140, '36"', true, 50],
-        ['Premium Satin Silk', 'Satin', 'Maroon', 'Glossy', 1850, 80, 75, '45"', true, 30],
-        ['Comfort Cotton', 'Cotton', 'Blue', 'Striped', 950, 200, 190, '36"', true, 100]
-      ];
-      
-      for (const f of demoFabrics) {
-        await pool.query(
-          "INSERT INTO fabrics (name, material_type, color, design, price_per_meter, stock_quantity, stock_available_quantity, width, is_in_catalog, reorder_level) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-          f
-        );
-      }
-      console.log("✅ Demo fabrics seeded.");
-    }
   `;
   await pool.query(query);
 };
