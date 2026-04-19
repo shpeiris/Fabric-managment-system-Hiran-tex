@@ -237,6 +237,12 @@ const createOrder = async (orderData) => {
         return { order_id: orderId };
     } catch (err) {
         await pool.query('ROLLBACK');
+        console.error('DATABASE ERROR in createOrder:', err.message, err.detail || '');
+        if (err.code === '23502') {
+            console.error('Details: Required field missing (NOT NULL constraint violation).');
+        } else if (err.code === '22001') {
+            console.error('Details: Data too long for column (Value too long for type).');
+        }
         throw err;
     }
 };
