@@ -561,6 +561,7 @@ export default function FabricManagement() {
                   <input
                     name="restock_date"
                     type="date"
+                    min={new Date().toISOString().split('T')[0]}
                     value={values.restock_date}
                     onChange={handleChange}
                   />

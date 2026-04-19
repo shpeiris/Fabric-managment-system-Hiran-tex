@@ -23,8 +23,8 @@ const CompleteOrder = ({
 
     if (!orderData.phoneNumber.trim()) {
       errors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10,11}$/.test(orderData.phoneNumber.replace(/[-\s]/g, ''))) {
-      errors.phoneNumber = 'Please enter a valid phone number';
+    } else if (!/^\d{10}$/.test(orderData.phoneNumber.replace(/[-\s]/g, ''))) {
+      errors.phoneNumber = 'Phone number must be exactly 10 digits';
     }
 
     if (!orderData.deliveryAddress.trim()) {

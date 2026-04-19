@@ -106,6 +106,10 @@ export default function Checkout() {
         setError('Please fill in Name, Email and Phone Number.');
         return false;
       }
+      if (!/^\d{10}$/.test(formData.phone.replace(/[-\s]/g, ''))) {
+        setError('Phone number must be exactly 10 digits.');
+        return false;
+      }
       if (formData.deliveryType !== 'STORE_PICKUP' && (!formData.address || !formData.city)) {
         setError('Please fill in Address and City for Delivery.');
         return false;

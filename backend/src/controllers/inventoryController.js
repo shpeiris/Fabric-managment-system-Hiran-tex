@@ -165,6 +165,9 @@ const addSupplier = async (req, res) => {
     if (!req.body.name) {
         return res.status(400).json({ error: "Supplier name is required" });
     }
+    if (req.body.contact_number && !/^\d{10}$/.test(req.body.contact_number)) {
+        return res.status(400).json({ error: "Contact number must be exactly 10 digits" });
+    }
     try {
         const result = await inventoryService.addSupplier(req.body);
         res.json({ message: "Supplier added successfully", supplier_id: result.supplier_id });
@@ -176,6 +179,9 @@ const addSupplier = async (req, res) => {
 
 const updateSupplier = async (req, res) => {
     const { id } = req.params;
+    if (req.body.contact_number && !/^\d{10}$/.test(req.body.contact_number)) {
+        return res.status(400).json({ error: "Contact number must be exactly 10 digits" });
+    }
     try {
         const result = await inventoryService.updateSupplier(id, req.body);
         if (!result) return res.status(404).json({ error: "Supplier not found" });
