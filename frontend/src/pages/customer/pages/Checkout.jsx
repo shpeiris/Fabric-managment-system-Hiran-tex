@@ -19,7 +19,7 @@ export default function Checkout() {
   
   const bankDetails = {
     bankName: "People's Bank",
-    accountName: "Hiran Fabric Textile",
+    accountName: "HIRAN FABRIC TEXTILE",
     accountNumber: "2022154879536",
     branch: "Nittambuwa"
   };
@@ -128,7 +128,7 @@ export default function Checkout() {
     setError('');
 
     const deliveryAddress = formData.deliveryType === 'STORE_PICKUP' 
-      ? 'Store Pickup (Hiran Fabric Textile, Nittambuwa)' 
+      ? 'Store Pickup (HIRAN FABRIC TEXTILE, Nittambuwa)' 
       : `${formData.address}${formData.city ? ', ' + formData.city : ''}${formData.postalCode ? ', ' + formData.postalCode : ''}`;
 
     const orderPayload = {
@@ -654,7 +654,7 @@ export default function Checkout() {
 
                   <span style={{ color: '#6b7280' }}>{formData.deliveryType === 'STORE_PICKUP' ? 'Pickup at:' : 'Deliver to:'}</span>
                   <span style={{ fontWeight: '600', color: '#111827' }}>
-                    {formData.deliveryType === 'STORE_PICKUP' ? 'Hiran Fabric Textile, Nittambuwa' : `${formData.address}, ${formData.city}`}
+                    {formData.deliveryType === 'STORE_PICKUP' ? 'HIRAN FABRIC TEXTILE, Nittambuwa' : `${formData.address}, ${formData.city}`}
                   </span>
 
                   <span style={{ color: '#6b7280' }}>Contact Name:</span>
