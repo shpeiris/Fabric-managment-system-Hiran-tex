@@ -43,15 +43,15 @@ const createUser = async (userData, creatorId) => {
   } else {
     // Insert into Employees table
     sql =
-      "INSERT INTO employees (full_name, email, password, nic, telephone, role, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING employee_id as id, created_at";
+      "INSERT INTO employees (full_name, email, password, nic, telephone, role, status) VALUES ($1, $2, $3, $4, $5, $6::user_role, $7::user_status) RETURNING employee_id as id, created_at";
     params = [
       full_name,
       email,
       hashedPassword,
       nic,
       telephone || null,
-      role::user_role,
-      "ACTIVE"::user_status,
+      role,
+      "ACTIVE",
     ];
   }
 
