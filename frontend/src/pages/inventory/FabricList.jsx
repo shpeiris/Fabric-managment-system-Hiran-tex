@@ -530,6 +530,7 @@ export default function FabricManagement() {
                             <input
                               type="date"
                               title="Restock Date"
+                              min={new Date().toISOString().split('T')[0]}
                               value={variantRestockDates[colorHex] || ''}
                               onChange={(e) => setVariantRestockDates({
                                 ...variantRestockDates,

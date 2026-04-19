@@ -60,6 +60,14 @@ const addFabric = async (req, res) => {
         if (fabricData.width === '') fabricData.width = null;
         if (fabricData.restock_date === '') fabricData.restock_date = null;
 
+        if (fabricData.restock_date) {
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            if (fabricData.restock_date < todayStr) {
+                return res.status(400).json({ error: "Restock date cannot be in the past" });
+            }
+        }
+
         if (req.file) {
             // Set image_url to the path of the uploaded file
             fabricData.image_url = `uploads/fabrics/${req.file.filename}`;
@@ -93,6 +101,14 @@ const updateFabric = async (req, res) => {
         // Handle empty fields
         if (fabricData.width === '') fabricData.width = null;
         if (fabricData.restock_date === '') fabricData.restock_date = null;
+
+        if (fabricData.restock_date) {
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            if (fabricData.restock_date < todayStr) {
+                return res.status(400).json({ error: "Restock date cannot be in the past" });
+            }
+        }
 
         if (req.file) {
             // Set image_url to the path of the uploaded file
