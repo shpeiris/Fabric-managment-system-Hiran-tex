@@ -2,11 +2,11 @@
 
 Comprehensive validation utilities and React hooks for form validation.
 
-## Files Created
+## Files
 
 ### 1. Validation Utilities
 
-**File**: [`frontend/src/utils/validators.js`](file:///Users/akilapilapitiya/Developer/fabric-management-system/frontend/src/utils/validators.js)
+**File**: `src/utils/validators.js`
 
 **Functions**:
 
@@ -23,7 +23,7 @@ Comprehensive validation utilities and React hooks for form validation.
 
 ### 2. Form Validation Helpers
 
-**File**: [`frontend/src/utils/formValidation.js`](file:///Users/akilapilapitiya/Developer/fabric-management-system/frontend/src/utils/formValidation.js)
+**File**: `src/utils/formValidation.js`
 
 **Functions**:
 
@@ -35,7 +35,7 @@ Comprehensive validation utilities and React hooks for form validation.
 
 ### 3. React Hook
 
-**File**: [`frontend/src/hooks/useFormValidation.js`](file:///Users/akilapilapitiya/Developer/fabric-management-system/frontend/src/hooks/useFormValidation.js)
+**File**: `src/hooks/useFormValidation.js`
 
 **Usage**:
 
@@ -71,11 +71,11 @@ const {
 
 **Requirements**:
 
-- Minimum 8 characters (upgraded from 6)
+- Minimum 8 characters
 - At least one uppercase letter (A-Z)
 - At least one lowercase letter (a-z)
 - At least one digit (0-9)
-- At least one special character (!@#$%^&\*)
+- At least one special character (!@#$%^&*)
 
 ## Example Usage
 
