@@ -3,14 +3,15 @@
 This document provides a comprehensive breakdown of the database architecture, including Table Specifications and Record Specifications for the Fabric Management System.
 
 ## 1. System Enums & Types
-The system uses custom PostgreSQL types to enforce data integrity across various modules.
+The system uses constraints and type checks to enforce data integrity.
 
-| Type Name | Values | Description |
+| Field Name | Values | Description |
 | :--- | :--- | :--- |
-| `user_role` | `ADMIN`, `INVENTORY_MANAGER`, `SALESPERSON` | Defines access levels for staff. |
-| `user_status` | `ACTIVE`, `INACTIVE` | Current employment status. |
+| `role` | `ADMIN`, `INVENTORY`, `SALES` | Defines access levels for staff. |
+| `status` | `ACTIVE`, `INACTIVE` | Current employment status. |
 | `order_status` | `PENDING`, `PROCESSING`, `DELIVERED`, `CANCELLED` | Lifecycle of a customer order. |
-| `payment_status` | `PENDING`, `COMPLETED`, `FAILED`, `REFUNDED` | Status of financial transactions. |
+| `payment_status` | `PENDING`, `COMPLETED`, `FAILED` | Status of financial transactions. |
+| `order_source` | `ONLINE`, `IN_STORE` | Origin of the customer order. |
 
 ---
 
@@ -29,9 +30,9 @@ Stores authentication and profile data for internal staff members.
 | `password` | VARCHAR(255) | NOT NULL | BCrypt hashed password |
 | `nic` | VARCHAR(50) | NOT NULL, UNIQUE | National ID |
 | `telephone` | VARCHAR(20) | | Contact number |
-| `role` | `user_role` | NOT NULL | System permissions |
-| `status` | `user_status` | DEFAULT 'ACTIVE' | Active/Inactive flag |
-| `created_at` | TIMESTAMP | DEFAULT NOW() | Record creation date |
+| `role` | VARCHAR(20) | NOT NULL | System permissions |
+| `status` | VARCHAR(20) | DEFAULT 'ACTIVE' | Active/Inactive flag |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation date |
 
 #### Table: `customers`
 Stores profile and login data for external customers.
@@ -40,10 +41,11 @@ Stores profile and login data for external customers.
 | :--- | :--- | :--- | :--- |
 | `customer_id` | SERIAL | PRIMARY KEY | Unique ID |
 | `full_name` | VARCHAR(255) | NOT NULL | Customer name |
-| `email` | VARCHAR(100) | NOT NULL, UNIQUE | Login email |
-| `password` | VARCHAR(100) | NOT NULL | Password |
-| `tel` | VARCHAR(10) | NOT NULL | Contact number |
-| `address` | VARCHAR(255) | NOT NULL | Shipping address |
+| `email` | VARCHAR(255) | NOT NULL, UNIQUE | Login email |
+| `password` | VARCHAR(255) | NOT NULL | Password |
+| `tel` | VARCHAR(20) | | Contact number |
+| `address` | TEXT | NOT NULL | Shipping address |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation date |
 
 ---
 
@@ -56,17 +58,17 @@ The core catalog of fabric products.
 | :--- | :--- | :--- | :--- |
 | `fabric_id` | SERIAL | PRIMARY KEY | Unique ID |
 | `name` | VARCHAR(255) | NOT NULL | Fabric identifier |
-| `material_type` | VARCHAR(100) | | e.g., Cotton, Silk, Linen |
-| `color` | VARCHAR(50) | | Color identifier/Hex |
+| `material_type` | VARCHAR(100) | | e.g., Cotton, Silk |
+| `color` | VARCHAR(50) | | Color identifier |
 | `design` | VARCHAR(100) | | Pattern name/code |
-| `price_per_meter` | NUMERIC | > 0 | Unit price |
-| `stock_quantity` | INTEGER | DEFAULT 0 | Total meters in stock |
-| `stock_available_quantity`| NUMERIC | >= 0 | Multi-variant quantity |
-| `is_in_catalog` | BOOLEAN | DEFAULT TRUE | Visibility in public shop |
-| `restock_level` | INTEGER | DEFAULT 100 | Threshold for alerts |
-| `restock_date` | DATE | | Last/Next arrival date |
+| `price_per_meter` | DECIMAL(10, 2) | NOT NULL | Unit price |
+| `stock_quantity` | DECIMAL(10, 2) | DEFAULT 0 | Total meters in stock |
+| `stock_available_quantity`| DECIMAL(10, 2) | DEFAULT 0 | Safe margin quantity |
+| `reorder_level` | DECIMAL(10, 2) | DEFAULT 50 | Threshold for alerts |
 | `image_url` | TEXT | | Product image path |
 | `width` | VARCHAR(50) | | e.g., 45", 60" |
+| `restock_date` | DATE | | Last/Next arrival date |
+| `is_in_catalog` | BOOLEAN | DEFAULT TRUE | Visibility in shop |
 
 #### Table: `suppliers`
 Details of fabric manufacturers/distributors.
@@ -75,8 +77,8 @@ Details of fabric manufacturers/distributors.
 | :--- | :--- | :--- | :--- |
 | `supplier_id` | SERIAL | PRIMARY KEY | Unique ID |
 | `name` | VARCHAR(255) | NOT NULL | Company name |
-| `contact_person`| VARCHAR(255) | | Primary contact name |
-| `contact_number`| VARCHAR(20) | | Primary contact phone |
+| `contact_person`| VARCHAR(255) | | Primary contact |
+| `contact_number`| VARCHAR(20) | | Phone |
 | `email` | VARCHAR(255) | | Official email |
 | `address` | TEXT | | Business address |
 
@@ -91,13 +93,16 @@ Header table for customer purchases.
 | :--- | :--- | :--- | :--- |
 | `order_id` | SERIAL | PRIMARY KEY | Unique ID |
 | `customer_id` | INTEGER | REFERENCES `customers` | Foreign Key |
-| `customer_name` | VARCHAR(255) | | Snapshot at time of order |
-| `phone_number` | VARCHAR(20) | | Snapshot for delivery |
-| `delivery_address`| TEXT | | Snapshot for delivery |
-| `delivery_type` | VARCHAR(100) | | Courier/Self-pickup |
-| `total_amount` | NUMERIC | NOT NULL | Total cost |
-| `order_status` | `order_status` | DEFAULT 'PENDING' | Logical flow |
-| `order_date` | TIMESTAMP | DEFAULT NOW() | Checkout time |
+| `order_status` | VARCHAR(20) | DEFAULT 'PENDING' | Logical flow |
+| `total_amount` | DECIMAL(12, 2) | NOT NULL | Total cost |
+| `delivery_address`| TEXT | | Delivery snapshot |
+| `delivery_type` | VARCHAR(50) | DEFAULT 'STANDARD'| Courier/Pickup |
+| `customer_name` | VARCHAR(255) | | Snapshot |
+| `phone_number` | VARCHAR(20) | | Snapshot |
+| `verified_at` | TIMESTAMP | | Sales verification |
+| `delivered_by` | VARCHAR(255) | | Delivery agent |
+| `tracking_id` | VARCHAR(100) | | Courier tracking |
+| `order_source` | VARCHAR(20) | DEFAULT 'ONLINE' | Online / In-Store |
 
 #### Table: `order_items`
 Snapshot of items within a specific order.
@@ -107,8 +112,9 @@ Snapshot of items within a specific order.
 | `order_item_id` | SERIAL | PRIMARY KEY | Unique ID |
 | `order_id` | INTEGER | REFERENCES `orders` | Foreign Key |
 | `fabric_id` | INTEGER | REFERENCES `fabrics` | Foreign Key |
-| `quantity` | NUMERIC | > 0 | Meters ordered |
-| `unit_price` | NUMERIC | NOT NULL | Price at time of order |
+| `quantity` | DECIMAL(10, 2) | NOT NULL | Meters ordered |
+| `unit_price` | DECIMAL(10, 2) | NOT NULL | Snapshot price |
+| `total_price` | DECIMAL(12, 2) | NOT NULL | Item total |
 
 ---
 
@@ -121,10 +127,10 @@ Tracks financial transactions linked to orders.
 | :--- | :--- | :--- | :--- |
 | `payment_id` | SERIAL | PRIMARY KEY | Unique ID |
 | `order_id` | INTEGER | REFERENCES `orders` | Foreign Key |
-| `amount` | NUMERIC | NOT NULL | Value paid |
+| `amount` | DECIMAL(12, 2) | NOT NULL | Value paid |
 | `payment_method`| VARCHAR(50) | | Cash, Card, Bank Slip |
-| `payment_status`| `payment_status`| DEFAULT 'PENDING' | Verification status |
-| `bank_slip_url` | TEXT | | Image path if applicable |
+| `payment_status`| VARCHAR(20) | DEFAULT 'PENDING' | Status Verification |
+| `bank_slip_url` | TEXT | | Image path |
 
 #### Table: `stock_arrivals`
 Ledger of incoming inventory from suppliers.
@@ -134,62 +140,32 @@ Ledger of incoming inventory from suppliers.
 | `arrival_id` | SERIAL | PRIMARY KEY | Unique ID |
 | `fabric_id` | INTEGER | REFERENCES `fabrics` | Foreign Key |
 | `supplier_id` | INTEGER | REFERENCES `suppliers` | Foreign Key |
-| `quantity` | NUMERIC | NOT NULL | Meters received |
-| `total_value` | NUMERIC | NOT NULL | Purchase cost |
+| `quantity` | DECIMAL(10, 2) | NOT NULL | Meters received |
+| `total_value` | DECIMAL(12, 2) | NOT NULL | Purchase cost |
 
 ---
 
-## 3. Record Specifications
-
-### 3.1 Data Record Structure
-Every record in the system follows a JSON-like structure when transmitted via the API. Below are examples of primary objects:
-
-#### Fabric Record Structure
-```json
-{
-  "fabric_id": 42,
-  "name": "Emerald Silk",
-  "material_type": "Silk",
-  "price_per_meter": 2500.00,
-  "stock_quantity": 150,
-  "is_in_catalog": true,
-  "status": "OK"
-}
-```
-
-#### Order Record Structure
-```json
-{
-  "order_id": 1001,
-  "customer_id": 5,
-  "total_amount": 7500.00,
-  "order_status": "PENDING",
-  "items": [
-    { "name": "Emerald Silk", "quantity": 3, "unit_price": 2500.00 }
-  ]
-}
-```
+### 2.5 Supporting Tables
+- **`cart`**: Current active shopping carts for customers.
+- **`feedback`**: Order reviews and ratings from customers.
+- **`confirmation_logs`**: SMS/Email logs sent to customers.
+- **`activity_logs`**: Tracks employee actions for transparency.
+- **`password_resets`**: Secure temporary OTP tokens for account recovery.
 
 ---
 
-## 4. Entity Relationship Diagram (ERD)
+## 3. Entity Relationship Diagram (ERD)
 
 ```mermaid
 erDiagram
     EMPLOYEES ||--o{ ACTIVITY_LOGS : performs
     CUSTOMERS ||--o{ ORDERS : places
     CUSTOMERS ||--o{ CART : adds_to
+    CUSTOMERS ||--o{ FEEDBACK : writes
     ORDERS ||--|{ ORDER_ITEMS : contains
+    ORDERS ||--|{ FEEDBACK : receives
     ORDER_ITEMS }|--|| FABRICS : references
     FABRICS ||--o{ STOCK_ARRIVALS : receives
     SUPPLIERS ||--o{ STOCK_ARRIVALS : provides
     ORDERS ||--o{ PAYMENTS : linked_to
-    ORDERS ||--|| INVOICES : generates
 ```
-
----
-
-## 5. Metadata & Logs
-- **`activity_logs`**: Tracks IP addresses and User Agents for all security-sensitive actions.
-- **`confirmation_logs`**: Tracks SMS/Email notifications sent to customers.
-- **`password_resets`**: Secure storage for temporary OTP tokens.

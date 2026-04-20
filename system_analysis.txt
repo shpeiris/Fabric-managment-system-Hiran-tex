@@ -3,7 +3,7 @@ Fabric Management System - Full System Analysis
 1. Overview
 The Fabric Management System is a full-stack web application designed for a fabric store or warehouse. It handles both an internal administration/management side (for staff) and an external-facing side (for customers). 
 
-The application is built using a React/Vite frontend and a Node.js/Express backend, interacting with a PostgreSQL database. 
+The application is built using a React/Vite frontend and a Node.js/Express backend, interacting with a PostgreSQL database.
 
 ---------------------------------------------------------
 ACTORS AND FEATURES
@@ -13,27 +13,27 @@ Actor 1: SYSTEM ADMINISTRATOR
 Access Level: ADMIN
 Key Features:
 - User Management: Can view, create, edit, and delete employee profiles.
-- Role Assignment: Assign roles (INVENTORY_MANAGER, SALESPERSON) to employees.
+- Role Assignment: Assign roles (INVENTORY, SALES) to employees.
 - Security Logs Overview: View activity logs (IP, user agents) for security-sensitive actions.
 - Full Dashboard Access: Aggregate statistics of total sales, total orders, available stock, and staff status.
 - Global Settings/Metadata management.
 
 Actor 2: INVENTORY MANAGER
-Access Level: INVENTORY_MANAGER
+Access Level: INVENTORY
 Key Features:
 - Fabric Management: Create, Read, Update, and Delete (CRUD) fabric records.
 - Catalog Control: Toggle fabrics in or out of the public-facing catalog via the `is_in_catalog` parameter.
-- Restock Alerts: Configure and receive alerts when `stock_quantity` drops below `restock_level`.
+- Restock Alerts: Configure and receive alerts when `stock_quantity` drops below `reorder_level`.
 - Supplier Management: Add or update records of fabric manufacturers/distributors.
 - Stock Arrivals: Record incoming inventory from suppliers (`stock_arrivals`), updating the warehouse overall quantities.
 
 Actor 3: SALESPERSON
-Access Level: SALESPERSON
+Access Level: SALES
 Key Features:
 - Order Management: View customer orders, update order status (PENDING, PROCESSING, DELIVERED, CANCELLED).
-- Invoice Generation: Generate invoices for accepted/completed orders.
-- Payment Verification: Review payment proofs (like bank slips) and update payment status (PENDING, COMPLETED, FAILED, REFUNDED).
-- Customer Assistance: View customer details and assist with offline/in-store order placements if required.
+- Verification: Verify orders directly with customers and update delivery information (`verified_at`, `verification_notes`).
+- Payment Verification: Review payment proofs (like bank slips) and update payment status (PENDING, COMPLETED, FAILED).
+- Customer Assistance: View customer details and assist with offline/in-store order placements.
 
 Actor 4: CUSTOMER
 Access Level: Customer (Authenticated via Frontend Shop)
@@ -41,9 +41,10 @@ Key Features:
 - Catalog Browsing: View available fabrics sorted by price, color, or material type.
 - Shopping Cart: Add items (`fabrics`) to a cart, adjust quantities (meters), and prepare for checkout.
 - Checkout & Orders: Convert cart into an order, specify delivery details (address, method).
-- Payments: Process payments (Cash, Card, or Bank Slip upload).
-- Order History: Review past orders, check the status of current orders (PENDING, DELIVERED).
-- Profile Management: Update personal information (address, telephone).
+- Payments: Process payments (Bank Slip upload support).
+- Order History: Review past orders, check the status of current orders.
+- Reviews and Feedback: Submit structured feedback (Overall rating, Delivery, Fabric Quality) for completed orders.
+- Profile Management: Update personal information and handle password resets using OTP.
 
 Actor 5: SYSTEM (Automated Processes)
 Key Features:
@@ -54,8 +55,8 @@ Key Features:
 ---------------------------------------------------------
 TECHNICAL MODULES & ARCHITECTURE
 ---------------------------------------------------------
-- Authentication (AuthController): Handles JWT-based logins for staff and customers.
-- Inventory (FabricController / InventoryController): Handles the core CRUD of products.
-- Sales/Order (OrderController, SalesController, CartController): Handles checkout flow and status transitions.
-- Finance (PaymentController, InvoiceController): Tracks revenue, transactions, and formal invoicing.
-- Frontend: State-managed React views structured into Dashboards (Sales, Inventory, Admin) and a generic Public facing shop.
+- Authentication: Handles JWT-based logins for staff and customers, and secure OTP resets.
+- Inventory: Handles the core CRUD of products and supplier restocks.
+- Sales/Order: Handles checkout flow, order verification, and status transitions.
+- Finance: Tracks payments, bank slip verifications, and order totals.
+- Frontend: State-managed React views cleanly structured into specific module Dashboards (Sales, Inventory, Admin) using a single clean `pages/` directory architecture.
