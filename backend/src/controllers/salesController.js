@@ -27,6 +27,9 @@ const createCustomer = async (req, res) => {
         if (!full_name || !email || !tel || !address || !password) {
             return res.status(400).json({ error: 'All fields are required.' });
         }
+        if (!/^\d{10}$/.test(tel)) {
+            return res.status(400).json({ error: 'Phone number must be exactly 10 digits' });
+        }
         const customer = await salesService.createCustomer({ full_name, email, tel, address, password });
         res.status(201).json({ message: 'Customer created successfully', customer });
     } catch (err) {
@@ -111,6 +114,10 @@ const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status, delivered_by, delivery_contact_number, tracking_id } = req.body;
+        
+        if (delivery_contact_number && !/^\d{10}$/.test(delivery_contact_number)) {
+            return res.status(400).json({ error: "Delivery contact number must be exactly 10 digits" });
+        }
         
         const result = await orderService.updateOrderStatus(id, status, delivered_by, delivery_contact_number, tracking_id);
         

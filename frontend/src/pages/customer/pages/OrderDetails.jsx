@@ -632,10 +632,10 @@ export default function OrderDetails() {
         <div className="invoice-header">
           <div className="invoice-title-section">
             <h1>INVOICE</h1>
-            <p>Hiran Fabric Textile</p>
+            <p>HIRAN FABRIC TEXTILE</p>
           </div>
           <div className="company-details">
-            <h2>Hiran Fabric Textile</h2>
+            <h2>HIRAN FABRIC TEXTILE</h2>
             <p>No 72, New Shopping Complex</p>
             <p>Nittambuwa, Sri Lanka</p>
             <p>+94 77 112 4088</p>

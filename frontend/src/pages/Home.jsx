@@ -15,7 +15,7 @@ const Navbar = ({ companyName }) => {
     <header className="navbar">
       <div className="logo">
         <span className="logo-icon">🏠</span>
-        <span className="company-name">{companyName || "Hiran Fabric Textile"}</span>
+        <span className="company-name">{companyName || "HIRAN FABRIC TEXTILE"}</span>
       </div>
       <nav>
         <a href="#home">Home</a>
@@ -31,7 +31,7 @@ const Hero = ({ title, subtitle, buttonText, imageUrl }) => {
   return (
     <section className="hero" id="home">
       <div className="hero-content">
-        <h1>{title || "Welcome to Hiran Fabric Textile"}</h1>
+        <h1>{title || "Welcome to HIRAN FABRIC TEXTILE"}</h1>
         <p className="hero-subtitle">{subtitle || "Quality Fabrics for Every Creation"}</p>
         <Link to="/register">
           <button className="btn-get-started">{buttonText || "Get Started"}</button>
@@ -58,7 +58,7 @@ function MainContent({ aboutTitle, aboutContent, features }) {
       <div className="about-section" id="about">
         <h2>{aboutTitle || "About Us"}</h2>
         <div className="about-text-container">
-            {(aboutContent || "Hiran Fabric Textile is a premier textile business based in Nittambuwa, Sri Lanka, dedicated to providing high-quality fabrics for every creative need.").split('\n').map((para, i) => (
+            {(aboutContent || "HIRAN FABRIC TEXTILE is a premier textile business based in Nittambuwa, Sri Lanka, dedicated to providing high-quality fabrics for every creative need.").split('\n').map((para, i) => (
                 <p key={i}>{para}</p>
             ))}
         </div>
@@ -112,7 +112,7 @@ const Footer = ({ settings }) => {
         <div className="footer-column footer-about">
           <div className="logo" style={{ marginBottom: '20px' }}>
             <span className="logo-icon" style={{ fontSize: '24px' }}>🏠</span>
-            <span className="company-name" style={{ fontSize: '18px' }}>{settings?.company_name || "Hiran Fabric Textile"}</span>
+            <span className="company-name" style={{ fontSize: '18px' }}>{settings?.company_name || "HIRAN FABRIC TEXTILE"}</span>
           </div>
           <p>
             {settings?.about_content?.substring(0, 150)}...
@@ -150,7 +150,7 @@ const Footer = ({ settings }) => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} {settings?.company_name || "Hiran Fabric Textile"}. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} {settings?.company_name || "HIRAN FABRIC TEXTILE"}. All rights reserved.</p>
         <div className="footer-bottom-links">
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>

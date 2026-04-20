@@ -273,11 +273,11 @@ export default function Orders() {
         <div className="invoice-header" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #001a66', paddingBottom: '20px', marginBottom: '30px' }}>
           <div>
             <h2 style={{ color: '#001a66', margin: '0 0 5px 0', fontSize: '28px', fontWeight: '800' }}>HIRAN FABRIC TEXTILE</h2>
-            <p style={{ margin: '2px 0', color: '#475569', fontSize: '13px' }}>123 Textile Road, Gampaha, Sri Lanka</p>
-            <p style={{ margin: '2px 0', color: '#475569', fontSize: '13px' }}>Phone: +94 77 123 4567 | Email: support@hiranfabric.com</p>
+            <p style={{ margin: '2px 0', color: '#475569', fontSize: '13px' }}>No 72, New Shopping Complex, Nittambuwa</p>
+            <p style={{ margin: '2px 0', color: '#475569', fontSize: '13px' }}>Phone: +94 77 112 4088 | Email: hiranfabrictextile@gmail.com</p>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ margin: '0 0 10px 0', color: '#cbd5e1', fontSize: '36px', textTransform: 'uppercase', letterSpacing: '2px' }}>Invoice</h1>
+            <h1 style={{ margin: '0 0 10px 0', color: '#cbd5e1', fontSize: '36px', textTransform: 'uppercase', letterSpacing: '2px' }}>Official Invoice</h1>
             <p style={{ fontWeight: 'bold', margin: '0 0 5px 0', color: '#0f172a', fontSize: '16px' }}>
               {order.invoice_number ? order.invoice_number.toUpperCase() : `ORDER #${order.order_id}`}
             </p>
@@ -483,26 +483,45 @@ export default function Orders() {
                   )}
                 </td>
                 <td>
-                  <button 
-                    className="btn-view-invoice"
-                    onClick={() => handleViewInvoice(order.order_id)}
-                    style={{ 
-                      background: 'white', 
-                      color: '#001a66', 
-                      border: '1px solid #001a66',
-                      padding: '6px 10px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px'
-                    }}
-                    disabled={fetchingInvoice}
-                  >
-                    <FileText size={14} /> 
-                    {order.invoice_id ? `inv ${order.invoice_id.toString().padStart(4, '0')}`.toUpperCase() : 'View Invoice'}
-                  </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <button 
+                      className="btn-view-invoice"
+                      onClick={() => handleViewInvoice(order.order_id)}
+                      style={{ 
+                        background: 'white', 
+                        color: '#001a66', 
+                        border: '1px solid #001a66',
+                        padding: '6px 10px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px'
+                      }}
+                      disabled={fetchingInvoice}
+                    >
+                      <FileText size={14} /> 
+                      {order.invoice_id ? `inv ${order.invoice_id.toString().padStart(4, '0')}`.toUpperCase() : 'View Invoice'}
+                    </button>
+                    {order.invoice_id && (
+                      <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center' }}>
+                        <span style={{ 
+                          display: 'inline-block', 
+                          padding: '1px 4px', 
+                          borderRadius: '3px', 
+                          background: order.invoice_status === 'ISSUED' ? '#f1f5f9' : '#dcfce7',
+                          color: order.invoice_status === 'ISSUED' ? '#475569' : '#166534',
+                          marginRight: '4px',
+                          fontWeight: '600'
+                        }}>
+                          {order.invoice_status}
+                        </span>
+                        <span>{new Date(order.invoice_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: '5px' }}>
@@ -596,7 +615,7 @@ export default function Orders() {
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%' }}>
             <div className="modal-header">
               <Clipboard size={20} color="#001a66" />
-              <h3>Official Invoice Preview</h3>
+              <h3>Official Invoice</h3>
               <button className="close-btn" onClick={() => setShowInvoiceModal(false)}>×</button>
             </div>
             <div className="modal-content">

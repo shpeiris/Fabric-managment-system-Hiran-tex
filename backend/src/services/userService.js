@@ -43,7 +43,7 @@ const createUser = async (userData, creatorId) => {
   } else {
     // Insert into Employees table
     sql =
-      "INSERT INTO employees (full_name, email, password, nic, telephone, role, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING employee_id as id, created_at";
+      "INSERT INTO employees (full_name, email, password, nic, telephone, role, status) VALUES ($1, $2, $3, $4, $5, $6::user_role, $7::user_status) RETURNING employee_id as id, created_at";
     params = [
       full_name,
       email,
@@ -77,8 +77,8 @@ const getAllUsers = async () => {
         full_name, 
         email, 
         tel as phone, 
-        'CUSTOMER' as role, 
-        'ACTIVE' as status, 
+        'CUSTOMER'::text as role, 
+        'ACTIVE'::text as status, 
         created_at 
       FROM customers
       UNION ALL
@@ -88,8 +88,8 @@ const getAllUsers = async () => {
         email, 
         telephone as phone, 
         CASE 
-          WHEN role = 'INVENTORY' OR role = 'INVENTORY_MANAGER' THEN 'INVENTORY_MANAGER'
-          WHEN role = 'SALES' OR role = 'SALESPERSON' THEN 'SALESPERSON'
+          WHEN role::text = 'INVENTORY' OR role::text = 'INVENTORY_MANAGER' THEN 'INVENTORY_MANAGER'
+          WHEN role::text = 'SALES' OR role::text = 'SALESPERSON' THEN 'SALESPERSON'
           ELSE role::text 
         END as role,
         status::text,

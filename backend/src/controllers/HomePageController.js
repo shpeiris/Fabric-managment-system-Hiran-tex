@@ -28,6 +28,10 @@ export const updateHomePageSettings = async (req, res) => {
             contact_hours
         } = req.body;
 
+        if (contact_phone && !/^\d{10}$/.test(contact_phone)) {
+            return res.status(400).json({ error: "Contact telephone must be exactly 10 digits" });
+        }
+
         // Features will be sent as a JSON string in FormData
         let features = [];
         try {

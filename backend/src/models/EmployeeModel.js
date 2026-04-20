@@ -22,6 +22,14 @@ export const initEmployeeModel = async () => {
       status user_status DEFAULT 'ACTIVE',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- Defensive: Ensure telephone length is consistent with modern formats
+    DO $$ 
+    BEGIN 
+      ALTER TABLE employees ALTER COLUMN telephone TYPE VARCHAR(20);
+    EXCEPTION WHEN OTHERS THEN 
+      RAISE NOTICE 'Employees table already updated or busy.';
+    END $$;
   `;
   await pool.query(query);
 

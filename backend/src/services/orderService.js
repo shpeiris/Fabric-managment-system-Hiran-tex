@@ -88,7 +88,7 @@ const getOrders = async (filters) => {
            p.payment_id, p.payment_status, p.payment_method, p.bank_slip_url,
            fb.overall_rating as feedback_rating,
            fb.comments as feedback_comments,
-           inv.invoice_id
+           inv.invoice_id, inv.status as invoice_status, inv.created_at as invoice_date
     FROM orders o
     LEFT JOIN payments p ON o.order_id = p.order_id
     LEFT JOIN feedback fb ON o.order_id = fb.order_id
@@ -237,6 +237,12 @@ const createOrder = async (orderData) => {
         return { order_id: orderId };
     } catch (err) {
         await pool.query('ROLLBACK');
+        console.error('DATABASE ERROR in createOrder:', err.message, err.detail || '');
+        if (err.code === '23502') {
+            console.error('Details: Required field missing (NOT NULL constraint violation).');
+        } else if (err.code === '22001') {
+            console.error('Details: Data too long for column (Value too long for type).');
+        }
         throw err;
     }
 };

@@ -60,6 +60,14 @@ const addFabric = async (req, res) => {
         if (fabricData.width === '') fabricData.width = null;
         if (fabricData.restock_date === '') fabricData.restock_date = null;
 
+        if (fabricData.restock_date) {
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            if (fabricData.restock_date < todayStr) {
+                return res.status(400).json({ error: "Restock date cannot be in the past" });
+            }
+        }
+
         if (req.file) {
             // Set image_url to the path of the uploaded file
             fabricData.image_url = `uploads/fabrics/${req.file.filename}`;
@@ -93,6 +101,14 @@ const updateFabric = async (req, res) => {
         // Handle empty fields
         if (fabricData.width === '') fabricData.width = null;
         if (fabricData.restock_date === '') fabricData.restock_date = null;
+
+        if (fabricData.restock_date) {
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            if (fabricData.restock_date < todayStr) {
+                return res.status(400).json({ error: "Restock date cannot be in the past" });
+            }
+        }
 
         if (req.file) {
             // Set image_url to the path of the uploaded file
@@ -165,6 +181,9 @@ const addSupplier = async (req, res) => {
     if (!req.body.name) {
         return res.status(400).json({ error: "Supplier name is required" });
     }
+    if (req.body.contact_number && !/^\d{10}$/.test(req.body.contact_number)) {
+        return res.status(400).json({ error: "Contact number must be exactly 10 digits" });
+    }
     try {
         const result = await inventoryService.addSupplier(req.body);
         res.json({ message: "Supplier added successfully", supplier_id: result.supplier_id });
@@ -176,6 +195,9 @@ const addSupplier = async (req, res) => {
 
 const updateSupplier = async (req, res) => {
     const { id } = req.params;
+    if (req.body.contact_number && !/^\d{10}$/.test(req.body.contact_number)) {
+        return res.status(400).json({ error: "Contact number must be exactly 10 digits" });
+    }
     try {
         const result = await inventoryService.updateSupplier(id, req.body);
         if (!result) return res.status(404).json({ error: "Supplier not found" });

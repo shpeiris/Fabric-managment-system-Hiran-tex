@@ -21,8 +21,25 @@ export const initOrderModel = async () => {
       verified_by INTEGER,
       delivered_by VARCHAR(255),
       delivery_contact_number VARCHAR(20),
-      tracking_id VARCHAR(255)
+      tracking_id VARCHAR(255),
+      order_type VARCHAR(20),
+      order_source VARCHAR(20)
     );
+
+    -- Ensure missing ENUM values exist
+    DO $$ BEGIN
+        ALTER TYPE order_status ADD VALUE 'SHIPPED' AFTER 'PROCESSING';
+    EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+    DO $$ BEGIN
+        ALTER TYPE order_status ADD VALUE 'READY_FOR_PICKUP' AFTER 'PROCESSING';
+    EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+    -- Defensive: Ensure column consistency
+    DO $$ BEGIN
+      ALTER TABLE orders ALTER COLUMN delivery_type TYPE VARCHAR(100);
+      ALTER TABLE orders ALTER COLUMN phone_number TYPE VARCHAR(20);
+    EXCEPTION WHEN OTHERS THEN null; END $$;
 
     CREATE TABLE IF NOT EXISTS order_status_history (
       history_id SERIAL PRIMARY KEY,

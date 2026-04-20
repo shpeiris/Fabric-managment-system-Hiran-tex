@@ -64,6 +64,10 @@ const createOrder = async (req, res) => {
 const createCustomerOrder = async (req, res) => {
     const { items, delivery_address, delivery_type, payment_method, customer_name, phone_number, special_instructions } = req.body;
 
+    if (phone_number && !/^\d{10}$/.test(phone_number)) {
+        return res.status(400).json({ error: "Phone number must be exactly 10 digits" });
+    }
+
     if (!items || items.length === 0) {
         return res.status(400).json({ error: "Items are required" });
     }
@@ -95,6 +99,10 @@ const createCustomerOrder = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status, delivered_by, delivery_contact_number } = req.body;
+
+    if (delivery_contact_number && !/^\d{10}$/.test(delivery_contact_number)) {
+        return res.status(400).json({ error: "Delivery contact number must be exactly 10 digits" });
+    }
 
     const validStatuses = ['PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
