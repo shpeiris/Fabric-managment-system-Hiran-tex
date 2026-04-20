@@ -6,10 +6,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "migrate": "node migrations/run.js",
-    "setup-db": "node scripts/setup_database.js",
-    "apply-schema": "node scripts/apply_schema.js"
+    "dev": "nodemon src/server.js"
   },
   "keywords": [
     "fabric",
