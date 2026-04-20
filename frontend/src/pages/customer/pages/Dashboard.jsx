@@ -4,7 +4,7 @@ import { apiCall, getUser } from '../../../utils/auth.js';
 import "./CustomerDashboard.css";
 
 // Import sample images
-import fabric1 from "../../../assets/Fabrics/lasecotton.png";
+import fabric1 from "../../../assets/Fabrics/inventory01.png";
 
 export default function Dashboard() {
   const navigate = useNavigate();
