@@ -72,10 +72,12 @@ export default function StockArrivals() {
     return acc;
   }, {}));
 
+  // Fetch data as soon as the component loads
   useEffect(() => {
     fetchInitialData();
   }, []);
 
+  // Auto-open modal if redirected from a low-stock alert
   useEffect(() => {
     // Check for incoming fabric state from Alerts
     if (location.state && location.state.fabric_id && fabrics.length > 0) {
@@ -92,6 +94,7 @@ export default function StockArrivals() {
     }
   }, [location, fabrics]);
 
+  // Fetch all needed lists for arrivals, fabrics, and suppliers from the API
   const fetchInitialData = async () => {
     try {
       setLoading(true);
@@ -118,6 +121,7 @@ export default function StockArrivals() {
     }
   };
 
+  // Update form state when user changes the quantity for a specific color
   const handleQuantityChange = (fabricId, value) => {
     setFieldValue('colorQuantities', {
       ...values.colorQuantities,
@@ -125,6 +129,7 @@ export default function StockArrivals() {
     });
   };
 
+  // Process and save the stock arrival form data to the backend loop
   const handleSubmit = async (formValues) => {
     const itemsToSubmit = Object.entries(formValues.colorQuantities)
       .filter(([, qty]) => parseFloat(qty) > 0)
@@ -177,6 +182,7 @@ export default function StockArrivals() {
     return <div style={{ padding: "40px", textAlign: "center" }}>Loading arrivals...</div>;
   }
 
+  // Calculate analytics totals for the summary cards
   const totalMeters = arrivals.reduce((sum, a) => sum + parseFloat(a.quantity), 0);
   const recentArrivals = arrivals.filter(a => {
     const arrivalDate = new Date(a.arrival_date);

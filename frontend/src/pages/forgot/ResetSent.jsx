@@ -48,6 +48,7 @@ export default function ResetSent() {
         const data = await response.json();
         setError(data.error || "Failed to resend OTP");
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (err) {
       setError("Server error while resending OTP");
     }

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { apiCall } from "../../../utils/auth.js";
 import "./InventoryDashboard.css";
 
 export default function InventoryDashboard() {
-  const navigate = useNavigate();
+  
   const [fabrics, setFabrics] = useState([]);
   const [arrivals, setArrivals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalStockValue: 0,
     lowStockItems: 0,

@@ -64,7 +64,7 @@ export default function FabricManagement() {
     reorder_level: [(val) => validateFabricStock(val)], // Reorder level follows stock rules
     width: [validateFabricWidth],
     selectedColors: [
-      (val, formData) => !editingFabric ? validateAtLeastOneColor(val) : null
+      (val) => !editingFabric ? validateAtLeastOneColor(val) : null
     ]
   };
 
