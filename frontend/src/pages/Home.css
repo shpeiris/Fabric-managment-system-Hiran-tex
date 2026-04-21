@@ -1,3 +1,7 @@
+/* ==========================================================================
+   GLOBAL & RESET STYLES
+   These apply basic resets to all elements and define the font family.
+   ========================================================================== */
 * {
   margin: 0;
   padding: 0;
@@ -5,14 +9,22 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* ==========================================================================
+   MAIN PAGE WRAPPER 
+   Ensures the Home page fills at least the height of the viewing screen.
+   ========================================================================== */
 .home-page {
   min-height: 100vh;
-  background: white;
+  background: rgb(255, 255, 255);
 }
 
+/* ==========================================================================
+   NAVIGATION BAR (HEADER)
+   Styles for the top navigation bar, logo, and links.
+   ======================================================================== */
 /* Navbar */
 .navbar {
-  background: #001a66;
+  background: #031344;
   padding: 12px 40px;
   display: flex;
   justify-content: space-between;
@@ -32,7 +44,7 @@
 }
 
 .company-name {
-  color: white;
+  color: rgb(74, 221, 25);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -46,7 +58,7 @@
 
 .navbar a,
 .nav-link {
-  color: white;
+  color: rgb(66, 216, 63);
   text-decoration: none;
   font-weight: 500;
   font-size: 15px;
@@ -58,9 +70,14 @@
   color: #7cff00;
 }
 
+/* ==========================================================================
+   HERO SECTION 
+   This is the large top container with the heading, 'Get Started' button, 
+   and big hero image. It is the first thing users see.
+   ========================================================================== */
 /* Hero Section */
 .hero {
-  background: white;
+  background: rgb(255, 255, 255);
   padding: 60px 40px 40px 40px;
   text-align: center;
 }
@@ -84,8 +101,12 @@
   font-weight: 300;
 }
 
+/* ==========================================================================
+   BUTTON STYLES 
+   The main call to action button in the Hero section ('Get Started' button).
+   ========================================================================== */
 .btn-get-started {
-  background: #7cff00;
+  background: #2ce20c;
   color: #001a66;
   border: none;
   padding: 12px 35px;
@@ -94,9 +115,10 @@
   font-weight: 700;
   font-size: 15px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(124, 255, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(106, 209, 9, 0.772);
 }
 
+/* Hover state - triggers when user puts their mouse over the button */
 .btn-get-started:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(124, 255, 0, 0.5);
@@ -109,7 +131,7 @@
   margin: 0 auto;
   overflow: hidden;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(251, 251, 251, 0.22);
 }
 
 .hero-image {
@@ -120,6 +142,10 @@
   max-height: 400px;
 }
 
+/* ==========================================================================
+   MAIN CONTENT AREA 
+   Splits the page layout to 35% About and 65% Features using CSS Grid. 
+   ========================================================================== */
 /* Main Content - About and Features Side by Side */
 .main-content {
   display: grid;
@@ -147,7 +173,7 @@
 .about-section p {
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #3df30f;
+  color: #ffffff;
   margin-bottom: 15px;
   text-align: justify;
 }
@@ -166,6 +192,10 @@
   gap: 25px;
 }
 
+/* ==========================================================================
+   FEATURE CARDS
+   Styles for each individual card displayed in the features grid.
+   ========================================================================== */
 .feature-card {
   background: white;
   border: 1px solid #e0e0e0;
@@ -175,6 +205,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* Hover effect when the user hovers over a feature card, slightly lifts & adds shadow */
 .feature-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);

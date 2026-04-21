@@ -3,16 +3,19 @@ import { apiCall } from "@/utils/auth.js";
 import "./pages/Reports.css";
 
 export default function Reports() {
+  // State variables to remember which tab we are on and store the fetched data
   const [activeTab, setActiveTab] = useState("sales");
   const [salesReport, setSalesReport] = useState(null);
   const [inventoryReport, setInventoryReport] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Automatically fetch data whenever the user switches tabs (sales vs inventory)
   useEffect(() => {
     if (activeTab === "sales") fetchSalesReport();
     if (activeTab === "inventory") fetchInventoryReport();
   }, [activeTab]);
 
+  // Fetches financial and order data from the backend
   const fetchSalesReport = async (startDate = "", endDate = "") => {
     try {
       setLoading(true);
@@ -56,7 +59,7 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* TABS */}
+      {/* TABS Navigation: Buttons to switch between Sales and Inventory views */}
       <div className="report-tabs">
         <button className={activeTab === "sales" ? "active" : ""} onClick={() => setActiveTab("sales")}>
           Sales Report
@@ -66,13 +69,16 @@ export default function Reports() {
         </button>
       </div>
 
+      {/* Show a loading message while waiting for the server */}
       {loading && <p>Loading report data...</p>}
 
-      {/* SALES REPORT */}
+      {/* --- SECTION: SALES REPORT VIEW --- */}
+      {/* Only show this section if the "Sales" tab is selected AND data has finished loading */}
       {activeTab === "sales" && !loading && salesReport && (
         <>
           <p className="note">Comprehensive sales overview and recent performance.</p>
 
+          {/* 1. Quick Overview Cards at the top (Revenue, Fees, Order Count) */}
           {salesReport.summary && (
             <div className="inventory-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
               <div className="summary-card" style={{ background: '#f8fafc', borderLeft: '4px solid #001a66' }}>
@@ -97,6 +103,7 @@ export default function Reports() {
             </div>
           )}
 
+          {/* 2. Table showing how much was made each day */}
           <div className="report-box" style={{ margin: '30px 0' }}>
             <h3>Daily Sales Performance</h3>
             <div className="table-container">
@@ -129,6 +136,7 @@ export default function Reports() {
             </div>
           </div>
 
+          {/* 3. Table showing the latest individual customer orders */}
           <div className="report-box" style={{ marginBottom: '40px' }}>
             <h3>Monthly Transactions</h3>
             <div className="table-container">
@@ -172,6 +180,7 @@ export default function Reports() {
             </div>
           </div>
 
+          {/* 4. Table showing which fabric items sell the fastest */}
           <div className="report-box" style={{ marginBottom: '40px' }}>
             <h3>Top Performing Fabrics</h3>
             <div className="table-container">
@@ -202,11 +211,13 @@ export default function Reports() {
         </>
       )}
 
-      {/* INVENTORY REPORT */}
+      {/* --- SECTION: INVENTORY REPORT VIEW --- */}
+      {/* Only show this section if the "Inventory" tab is selected AND data has finished loading */}
       {activeTab === "inventory" && !loading && inventoryReport && (
         <>
           <p className="note">Current Inventory Status</p>
 
+          {/* 1. Quick Overview Cards at the top (Total Stock, Empty Stock count) */}
           <div className="inventory-summary">
             <div className="summary-card">
               <h3>Total Meters in Stock</h3>
@@ -222,6 +233,7 @@ export default function Reports() {
             </div>
           </div>
 
+          {/* 2. Table showing items that are running out or completely empty */}
           <div className="report-box" style={{ margin: '30px 0' }}>
             <h3>Low Stock Alert</h3>
             <table className="report-table">
@@ -248,6 +260,7 @@ export default function Reports() {
             </table>
           </div>
 
+          {/* 3. Table showing the latest supply boxes that arrived at the store */}
           <div className="report-box" style={{ marginBottom: '30px' }}>
             <h3>Recent Stock Arrivals</h3>
             <div className="table-container">

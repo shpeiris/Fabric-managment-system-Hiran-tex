@@ -5,11 +5,13 @@ import { getUser } from '../../../utils/auth.js';
 export default function Sidebar({ onLogout }) {
   const [user, setUser] = useState(null);
 
+  // Get the logged-in user's details when the sidebar first loads
   useEffect(() => {
     const userData = getUser();
     setUser(userData);
   }, []);
 
+  // Links for the main Admin section
   const menuItems = [
     { name: 'Dashboard', path: '/admin/dashboard' },
     { name: 'User Management', path: '/admin/users' },
@@ -17,6 +19,7 @@ export default function Sidebar({ onLogout }) {
     { name: 'Reports and Analytics', path: '/admin/reports' }
   ];
 
+  // Links to jump to other department dashboards
   const moduleItems = [
     { name: 'Sales Dashboard', path: '/sales/dashboard' },
     { name: 'Inventory Dashboard', path: '/inventory/dashboard' }
@@ -26,13 +29,13 @@ export default function Sidebar({ onLogout }) {
     <aside style={{
       width: '260px',
       minHeight: '100vh',
-      background: '#001a66',
+      background: '#001a66',//side bar
       color: 'white',
       display: 'flex',
       flexDirection: 'column',
       boxShadow: '4px 0 15px rgba(0, 0, 0, 0.3)'
     }}>
-      {/* Header */}
+      {/* Header (Top Logo Section) */}
       <div style={{
         padding: '25px 20px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
@@ -43,9 +46,10 @@ export default function Sidebar({ onLogout }) {
         </Link>
       </div>
 
-      {/* Navigation Menu */}
+      {/* Navigation Menu (The Clickable Links) */}
       <nav style={{ flex: 1, padding: '20px 0', overflowY: 'auto' }}>
         <div style={{ padding: '0 25px 10px', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Admin Center</div>
+        {/* Loop through the Admin links and create a button for each */}
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
@@ -68,6 +72,7 @@ export default function Sidebar({ onLogout }) {
         ))}
 
         <div style={{ padding: '25px 25px 10px', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Management Modules</div>
+        {/* Loop through the Module links and create a button for each */}
         {moduleItems.map((item) => (
           <NavLink
             key={item.path}
@@ -90,12 +95,12 @@ export default function Sidebar({ onLogout }) {
         ))}
       </nav>
 
-      {/* Footer with User Info and Logout */}
+      {/* Bottom Section: Shows who is logged in and the Logout button */}
       <div style={{
         padding: '20px',
         borderTop: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
-        {/* User Profile */}
+        {/* User Profile Badge (Shows name and first letter as an avatar) */}
         <div style={{
           display: 'flex',
           alignItems: 'center',

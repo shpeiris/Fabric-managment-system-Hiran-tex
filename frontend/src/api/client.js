@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // Create axios instance with default configuration
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL,//if you ask for /api/users, it knows to go to http://localhost:5000/api/users
   withCredentials: true, // Important for session cookies
   headers: {
     "Content-Type": "application/json",

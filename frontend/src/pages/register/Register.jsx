@@ -1,6 +1,6 @@
 import "../register/Register.css";
-import { Link, useNavigate } from "react-router-dom";
-import { authService } from "../../services";
+import { Link, useNavigate } from "react-router-dom";// React Router to move the user to different pages
+import { authService } from "../../services";// used to contact the backend to register the user and save their login session
 import { setUser } from "../../utils/auth";
 import { useFormValidation } from "../../hooks/useFormValidation";
 import registrationImage from "../../assets/Fabrics/registration.png";
@@ -14,9 +14,11 @@ import {
 } from "../../utils/validators";
 
 const Register = () => {
+  // Hook from React Router to redirect the user to a different page 
   const navigate = useNavigate();
 
-  // Validation rules for each field
+  // 1. Validation rules for each field in the form
+  // These make sure the user inputs the correct type and length of information.
   const validationRules = {
     fullName: [
       (val) => validateRequired(val, "Full name"),
@@ -35,6 +37,10 @@ const Register = () => {
     ],
   };
 
+  // 2. Custom Form Hook Setup
+  // manages what the user types ('values'), checks for mistakes ('errors'),
+  // tracks if they are currently submitting to the database ('isSubmitting'), 
+  // and checks if they've clicked in and out of an input box .
   const {
     values,
     errors,
@@ -56,8 +62,10 @@ const Register = () => {
     validationRules,
   );
 
+  // 3. User submission logic - runs when the "Create Customer Account" button is clicked
   const onSubmit = async (formData) => {
     try {
+      // Gather up the actual values the user typed to match what the backend expects
       const registrationData = {
         full_name: formData.fullName,
         email: formData.email,
@@ -66,18 +74,21 @@ const Register = () => {
         password: formData.password,
       };
 
+      // 4. Send exactly what the user typed to the backend API (`/api/auth/register`)
       const data = await authService.register(registrationData);
 
-      // Save user and token for automatic login
+      // 5. Automatically log the newly registered user in
+      // This saves the new user 
       if (data && data.user) {
         setUser({ ...data.user, token: data.token });
       }
 
-      // Show success and redirect to dashboard
+      // 6. Give the browser 1 second, then teleport the user to the Customer Dashboard successfully.
       setTimeout(() => {
         navigate("/customer/dashboard");
       }, 1000);
     } catch (error) {
+      // If the backend refuses their registration (e.g. Email is already taken), log the error and show it
       console.error("Registration error:", error);
       setFieldError(
         "submit",
@@ -86,6 +97,7 @@ const Register = () => {
     }
   };
 
+  // 7. This HTML represents the UI of the Registration component that the user actually sees on screen.
   return (
     <div className="register-page">
       {/* Header - Matching other pages */}
@@ -110,12 +122,17 @@ const Register = () => {
               <p>Create your account to start shopping</p>
             </div>
 
+            {/* This `<form>` runs our custom function `handleSubmit(onSubmit)` completely overriding normal browser refreshes. */}
             <form onSubmit={handleSubmit(onSubmit)} className="compact-form">
+              
+              {/* Show the Big "Server Error" message if anything went wrong upon submit (like wrong email format) */}
               {errors.submit && (
                 <div className="error-msg">✗ {errors.submit}</div>
               )}
 
               <div className="form-grid">
+                
+                {/* 1. Full Name Input Group */}
                 <div className="form-group floating-group">
                   <input
                     name="fullName"
@@ -130,11 +147,14 @@ const Register = () => {
                     disabled={isSubmitting}
                   />
                   <label htmlFor="fullName">Full Name</label>
+                  
+                  {/* Checks to see if the user clicked into the box (touched) AND if they got it wrong (errors > validateRequired/validateMinLength) */}
                   {touched.fullName && errors.fullName && (
                     <span className="field-error">{errors.fullName}</span>
                   )}
                 </div>
 
+                {/* 2. Email Address Input Group */}
                 <div className="form-group floating-group">
                   <input
                     name="email"
@@ -233,6 +253,7 @@ const Register = () => {
                 </div>
               </div>
 
+              {/* Dynamic submit button: If loading = show spinner 'Creating Account...' / If NOT = 'Create Customer Account' */}
               <button
                 type="submit"
                 className={`register-btn-compact ${isSubmitting ? "loading" : ""}`}

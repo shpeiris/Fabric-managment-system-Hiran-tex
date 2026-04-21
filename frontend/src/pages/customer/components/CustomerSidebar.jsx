@@ -13,7 +13,7 @@ export default function CustomerSidebar() {
       height: '100vh',
       overflowY: 'auto'
     }}>
-      {/* Logo/Brand */}
+      {/* Top Banner: Logo and Branch Name */}
       <div style={{ padding: '0 20px', marginBottom: '30px' }}>
         <Link to="/" style={{ textDecoration: 'none' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#7cff00', marginBottom: '5px' }}>
@@ -23,8 +23,9 @@ export default function CustomerSidebar() {
         <p style={{ fontSize: '12px', color: '#94a3b8' }}>Customer Portal</p>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation Menu: List of links the customer can click */}
       <nav>
+        {/* Link 1: Main Dashboard Overview */}
         <NavLink
           to="/customer/dashboard"
           style={({ isActive }) => ({
@@ -43,6 +44,7 @@ export default function CustomerSidebar() {
           Dashboard
         </NavLink>
 
+        {/* Link 2: View and Search all available fabrics */}
         <NavLink
           to="/customer/browse"
           style={({ isActive }) => ({
@@ -61,6 +63,7 @@ export default function CustomerSidebar() {
           Browse Fabrics
         </NavLink>
 
+        {/* Link 3: View current items added to the Cart before checking out */}
         <NavLink
           to="/customer/cart"
           style={({ isActive }) => ({
@@ -79,6 +82,7 @@ export default function CustomerSidebar() {
           Shopping Cart
         </NavLink>
 
+        {/* Link 4: Track current orders and view past purchases */}
         <NavLink
           to="/customer/orders"
           style={({ isActive }) => ({
@@ -97,6 +101,7 @@ export default function CustomerSidebar() {
           My Orders
         </NavLink>
 
+        {/* Link 5: View payment history and upload bank slips */}
         <NavLink
           to="/customer/payments"
           style={({ isActive }) => ({
@@ -115,6 +120,7 @@ export default function CustomerSidebar() {
           Payments
         </NavLink>
 
+        {/* Link 6: System notifications and alerts */}
         <NavLink
           to="/customer/notifications"
           style={({ isActive }) => ({
@@ -133,6 +139,7 @@ export default function CustomerSidebar() {
           Notifications
         </NavLink>
 
+        {/* Link 7: Update personal details (Account Settings) */}
         <NavLink
           to="/customer/profile"
           style={({ isActive }) => ({
